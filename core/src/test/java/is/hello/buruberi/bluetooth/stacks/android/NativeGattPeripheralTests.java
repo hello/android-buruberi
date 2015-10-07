@@ -661,13 +661,13 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final NativeGattPeripheral peripheral = createConnectedPeripheral();
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> enable = peripheral.disableNotification(new NativePeripheralService(nativeService, peripheral),
-                                                                       Testing.WRITE_CHARACTERISTIC,
-                                                                       Testing.NOTIFY_DESCRIPTOR,
-                                                                       timeout);
+        final Observable<UUID> disable = peripheral.disableNotification(new NativePeripheralService(nativeService, peripheral),
+                                                                        Testing.WRITE_CHARACTERISTIC,
+                                                                        Testing.NOTIFY_DESCRIPTOR,
+                                                                        timeout);
 
         final Testing.Result<UUID> result = new Testing.Result<>();
-        enable.subscribe(result);
+        disable.subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
         final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
@@ -695,13 +695,13 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final NativeGattPeripheral peripheral = createConnectedPeripheral();
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> enable = peripheral.disableNotification(new NativePeripheralService(nativeService, peripheral),
-                                                                       Testing.WRITE_CHARACTERISTIC,
-                                                                       Testing.NOTIFY_DESCRIPTOR,
-                                                                       timeout);
+        final Observable<UUID> disable = peripheral.disableNotification(new NativePeripheralService(nativeService, peripheral),
+                                                                        Testing.WRITE_CHARACTERISTIC,
+                                                                        Testing.NOTIFY_DESCRIPTOR,
+                                                                        timeout);
 
         final Testing.Result<UUID> result = new Testing.Result<>();
-        enable.subscribe(result);
+        disable.subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
         final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
@@ -730,13 +730,13 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final NativeGattPeripheral peripheral = createConnectedPeripheral();
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> enable = peripheral.disableNotification(new NativePeripheralService(nativeService, peripheral),
-                                                                       Testing.WRITE_CHARACTERISTIC,
-                                                                       Testing.NOTIFY_DESCRIPTOR,
-                                                                       timeout);
+        final Observable<UUID> disable = peripheral.disableNotification(new NativePeripheralService(nativeService, peripheral),
+                                                                        Testing.WRITE_CHARACTERISTIC,
+                                                                        Testing.NOTIFY_DESCRIPTOR,
+                                                                        timeout);
 
         final Testing.Result<UUID> result = new Testing.Result<>();
-        enable.subscribe(result);
+        disable.subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
         final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);

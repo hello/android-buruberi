@@ -56,6 +56,11 @@ public interface Characteristic {
     //region Properties
 
     /**
+     * Returns the identifier of the characteristic.
+     */
+    UUID getUuid();
+
+    /**
      * Returns the properties of this characteristic.
      */
     int getProperties();

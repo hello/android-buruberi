@@ -103,6 +103,11 @@ public final class NativePeripheralService implements PeripheralService {
         }
 
         @Override
+        public UUID getUuid() {
+            return nativeCharacteristic.getUuid();
+        }
+
+        @Override
         public int getProperties() {
             return nativeCharacteristic.getProperties();
         }
