@@ -58,11 +58,11 @@ publishing {
                         resolveStrategy = DELEGATE_FIRST
                         name 'buruberi'
                         description 'A small library for communicating with gatt-profile Bluetooth Low Energy devices on Android.'
-                        url 'https://github.com/hello/buruberi'
+                        url 'https://github.com/hello/android-buruberi'
                         scm {
-                            url 'https://github.com/hello/buruberi'
-                            connection 'scm:git:git@github.com:hello/buruberi.git'
-                            developerConnection 'scm:git:git@github.com:hello/buruberi.git'
+                            url 'https://github.com/hello/android-buruberi'
+                            connection 'scm:git:git@github.com:hello/android-buruberi.git'
+                            developerConnection 'scm:git:git@github.com:hello/android-buruberi.git'
                         }
                         licenses {
                             license {
