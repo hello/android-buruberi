@@ -615,7 +615,9 @@ public class NativeGattPeripheral implements GattPeripheral {
                         gattDispatcher.removeDisconnectListener(onDisconnect);
 
                         if (status == BluetoothGatt.GATT_SUCCESS) {
-                            Map<UUID, PeripheralService> services = NativePeripheralService.wrapGattServices(gatt.getServices());
+                            final Map<UUID, PeripheralService> services =
+                                    NativePeripheralService.wrap(gatt.getServices(),
+                                                                 NativeGattPeripheral.this);
                             subscriber.onNext(services);
                             subscriber.onCompleted();
 

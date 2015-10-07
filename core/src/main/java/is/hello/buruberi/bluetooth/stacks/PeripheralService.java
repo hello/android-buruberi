@@ -1,7 +1,9 @@
 package is.hello.buruberi.bluetooth.stacks;
 
 import android.bluetooth.BluetoothGattService;
+import android.support.annotation.NonNull;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface PeripheralService {
@@ -10,4 +12,6 @@ public interface PeripheralService {
 
     UUID getUuid();
     int getType();
+    List<UUID> getCharacteristics();
+    Characteristic getCharacteristic(@NonNull UUID identifier);
 }
