@@ -415,7 +415,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         assertThat(peripheral.getBondStatus(), is(equalTo(GattPeripheral.BOND_NONE)));
 
         shadowDevice.setBondState(BluetoothDevice.BOND_BONDING);
-        assertThat(peripheral.getBondStatus(), is(equalTo(GattPeripheral.BOND_BONDING)));
+        assertThat(peripheral.getBondStatus(), is(equalTo(GattPeripheral.BOND_CHANGING)));
 
         shadowDevice.setBondState(BluetoothDevice.BOND_BONDED);
         assertThat(peripheral.getBondStatus(), is(equalTo(GattPeripheral.BOND_BONDED)));

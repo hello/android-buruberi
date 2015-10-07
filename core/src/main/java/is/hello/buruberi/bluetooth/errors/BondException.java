@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
+import is.hello.buruberi.util.NonGuaranteed;
 
 /**
  * Indicates that the state of a peripheral bond could not be altered by Buruberi.
@@ -60,6 +61,7 @@ public class BondException extends BuruberiException {
      *
      * @see android.bluetooth.BluetoothDevice#ACTION_BOND_STATE_CHANGED
      */
+    @NonGuaranteed
     public static final String EXTRA_REASON = "android.bluetooth.device.extra.REASON";
 
     /**
@@ -78,49 +80,58 @@ public class BondException extends BuruberiException {
     /**
      * A bond alternation succeeded.
      */
+    @NonGuaranteed
     public static final int BOND_SUCCESS = 0;
 
     /**
      * A bond attempt failed because pins did not match, or remote device did
      * not respond to pin request in time
      */
+    @NonGuaranteed
     public static final int REASON_AUTH_FAILED = 1;
 
     /**
      * A bond attempt failed because the other side explicitly rejected
      * bonding
      */
+    @NonGuaranteed
     public static final int REASON_AUTH_REJECTED = 2;
 
     /**
      * A bond attempt failed because we canceled the bonding process
      */
+    @NonGuaranteed
     public static final int REASON_AUTH_CANCELED = 3;
 
     /**
      * A bond attempt failed because we could not contact the remote device
      */
+    @NonGuaranteed
     public static final int REASON_REMOTE_DEVICE_DOWN = 4;
 
     /**
      * A bond attempt failed because a discovery is in progress
      */
+    @NonGuaranteed
     public static final int REASON_DISCOVERY_IN_PROGRESS = 5;
 
     /**
      * A bond attempt failed because of authentication timeout
      */
+    @NonGuaranteed
     public static final int REASON_AUTH_TIMEOUT = 6;
 
     /**
      * A bond attempt failed because of repeated attempts
      */
+    @NonGuaranteed
     public static final int REASON_REPEATED_ATTEMPTS = 7;
 
     /**
      * A bond attempt failed because we received an Authentication Cancel
      * by remote end
      */
+    @NonGuaranteed
     public static final int REASON_REMOTE_AUTH_CANCELED = 8;
 
     /**
@@ -128,6 +139,7 @@ public class BondException extends BuruberiException {
      * different from what the phone expected. On some devices, encountering
      * this error will result in the bluetooth drivers breaking until restart.
      */
+    @NonGuaranteed
     public static final int REASON_REMOVED = 9;
 
 
@@ -192,7 +204,7 @@ public class BondException extends BuruberiException {
      * Returns the corresponding constant name for a given {@code GattPeripheral#BOND_*} value.
      *
      * @see GattPeripheral#BOND_NONE
-     * @see GattPeripheral#BOND_BONDING
+     * @see GattPeripheral#BOND_CHANGING
      * @see GattPeripheral#BOND_BONDED
      */
     public static @NonNull String getBondStateString(int bondState) {
@@ -200,8 +212,8 @@ public class BondException extends BuruberiException {
             case GattPeripheral.BOND_NONE:
                 return "BOND_NONE";
 
-            case GattPeripheral.BOND_BONDING:
-                return "BOND_BONDING";
+            case GattPeripheral.BOND_CHANGING:
+                return "BOND_CHANGING";
 
             case GattPeripheral.BOND_BONDED:
                 return "BOND_BONDED";
