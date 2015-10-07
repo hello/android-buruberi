@@ -1,4 +1,4 @@
-package is.hello.buruberi.bluetooth.stacks;
+package is.hello.buruberi.bluetooth.stacks.android;
 
 import org.junit.Test;
 import org.robolectric.Robolectric;
@@ -6,6 +6,8 @@ import org.robolectric.Robolectric;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
+import is.hello.buruberi.bluetooth.stacks.android.SchedulerOperationTimeout;
 import is.hello.buruberi.testing.BuruberiTestCase;
 import is.hello.buruberi.util.Defaults;
 import is.hello.buruberi.util.Rx;

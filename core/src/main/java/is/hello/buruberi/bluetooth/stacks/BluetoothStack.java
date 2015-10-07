@@ -29,7 +29,7 @@ public interface BluetoothStack {
     /**
      * Performs a scan for peripherals matching a given set of criteria.
      * <p>
-     * Yields {@see is.hello.buruberi.bluetooth.errors.BluetoothDisabledError}
+     * Yields {@link is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException}
      * if the device's Bluetooth radio is currently disabled.
      *
      * @see is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria

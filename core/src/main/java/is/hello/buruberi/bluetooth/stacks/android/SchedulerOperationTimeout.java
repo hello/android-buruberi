@@ -1,10 +1,11 @@
-package is.hello.buruberi.bluetooth.stacks;
+package is.hello.buruberi.bluetooth.stacks.android;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
+import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import rx.Scheduler;
 import rx.Subscription;
