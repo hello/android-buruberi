@@ -1,0 +1,14 @@
+machine:
+  java:
+    version: oraclejdk8
+general:
+  branches:
+    ignore:
+      - /no\-test\-.*/
+dependencies:
+  override:
+    - echo y | android update sdk -u -a -t extra-android-m2repository
+    - ./gradlew dependencies
+test:
+  override:
+    - ./gradlew clean testDebug -PdisablePreDex
