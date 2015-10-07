@@ -1,6 +1,15 @@
 # ブルーベリー (burūberī)
 
-A small library for communicating with gatt-profile Bluetooth Low Energy devices on Android.
+Less flaky Bluetooth Low Energy for Android.
+
+# Introduction
+
+Working with Bluetooth Low Energy on Android can be a real pain. Major quality
+differences between manufacturers, mysterious undocumented error codes, bugs
+introduced between OS releases... These are not the things dreams are made of.
+Buruberi is a small library that wraps the Android Bluetooth Low Energy APIs,
+and tries to insulate you from as many of these problems as it can. When it
+can't insulate you from a problem, it does its best to provide mitigation tools.
 
 # License
 

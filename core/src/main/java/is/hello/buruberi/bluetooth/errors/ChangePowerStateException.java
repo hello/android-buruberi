@@ -15,12 +15,13 @@
 */
 package is.hello.buruberi.bluetooth.errors;
 
-public class PeripheralConnectionError extends BluetoothError {
-    public PeripheralConnectionError() {
-        super("Operation could not be completed because you are not connected to a peripheral");
-    }
-
-    public PeripheralConnectionError(String detailMessage) {
-        super(detailMessage);
+/**
+ * Indicates that the power state of the device's Bluetooth radio could not be changed.
+ * <p>
+ * Additional information is currently unavailable for this error.
+ */
+public class ChangePowerStateException extends BuruberiException {
+    public ChangePowerStateException() {
+        super("Could not alter Bluetooth power state");
     }
 }

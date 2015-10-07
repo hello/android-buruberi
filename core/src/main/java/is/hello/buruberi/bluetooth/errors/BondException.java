@@ -19,45 +19,64 @@ package is.hello.buruberi.bluetooth.errors;
 import android.support.annotation.NonNull;
 
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 
 /**
- * Used to indicate that a bond could not be created or removed for a peripheral.
- * Generally indicates an unstable bluetooth service on the host device.
+ * Indicates that the state of a peripheral bond could not be altered by Buruberi.
  */
-public class PeripheralBondAlterationError extends BluetoothError {
+public class BondException extends BuruberiException {
+    /**
+     * The reason for the bond alteration's failure.
+     * <p>
+     * This value may change between OS versions.
+     */
     public final int reason;
 
-    public PeripheralBondAlterationError(int reason) {
+    public BondException(int reason) {
         super(getReasonString(reason));
 
         this.reason = reason;
     }
 
+    /**
+     * @return {@link true} if {@link #REASON_REMOVED} is reported; {@code false} otherwise.
+     *
+     * @see #REASON_REMOVED for more info.
+     */
+    @Override
+    public boolean isInstabilityLikely() {
+        return (reason == BondException.REASON_REMOVED);
+    }
+
+
     //region Bonding Errors
 
     /**
      * The reason for a bond state change to have occurred.
-     * <p/>
+     * <p>
      * This extra is not publicly exposed before Android Lollipop / API Level 21,
      * and is only partially public in API Level 21. See the SDK Android Lollipop
      * source for the BluetoothDevice class for more info.
+     *
      * @see android.bluetooth.BluetoothDevice#ACTION_BOND_STATE_CHANGED
      */
     public static final String EXTRA_REASON = "android.bluetooth.device.extra.REASON";
 
     /**
-     * Specific to the Hello BLE stack, indicates an unknown failure.
+     * A bonding attempt failed for unknown reasons. Specific to Buruberi.
      */
     public static final int REASON_UNKNOWN_FAILURE = -1;
 
     /**
-     * Specific to the Hello BLE stack, indicates that the host does
-     * not have the private methods createBond or removeBond on BluetoothDevice.
+     * A bonding attempt failed up front because the bond alteration APIs
+     * changed between OS versions. Specific to Buruberi.
+     *
+     * @see GattPeripheral#removeBond(OperationTimeout) for more info.
      */
     public static final int REASON_ANDROID_API_CHANGED = -2;
 
     /**
-     * A bond attempt succeeded
+     * A bond alternation succeeded.
      */
     public static final int BOND_SUCCESS = 0;
 
@@ -105,12 +124,28 @@ public class PeripheralBondAlterationError extends BluetoothError {
     public static final int REASON_REMOTE_AUTH_CANCELED = 8;
 
     /**
-     * An existing bond was explicitly revoked
+     * A bond attempt failed because the bond state of the peripheral is
+     * different from what the phone expected. On some devices, encountering
+     * this error will result in the bluetooth drivers breaking until restart.
      */
     public static final int REASON_REMOVED = 9;
 
+
     /**
-     * Returns the corresponding name for a given {@see #EXTRA_REASON}.
+     * Returns the corresponding constant name for a given {@code REASON_*} value.
+     *
+     * @see #REASON_UNKNOWN_FAILURE
+     * @see #REASON_ANDROID_API_CHANGED
+     * @see #BOND_SUCCESS
+     * @see #REASON_AUTH_FAILED
+     * @see #REASON_AUTH_REJECTED
+     * @see #REASON_AUTH_CANCELED
+     * @see #REASON_REMOTE_DEVICE_DOWN
+     * @see #REASON_DISCOVERY_IN_PROGRESS
+     * @see #REASON_AUTH_TIMEOUT
+     * @see #REASON_REPEATED_ATTEMPTS
+     * @see #REASON_REMOTE_AUTH_CANCELED
+     * @see #REASON_REMOVED
      */
     public static @NonNull String getReasonString(int reason) {
         switch (reason) {
@@ -154,7 +189,11 @@ public class PeripheralBondAlterationError extends BluetoothError {
     }
 
     /**
-     * Returns the corresponding name for a given bond state.
+     * Returns the corresponding constant name for a given {@code GattPeripheral#BOND_*} value.
+     *
+     * @see GattPeripheral#BOND_NONE
+     * @see GattPeripheral#BOND_BONDING
+     * @see GattPeripheral#BOND_BONDED
      */
     public static @NonNull String getBondStateString(int bondState) {
         switch (bondState) {
@@ -173,14 +212,4 @@ public class PeripheralBondAlterationError extends BluetoothError {
     }
 
     //endregion
-
-
-    @Override
-    public boolean isFatal() {
-        // If REASON_REMOVED/9 is reported, it indicates that the
-        // bond state of the peripheral is different from what the
-        // phone expected. On some phones, encountering this error
-        // will result in the bluetooth drivers breaking until restart.
-        return (reason == PeripheralBondAlterationError.REASON_REMOVED);
-    }
 }

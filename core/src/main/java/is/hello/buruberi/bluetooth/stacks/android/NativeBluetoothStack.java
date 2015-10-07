@@ -16,11 +16,11 @@ import android.support.annotation.VisibleForTesting;
 
 import java.util.List;
 
-import is.hello.buruberi.bluetooth.errors.BluetoothDisabledError;
-import is.hello.buruberi.bluetooth.errors.BluetoothGattError;
-import is.hello.buruberi.bluetooth.errors.BluetoothPowerChangeError;
-import is.hello.buruberi.bluetooth.errors.OperationTimeoutError;
-import is.hello.buruberi.bluetooth.errors.PeripheralBondAlterationError;
+import is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException;
+import is.hello.buruberi.bluetooth.errors.GattException;
+import is.hello.buruberi.bluetooth.errors.ChangePowerStateException;
+import is.hello.buruberi.bluetooth.errors.OperationTimeoutException;
+import is.hello.buruberi.bluetooth.errors.BondException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.util.ErrorListener;
@@ -113,7 +113,7 @@ public class NativeBluetoothStack implements BluetoothStack {
                 return newConfiguredObservable(createLeScanner(peripheralCriteria));
             }
         } else {
-            return Observable.error(new BluetoothDisabledError());
+            return Observable.error(new UserDisabledBuruberiException());
         }
     }
 
@@ -149,7 +149,7 @@ public class NativeBluetoothStack implements BluetoothStack {
     })
     public Observable<Void> turnOn() {
         if (adapter == null) {
-            return Observable.error(new BluetoothPowerChangeError());
+            return Observable.error(new ChangePowerStateException());
         }
 
         final ReplaySubject<Void> turnOnMirror = ReplaySubject.createWithSize(1);
@@ -172,14 +172,14 @@ public class NativeBluetoothStack implements BluetoothStack {
 
                     applicationContext.unregisterReceiver(this);
 
-                    turnOnMirror.onError(new BluetoothPowerChangeError());
+                    turnOnMirror.onError(new ChangePowerStateException());
                 }
             }
         };
         applicationContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         if (!adapter.enable()) {
             applicationContext.unregisterReceiver(receiver);
-            return Observable.error(new BluetoothPowerChangeError());
+            return Observable.error(new ChangePowerStateException());
         }
 
         return turnOnMirror;
@@ -192,7 +192,7 @@ public class NativeBluetoothStack implements BluetoothStack {
     })
     public Observable<Void> turnOff() {
         if (adapter == null) {
-            return Observable.error(new BluetoothPowerChangeError());
+            return Observable.error(new ChangePowerStateException());
         }
 
         final ReplaySubject<Void> turnOnMirror = ReplaySubject.createWithSize(1);
@@ -215,14 +215,14 @@ public class NativeBluetoothStack implements BluetoothStack {
 
                     applicationContext.unregisterReceiver(this);
 
-                    turnOnMirror.onError(new BluetoothPowerChangeError());
+                    turnOnMirror.onError(new ChangePowerStateException());
                 }
             }
         };
         applicationContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         if (!adapter.disable()) {
             applicationContext.unregisterReceiver(receiver);
-            return Observable.error(new BluetoothPowerChangeError());
+            return Observable.error(new ChangePowerStateException());
         }
 
         return turnOnMirror;
@@ -230,9 +230,9 @@ public class NativeBluetoothStack implements BluetoothStack {
 
     @Override
     public boolean errorRequiresReconnect(@Nullable Throwable e) {
-        return (e != null && (e instanceof OperationTimeoutError ||
-                e instanceof BluetoothGattError ||
-                e instanceof PeripheralBondAlterationError));
+        return (e != null && (e instanceof OperationTimeoutException ||
+                e instanceof GattException ||
+                e instanceof BondException));
     }
 
 

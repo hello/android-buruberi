@@ -7,10 +7,10 @@ import rx.functions.Action0;
 
 /**
  * An opaque interface to be implemented by clients of the stack.
- * <p/>
+ * <p>
  * The stack will {@see #schedule} a timeout when it begins an operation,
  * and {@see #unschedule} it either when the task completes, or fails.
- * <p/>
+ * <p>
  * <em>Important:</em> OperationTimeout implementations are not guaranteed to be thread-safe.
  */
 public interface OperationTimeout {
@@ -18,24 +18,24 @@ public interface OperationTimeout {
 
     /**
      * Called by the bluetooth stack. Schedules a timeout timer.
-     * <p/>
+     * <p>
      * This method is not assumed to be safe to call until after {@see #setTimeoutAction} is called.
      */
     void schedule();
 
     /**
      * Called by the bluetooth stack. Unschedules the timeout timer.
-     * <p/>
+     * <p>
      * It is a valid condition for this method to be called multiple times,
      * it should become a no-op after the first call.
-     * <p/>
+     * <p>
      * This method is not assumed to be safe to call until after {@see #setTimeoutAction} is called.
      */
     void unschedule();
 
     /**
      * For use by clients. Unschedules and reschedules the timeout timer.
-     * <p/>
+     * <p>
      * This method is not assumed to be safe to call until after {@see #setTimeoutAction} is called.
      */
     void reschedule();
@@ -45,7 +45,7 @@ public interface OperationTimeout {
      * the timeout expires that will allow the stack to clean up any
      * resources. The client should unschedule and recycle the timeout
      * after it has finished running its clean up code.
-     * <p/>
+     * <p>
      * Client code should check the state of a peripheral after a timeout
      * has expired. It is implementation-specific what state the peripheral
      * will be in after a timeout.

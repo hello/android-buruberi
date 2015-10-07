@@ -15,7 +15,7 @@ import rx.observables.BlockingObservable;
 /**
  * A wrapper around BlockingObservable to make it more or
  * less idiot-proof to use when writing tests.
- * <p/>
+ * <p>
  * All operators throw exceptions emitted by the source observable.
  * @param <T>   The type emitted by the Sync wrapper.
  */
@@ -30,7 +30,7 @@ public final class Sync<T> implements Iterable<T> {
 
     /**
      * Wraps an unbounded source observable.
-     * <p/>
+     * <p>
      * This method <b>does not</b> work PresenterSubject.
      */
     public static <T> Sync<T> wrap(@NonNull Observable<T> source) {
@@ -40,7 +40,7 @@ public final class Sync<T> implements Iterable<T> {
     /**
      * Wraps a given observable, <code>take</code>ing one emitted value from it,
      * and firing a given action block before returning.
-     * <p/>
+     * <p>
      * This method should be used with ValuePresenter subclasses when updating them:
      * <pre>
      *     Account account = Sync.wrapAfter(presenter::update, presenter.account).last();
@@ -102,7 +102,7 @@ public final class Sync<T> implements Iterable<T> {
 
     /**
      * Blocks until the observable errors out.
-     * <p/>
+     * <p>
      * This method raises an assertion failure if the observable does not fail,
      * or if the error passed out of the observable does not match the given class.
      */

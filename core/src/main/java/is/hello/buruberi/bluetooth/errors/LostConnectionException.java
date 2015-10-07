@@ -15,8 +15,13 @@
 */
 package is.hello.buruberi.bluetooth.errors;
 
-public class PeripheralServiceDiscoveryFailedError extends BluetoothError {
-    public PeripheralServiceDiscoveryFailedError() {
-        super("Could not perform service discovery on peripheral");
+/**
+ * Indicates that the connection to the peripheral was unexpected
+ * lost during a Bluetooth operation. Generally caused by the remote
+ * device going offline, or moving out of range of the phone.
+ */
+public class LostConnectionException extends BuruberiException {
+    public LostConnectionException() {
+        super("The connection to the peripheral was unexpected lost");
     }
 }

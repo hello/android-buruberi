@@ -11,7 +11,7 @@ import org.robolectric.shadows.ShadowBluetoothAdapter;
 
 import is.hello.buruberi.testing.BuruberiTestCase;
 import is.hello.buruberi.testing.Sync;
-import is.hello.buruberi.bluetooth.errors.BluetoothPowerChangeError;
+import is.hello.buruberi.bluetooth.errors.ChangePowerStateException;
 import is.hello.buruberi.bluetooth.stacks.util.ErrorListener;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
@@ -157,7 +157,7 @@ public class NativeBluetoothStackTests extends BuruberiTestCase {
         getContext().sendBroadcast(stateChange);
 
         Sync.wrap(turnOn)
-            .assertThrows(BluetoothPowerChangeError.class);
+            .assertThrows(ChangePowerStateException.class);
     }
 
     @Test
@@ -199,6 +199,6 @@ public class NativeBluetoothStackTests extends BuruberiTestCase {
         getContext().sendBroadcast(stateChange);
 
         Sync.wrap(turnOff)
-            .assertThrows(BluetoothPowerChangeError.class);
+            .assertThrows(ChangePowerStateException.class);
     }
 }

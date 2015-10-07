@@ -15,25 +15,11 @@
 */
 package is.hello.buruberi.bluetooth.errors;
 
-public class OperationTimeoutError extends BluetoothError {
-    public final Operation operation;
-
-    public OperationTimeoutError(Operation operation, Throwable cause) {
-        super("Operation " + operation + " timed out", cause);
-        this.operation = operation;
-    }
-
-    public OperationTimeoutError(Operation operation) {
-        this(operation, null);
-    }
-
-    public enum Operation {
-        CONNECT,
-        DISCOVER_SERVICES,
-        SUBSCRIBE_NOTIFICATION,
-        UNSUBSCRIBE_NOTIFICATION,
-        REMOVE_BOND,
-        WRITE_COMMAND,
-        COMMAND_RESPONSE,
+/**
+ * Indicates that service discovery failed for unknown reasons.
+ */
+public class ServiceDiscoveryException extends BuruberiException {
+    public ServiceDiscoveryException() {
+        super("Could not perform service discovery on peripheral");
     }
 }

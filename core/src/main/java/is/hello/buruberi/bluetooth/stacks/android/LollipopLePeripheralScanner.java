@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import is.hello.buruberi.bluetooth.errors.BluetoothDisabledError;
-import is.hello.buruberi.bluetooth.errors.BluetoothLeScanError;
+import is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException;
+import is.hello.buruberi.bluetooth.errors.LowEnergyScanException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
@@ -78,7 +78,7 @@ class LollipopLePeripheralScanner extends ScanCallback implements LePeripheralSc
                                     }
                                 }, peripheralCriteria.duration, TimeUnit.MILLISECONDS);
         } else {
-            subscriber.onError(new BluetoothDisabledError());
+            subscriber.onError(new UserDisabledBuruberiException());
         }
     }
 
@@ -142,7 +142,7 @@ class LollipopLePeripheralScanner extends ScanCallback implements LePeripheralSc
             this.timeout = null;
         }
 
-        BluetoothLeScanError error = new BluetoothLeScanError(errorCode);
+        LowEnergyScanException error = new LowEnergyScanException(errorCode);
         if (subscriber != null) {
             subscriber.onError(error);
         } else {

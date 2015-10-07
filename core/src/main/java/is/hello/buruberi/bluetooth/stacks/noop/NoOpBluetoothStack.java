@@ -8,7 +8,7 @@ import android.support.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
-import is.hello.buruberi.bluetooth.errors.BluetoothPowerChangeError;
+import is.hello.buruberi.bluetooth.errors.ChangePowerStateException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
@@ -57,12 +57,12 @@ public class NoOpBluetoothStack implements BluetoothStack {
 
     @Override
     public Observable<Void> turnOn() {
-        return Observable.error(new BluetoothPowerChangeError());
+        return Observable.error(new ChangePowerStateException());
     }
 
     @Override
     public Observable<Void> turnOff() {
-        return Observable.error(new BluetoothPowerChangeError());
+        return Observable.error(new ChangePowerStateException());
     }
 
     @Override

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import is.hello.buruberi.bluetooth.errors.BluetoothDisabledError;
+import is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
@@ -66,7 +66,7 @@ class LegacyLePeripheralScanner implements LePeripheralScanner, BluetoothAdapter
                                     }
                                 }, peripheralCriteria.duration, TimeUnit.MILLISECONDS);
         } else {
-            subscriber.onError(new BluetoothDisabledError());
+            subscriber.onError(new UserDisabledBuruberiException());
         }
     }
 

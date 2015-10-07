@@ -15,8 +15,11 @@
 */
 package is.hello.buruberi.bluetooth.errors;
 
-public class PeripheralNotFoundError extends BluetoothError {
-    public PeripheralNotFoundError() {
-        super("Peripheral not found");
+/**
+ * Indicates that the user turned off Bluetooth during an operation.
+ */
+public class UserDisabledBuruberiException extends BuruberiException {
+    public UserDisabledBuruberiException() {
+        super("Bluetooth was disabled during an operation");
     }
 }

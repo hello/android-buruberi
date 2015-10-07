@@ -45,7 +45,7 @@ publishing {
         publications {
             mavenJava(MavenPublication) {
                 groupId = PACKAGE
-                artifactId = 'core'
+                artifactId = 'buruberi-core'
                 version = VERSION_NAME
 
                 artifact(sourceJar)
@@ -57,7 +57,7 @@ publishing {
                     asNode().children().last() + {
                         resolveStrategy = DELEGATE_FIRST
                         name 'buruberi'
-                        description 'A small library for communicating with gatt-profile Bluetooth Low Energy devices on Android.'
+                        description 'Less flaky Bluetooth Low Energy for Android'
                         url 'https://github.com/hello/android-buruberi'
                         scm {
                             url 'https://github.com/hello/android-buruberi'

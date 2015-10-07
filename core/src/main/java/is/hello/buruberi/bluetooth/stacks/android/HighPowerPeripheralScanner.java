@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import is.hello.buruberi.bluetooth.errors.PeripheralNotFoundError;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import rx.Observable;
@@ -164,7 +163,7 @@ class HighPowerPeripheralScanner extends BroadcastReceiver implements Observable
             logger.error(BluetoothStack.LOG_TAG, "Could not start discovery", null);
 
             if (subscriber != null && !subscriber.isUnsubscribed()) {
-                subscriber.onError(new PeripheralNotFoundError());
+                subscriber.onError(new IllegalStateException("Could not stop discovery"));
                 this.subscriber = null;
             }
         }
@@ -189,7 +188,7 @@ class HighPowerPeripheralScanner extends BroadcastReceiver implements Observable
             logger.error(BluetoothStack.LOG_TAG, "Could not stop discovery", null);
 
             if (subscriber != null && !subscriber.isUnsubscribed()) {
-                subscriber.onError(new PeripheralNotFoundError());
+                subscriber.onError(new IllegalStateException("Could not stop discovery"));
                 this.subscriber = null;
             }
         }

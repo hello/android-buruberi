@@ -15,8 +15,18 @@
 */
 package is.hello.buruberi.bluetooth.errors;
 
-public class BluetoothConnectionLostError extends BluetoothError {
-    public BluetoothConnectionLostError() {
-        super("The connection to the peripheral was unexpected lost");
+/**
+ * Indicates that an operation could not be completed because the
+ * peripheral's connection state was not what was expected.
+ * <p>
+ * This exception generally indicates client error.
+ */
+public class ConnectionStateException extends BuruberiException {
+    public ConnectionStateException() {
+        this("Operation could not be completed because you are not connected to a peripheral");
+    }
+
+    public ConnectionStateException(String detailMessage) {
+        super(detailMessage);
     }
 }

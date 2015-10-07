@@ -23,7 +23,7 @@ public final class PeripheralCriteria {
 
     /**
      * Device addresses to match against.
-     * <p/>
+     * <p>
      * This list being empty has the effect of all addresses being acceptable.
      */
     public final List<String> peripheralAddresses = new ArrayList<>();
@@ -69,7 +69,7 @@ public final class PeripheralCriteria {
 
     /**
      * Adds a peripheral address to match against when scanning.
-     * <p/>
+     * <p>
      * The first address changes the scanning behavior from
      * matching any address, to just matching the address added.
      */
@@ -153,7 +153,7 @@ public final class PeripheralCriteria {
     /**
      * Sets whether or not to perform a high power scan before
      * performing a lower power discovery.
-     * <p/>
+     * <p>
      * A high power scan is required by some phones to properly
      * detect BLE advertising data. However, high power scans
      * are both slow and power intensive, so they should not

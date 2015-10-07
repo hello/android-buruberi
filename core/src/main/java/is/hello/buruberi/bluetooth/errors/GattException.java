@@ -20,18 +20,34 @@ import android.bluetooth.BluetoothGatt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.util.UUID;
+
+import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
+import is.hello.buruberi.bluetooth.stacks.PeripheralService;
+
 /**
- * Used to report errors from the gatt layer of the Android bluetooth stack.
- * <p/>
- * This error type generally should not be used outside of direct interactions
- * with a {@see is.hello.buruberi.bluetooth.stacks.Peripheral} object.
+ * Indicates low level gatt errors from the Android SDK.
+ * <p>
+ * Very few gatt error codes are properly documented by the Android SDK,
+ * and some vary by device vendor. The error codes documented in this class
+ * are a combination of trial and error, and combing the low level Bluetooth
+ * implementation in the AoSP. These codes can and will change, and should
+ * only be considered a hint.
  */
-public class BluetoothGattError extends BluetoothError {
-    //region Undocumented error codes
+public class GattException extends BuruberiException {
+    //region Error codes
 
     public static final int GATT_ILLEGAL_PARAMETER = 0x0087;
     public static final int GATT_NO_RESOURCES = 0x0080;
+
+    /**
+     * Generic internal error code from the low level Bluetooth implementation.
+     * <p>
+     * Undocumented status code from AoSP project.
+     */
     public static final int GATT_INTERNAL_ERROR = 0x0081;
+
     public static final int GATT_WRONG_STATE = 0x0082;
     public static final int GATT_DB_FULL = 0x0083;
     public static final int GATT_BUSY = 0x0084;
@@ -39,44 +55,70 @@ public class BluetoothGattError extends BluetoothError {
     public static final int GATT_INVALID_CFG = 0x008b;
 
     /**
+     * Generic internal error code from the low level Bluetooth implementation.
+     * <p>
      * This error code shows up if you turn off the Bluetooth radio,
      * and a device has an open gatt layer <em>and</em> is bonded.
      * Retrying your connection after receiving this error will work
      * seemingly 100% of the time.
+     * <p>
+     * If this error is reported more than once, the phone's Bluetooth has become unstable,
+     * and won't be fixed until the user power cycles their phone's Wi-Fi and Bluetooth radios.
+     * <p>
+     * Undocumented status code from AoSP project.
+     *
+     * @see #isRecoverableConnectError(int)
+     * @see #isInstabilityLikely()
      */
     public static final int GATT_STACK_ERROR = 0x0085;
 
     /**
      * Connection terminated by local host.
+     * <p>
+     * Undocumented status code from AoSP project.
      */
     public static final int GATT_CONN_TERMINATE_LOCAL_HOST = 0x16;
 
     /**
      * Connection terminate by peer user.
+     * <p>
+     * Undocumented status code from AoSP project.
      */
     public static final int GATT_CONN_TERMINATE_PEER_USER = 0x13;
 
     /**
      * Connection timeout.
+     * <p>
+     * Undocumented status code from AoSP project.
      */
     public static final int GATT_CONN_TIMEOUT = 0x08;
 
     /**
      * Connection failed to establish.
+     * <p>
+     * Undocumented status code from AoSP project.
      */
     public static final int GATT_CONN_FAIL_ESTABLISH = 0x03E;
 
-    //endregion
 
-
-    public final int statusCode;
-    public final @Nullable Operation operation;
-
-    public static boolean isRecoverableConnectError(int status) {
-        return (status == GATT_CONN_TERMINATE_LOCAL_HOST || // Nexus devices
-                status == GATT_STACK_ERROR); // Samsung devices
+    /**
+     * Returns whether or not a given error code encountered during a first
+     * connection attempt can be resolved by retrying the connection.
+     *
+     * @param statusCode  The error code.
+     * @return {@code true} if the error is likely recoverable; {@code false} otherwise.
+     *
+     * @see GattPeripheral#connect(OperationTimeout)
+     */
+    public static boolean isRecoverableConnectError(int statusCode) {
+        return (statusCode == GATT_CONN_TERMINATE_LOCAL_HOST || // Nexus devices
+                statusCode == GATT_STACK_ERROR); // Samsung devices
     }
 
+    /**
+     * Returns the corresponding constant name for a given {@code GATT_*} value.
+     *
+     */
     public static @NonNull String statusToString(int status) {
         switch (status) {
             case BluetoothGatt.GATT_SUCCESS:
@@ -150,27 +192,70 @@ public class BluetoothGattError extends BluetoothError {
         }
     }
 
-    public BluetoothGattError(int statusCode, @Nullable Operation operation) {
+    //endregion
+
+
+    /**
+     * The status code given by the gatt layer.
+     */
+    public final int statusCode;
+
+    /**
+     * The operation where the gatt exception was encountered, if applicable.
+     */
+    public final @Nullable Operation operation;
+
+    public GattException(int statusCode, @Nullable Operation operation) {
         super(statusToString(statusCode));
 
         this.statusCode = statusCode;
         this.operation = operation;
     }
 
+    /**
+     * @return {@link true} if {@link #GATT_STACK_ERROR} is reported; {@code false} otherwise.
+     *
+     * @see #GATT_STACK_ERROR for more info.
+     */
     @Override
-    public boolean isFatal() {
-        // If GATT_STACK_ERROR/133 is reported more than once, the gatt
-        // layer is unstable, and won't be fixed until the user
-        // power cycles their phone's wireless radios.
-        return (statusCode == BluetoothGattError.GATT_STACK_ERROR);
+    public boolean isInstabilityLikely() {
+        return (statusCode == GattException.GATT_STACK_ERROR);
     }
 
+
+    /**
+     * The operation on which the gatt layer encountered an error. Corresponds
+     * rough to all of the operations possible on a {@link GattPeripheral} object.
+     */
     public enum Operation {
+        /**
+         * Corresponds to {@link GattPeripheral#connect(OperationTimeout)}.
+         */
         CONNECT,
+
+        /**
+         * Corresponds to {@link GattPeripheral#disconnect()}.
+         */
         DISCONNECT,
+
+        /**
+         * Corresponds to {@link GattPeripheral#discoverServices(OperationTimeout)}.
+         */
         DISCOVER_SERVICES,
-        SUBSCRIBE_NOTIFICATION,
-        UNSUBSCRIBE_NOTIFICATION,
+
+        /**
+         * Corresponds to {@link GattPeripheral#enableNotification(PeripheralService, UUID, UUID, OperationTimeout)}.
+         */
+        ENABLE_NOTIFICATION,
+
+        /**
+         * Corresponds to {@link GattPeripheral#disableNotification(PeripheralService, UUID, UUID, OperationTimeout)}.
+         */
+        DISABLE_NOTIFICATION,
+
+        /**
+         * Corresponds to {@link GattPeripheral#writeCommand(PeripheralService, UUID, GattPeripheral.WriteType, byte[], OperationTimeout)}.
+         */
         WRITE_COMMAND,
     }
 }

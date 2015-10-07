@@ -24,10 +24,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
-import is.hello.buruberi.bluetooth.errors.BluetoothConnectionLostError;
-import is.hello.buruberi.bluetooth.errors.BluetoothGattError;
-import is.hello.buruberi.bluetooth.errors.PeripheralBondAlterationError;
-import is.hello.buruberi.bluetooth.errors.PeripheralServiceDiscoveryFailedError;
+import is.hello.buruberi.bluetooth.errors.LostConnectionException;
+import is.hello.buruberi.bluetooth.errors.GattException;
+import is.hello.buruberi.bluetooth.errors.BondException;
+import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.bluetooth.stacks.PeripheralService;
@@ -148,7 +148,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         try (TestReceiver receiver = new TestReceiver(new IntentFilter(GattPeripheral.ACTION_DISCONNECTED))) {
             shadowGatt.clearCalls();
-            shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGattError.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
+            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
             shadowGatt.verifyCall(ShadowBluetoothGatt.Call.CONNECT, timeout);
             verify(timeout).reschedule();
             assertThat(receiver.wasInvoked, is(false));
@@ -181,14 +181,14 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         try (TestReceiver receiver = new TestReceiver(new IntentFilter(GattPeripheral.ACTION_DISCONNECTED))) {
             shadowGatt.clearCalls();
-            shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGattError.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
+            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
             shadowGatt.verifyCall(ShadowBluetoothGatt.Call.CONNECT, timeout);
             verify(timeout).reschedule();
             assertThat(receiver.wasInvoked, is(false));
 
-            shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGattError.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
+            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
             assertThat(result.isCompleted(), is(false));
-            assertThat(result.getError(), is(instanceOf(BluetoothGattError.class)));
+            assertThat(result.getError(), is(instanceOf(GattException.class)));
             verify(timeout).unschedule();
         }
     }
@@ -214,7 +214,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, BluetoothGatt.STATE_DISCONNECTED);
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothGattError.class)));
+        assertThat(result.getError(), is(instanceOf(GattException.class)));
         verify(timeout).unschedule();
     }
 
@@ -262,7 +262,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_FAILURE, BluetoothGatt.STATE_DISCONNECTED);
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothGattError.class)));
+        assertThat(result.getError(), is(instanceOf(GattException.class)));
     }
 
     @Test
@@ -325,12 +325,12 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final Intent broadcast = new Intent(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         broadcast.putExtra(BluetoothDevice.EXTRA_DEVICE, peripheral.bluetoothDevice);
 
-        broadcast.putExtra(PeripheralBondAlterationError.EXTRA_REASON, PeripheralBondAlterationError.REASON_REMOVED);
+        broadcast.putExtra(BondException.EXTRA_REASON, BondException.REASON_REMOVED);
         broadcast.putExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
         getContext().sendBroadcast(broadcast);
 
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(PeripheralBondAlterationError.class)));
+        assertThat(result.getError(), is(instanceOf(BondException.class)));
     }
 
     @Test
@@ -392,12 +392,12 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final Intent broadcast = new Intent(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         broadcast.putExtra(BluetoothDevice.EXTRA_DEVICE, peripheral.bluetoothDevice);
 
-        broadcast.putExtra(PeripheralBondAlterationError.EXTRA_REASON, PeripheralBondAlterationError.REASON_REMOVED);
+        broadcast.putExtra(BondException.EXTRA_REASON, BondException.REASON_REMOVED);
         broadcast.putExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
         getContext().sendBroadcast(broadcast);
 
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(PeripheralBondAlterationError.class)));
+        assertThat(result.getError(), is(instanceOf(BondException.class)));
         verify(timeout).unschedule();
     }
 
@@ -472,7 +472,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         shadowGatt.getGattCallback().onServicesDiscovered(gatt, BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION);
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothGattError.class)));
+        assertThat(result.getError(), is(instanceOf(GattException.class)));
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -519,7 +519,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         shadowGatt.getGattCallback().onServicesDiscovered(gatt, BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION);
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothGattError.class)));
+        assertThat(result.getError(), is(instanceOf(GattException.class)));
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -543,7 +543,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         shadowGatt.setServices(Collections.singletonList(Testing.createMockGattService()));
         shadowGatt.getGattCallback().onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(PeripheralServiceDiscoveryFailedError.class)));
+        assertThat(result.getError(), is(instanceOf(ServiceDiscoveryException.class)));
     }
 
     //endregion
@@ -616,7 +616,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         gattShadow.getGattCallback().onDescriptorWrite(gatt, descriptor, BluetoothGatt.GATT_WRITE_NOT_PERMITTED);
         assertThat(result.getValues().size(), is(equalTo(0)));
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothGattError.class)));
+        assertThat(result.getError(), is(instanceOf(GattException.class)));
         verify(timeout).unschedule();
     }
 
@@ -651,7 +651,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         gattShadow.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
         assertThat(result.getValues().size(), is(equalTo(0)));
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothConnectionLostError.class)));
+        assertThat(result.getError(), is(instanceOf(LostConnectionException.class)));
         verify(timeout).unschedule();
     }
 
@@ -720,7 +720,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         gattShadow.getGattCallback().onDescriptorWrite(gatt, descriptor, BluetoothGatt.GATT_WRITE_NOT_PERMITTED);
         assertThat(result.getValues().size(), is(equalTo(0)));
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothGattError.class)));
+        assertThat(result.getError(), is(instanceOf(GattException.class)));
         verify(timeout).unschedule();
     }
 
@@ -755,7 +755,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         gattShadow.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
         assertThat(result.getValues().size(), is(equalTo(0)));
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothConnectionLostError.class)));
+        assertThat(result.getError(), is(instanceOf(LostConnectionException.class)));
         verify(timeout).unschedule();
     }
 
@@ -824,7 +824,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         gattShadow.getGattCallback().onCharacteristicWrite(gatt, characteristic, BluetoothGatt.GATT_WRITE_NOT_PERMITTED);
         assertThat(result.getValues().size(), is(equalTo(0)));
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothGattError.class)));
+        assertThat(result.getError(), is(instanceOf(GattException.class)));
         verify(timeout).unschedule();
     }
 
@@ -859,7 +859,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         gattShadow.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
         assertThat(result.getValues().size(), is(equalTo(0)));
         assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(BluetoothConnectionLostError.class)));
+        assertThat(result.getError(), is(instanceOf(LostConnectionException.class)));
         verify(timeout).unschedule();
     }
 

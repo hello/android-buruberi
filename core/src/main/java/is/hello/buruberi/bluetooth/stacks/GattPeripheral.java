@@ -15,12 +15,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import is.hello.buruberi.bluetooth.errors.ConnectionStateException;
+import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import rx.Observable;
 
 /**
  * Represents a Bluetooth Low Energy device that communicates over a gatt profile.
- * <p/>
+ * <p>
  * All Observable objects returned by a Peripheral must be subscribed
  * to before they will perform their work. No guarantees are made about
  * what scheduler the Observables will do, and yield their work on.
@@ -117,21 +119,21 @@ public interface GattPeripheral {
     /**
      * Returns the received signal strength of the Peripheral
      * when it was discovered by the {@see BluetoothStack}.
-     * <p/>
+     * <p>
      * This value does not update.
      */
     int getScanTimeRssi();
 
     /**
      * Returns the address of the Peripheral.
-     * <p/>
+     * <p>
      * This value should be included in the implementation's toString method.
      */
     String getAddress();
 
     /**
      * Returns the name of the Peripheral.
-     * <p/>
+     * <p>
      * This value should be included in the implementation's toString method.
      */
     String getName();
@@ -143,7 +145,7 @@ public interface GattPeripheral {
 
     /**
      * Returns the stack this Peripheral is tied to.
-     * <p/>
+     * <p>
      * @see is.hello.buruberi.bluetooth.stacks.BluetoothStack#newConfiguredObservable(Observable.OnSubscribe)
      */
     BluetoothStack getStack();
@@ -165,13 +167,13 @@ public interface GattPeripheral {
 
     /**
      * Attempts to create a gatt connection to the peripheral.
-     * <p/>
+     * <p>
      * Does nothing if there is already an active connection.
-     * <p/>
-     * Yields an {@link is.hello.buruberi.bluetooth.errors.PeripheralConnectionError} if called
+     * <p>
+     * Yields an {@link ConnectionStateException} if called
      * when peripheral connection status is changing.
      * @param timeout   The timeout to apply to the connect operation. Will only fire on certain phones.
-     * <p/>
+     * <p>
      * <em>Important:</em> The order in which you connect and create bonds depends
      * on the device's Android version. {@link #createBond()} for more info.
      */
@@ -180,11 +182,11 @@ public interface GattPeripheral {
 
     /**
      * Ends the gatt connection of the peripheral.
-     * <p/>
+     * <p>
      * Safe to call multiple times if the peripheral is disconnected,
      * or in the process of disconnecting.
-     * <p/>
-     * Yields a {@link is.hello.buruberi.bluetooth.errors.PeripheralConnectionError}
+     * <p>
+     * Yields a {@link ConnectionStateException}
      * if the peripheral is currently connecting.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
@@ -208,13 +210,13 @@ public interface GattPeripheral {
 
     /**
      * Creates a bond to the peripheral from the current device.
-     * <p/>
+     * <p>
      * Does nothing if the device is already bonded.
-     * <p/>
+     * <p>
      * <em>Important:</em> the behavior of this method varies depending
      * on the device's Android version. In API levels 18 and 19 (JB and KitKat),
      * this method can only be called if the Peripheral is currently connected.
-     * <p/>
+     * <p>
      * However, starting in API level 21 (Lollipop), this method will <em>fail</em>
      * if you call it when the device is connected. If you need a bond, you should
      * call this method before you call {@link #connect(OperationTimeout)}.
@@ -229,7 +231,7 @@ public interface GattPeripheral {
      * Removes any bond to the peripheral from the current device.
      * <p />
      * Does nothing if the device is not bonded.
-     * <p/>
+     * <p>
      * <em>Note:</em> this method does not exhibit the same inconsistent behavior
      * that {@link #createBond()} does between device Android versions.
      * @param timeout   The timeout to apply to the operation.
@@ -257,8 +259,8 @@ public interface GattPeripheral {
 
     /**
      * Performs service discovery on the peripheral.
-     * <p/>
-     * Yields a {@link is.hello.buruberi.bluetooth.errors.PeripheralConnectionError}
+     * <p>
+     * Yields a {@link ConnectionStateException}
      * if the peripheral is not connected when this method is called.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
@@ -267,11 +269,11 @@ public interface GattPeripheral {
     /**
      * Performs service discovery on the peripheral,
      * yielding the service matching a given identifier.
-     * <p/>
+     * <p>
      * If the service cannot be found, this method will yield
-     * a {@link is.hello.buruberi.bluetooth.errors.PeripheralServiceDiscoveryFailedError}.
-     * <p/>
-     * Yields a {@link is.hello.buruberi.bluetooth.errors.PeripheralConnectionError}
+     * a {@link ServiceDiscoveryException}.
+     * <p>
+     * Yields a {@link ConnectionStateException}
      * if the peripheral is not connected when this method is called.
      *
      * @see #discoverServices(OperationTimeout)

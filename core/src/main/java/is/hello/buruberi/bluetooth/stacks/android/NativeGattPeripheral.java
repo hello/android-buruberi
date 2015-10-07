@@ -24,11 +24,11 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import is.hello.buruberi.bluetooth.errors.BluetoothGattError;
-import is.hello.buruberi.bluetooth.errors.OperationTimeoutError;
-import is.hello.buruberi.bluetooth.errors.PeripheralBondAlterationError;
-import is.hello.buruberi.bluetooth.errors.PeripheralConnectionError;
-import is.hello.buruberi.bluetooth.errors.PeripheralServiceDiscoveryFailedError;
+import is.hello.buruberi.bluetooth.errors.GattException;
+import is.hello.buruberi.bluetooth.errors.OperationTimeoutException;
+import is.hello.buruberi.bluetooth.errors.BondException;
+import is.hello.buruberi.bluetooth.errors.ConnectionStateException;
+import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
@@ -49,7 +49,7 @@ import rx.functions.Func1;
 public class NativeGattPeripheral implements GattPeripheral {
     /**
      * How long to delay response after a successful service discovery.
-     * <p/>
+     * <p>
      * Settled on 5 seconds after experimenting with Jackson. Idea for delay from
      * <a href="https://code.google.com/p/android/issues/detail?id=58381">here</a>.
      */
@@ -171,7 +171,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                     subscriber.onCompleted();
                     return;
                 } else if (getConnectionStatus() == STATUS_CONNECTING || getConnectionStatus() == STATUS_DISCONNECTING) {
-                    subscriber.onError(new PeripheralConnectionError("Peripheral is changing connection status."));
+                    subscriber.onError(new ConnectionStateException("Peripheral is changing connection status."));
                     return;
                 }
 
@@ -183,7 +183,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                         // or the connection to a device is unexpectedly lost, will seemingly fail 100%
                         // of the time. The error code varies by manufacturer. Retrying silently resolves
                         // the issue.
-                        if (BluetoothGattError.isRecoverableConnectError(gattStatus) && !hasRetried.get()) {
+                        if (GattException.isRecoverableConnectError(gattStatus) && !hasRetried.get()) {
                             logger.warn(LOG_TAG, "First connection attempt failed due to stack error, retrying.");
 
                             hasRetried.set(true);
@@ -196,14 +196,14 @@ public class NativeGattPeripheral implements GattPeripheral {
                                 timeout.unschedule();
 
                                 NativeGattPeripheral.this.suspendDisconnectBroadcasts = false;
-                                subscriber.onError(new BluetoothGattError(BluetoothGattError.GATT_INTERNAL_ERROR, BluetoothGattError.Operation.CONNECT));
+                                subscriber.onError(new GattException(GattException.GATT_INTERNAL_ERROR, GattException.Operation.CONNECT));
                             }
                         } else if (gattStatus != BluetoothGatt.GATT_SUCCESS) {
                             timeout.unschedule();
 
-                            logger.error(LOG_TAG, "Could not connect. " + BluetoothGattError.statusToString(gattStatus), null);
+                            logger.error(LOG_TAG, "Could not connect. " + GattException.statusToString(gattStatus), null);
                             NativeGattPeripheral.this.suspendDisconnectBroadcasts = false;
-                            subscriber.onError(new BluetoothGattError(gattStatus, BluetoothGattError.Operation.CONNECT));
+                            subscriber.onError(new GattException(gattStatus, GattException.Operation.CONNECT));
 
                             removeThisListener.call();
                         } else if (newState == STATUS_CONNECTED) {
@@ -254,7 +254,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                         }
 
                         NativeGattPeripheral.this.suspendDisconnectBroadcasts = false;
-                        subscriber.onError(new OperationTimeoutError(OperationTimeoutError.Operation.CONNECT));
+                        subscriber.onError(new OperationTimeoutException(OperationTimeoutException.Operation.CONNECT));
                     }
                 }, stack.scheduler);
 
@@ -265,7 +265,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                         NativeGattPeripheral.this.suspendDisconnectBroadcasts = true;
                         timeout.schedule();
                     } else {
-                        subscriber.onError(new BluetoothGattError(BluetoothGattError.GATT_INTERNAL_ERROR, BluetoothGattError.Operation.CONNECT));
+                        subscriber.onError(new GattException(GattException.GATT_INTERNAL_ERROR, GattException.Operation.CONNECT));
                     }
                 } else {
                     NativeGattPeripheral.this.gatt = bluetoothDevice.connectGatt(stack.applicationContext, false, gattDispatcher);
@@ -273,7 +273,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                         NativeGattPeripheral.this.suspendDisconnectBroadcasts = true;
                         timeout.schedule();
                     } else {
-                        subscriber.onError(new BluetoothGattError(BluetoothGattError.GATT_INTERNAL_ERROR, BluetoothGattError.Operation.CONNECT));
+                        subscriber.onError(new GattException(GattException.GATT_INTERNAL_ERROR, GattException.Operation.CONNECT));
                     }
                 }
             }
@@ -293,7 +293,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                     subscriber.onCompleted();
                     return;
                 } else if (connectionStatus == STATUS_CONNECTING) {
-                    subscriber.onError(new PeripheralConnectionError("Peripheral is connecting"));
+                    subscriber.onError(new ConnectionStateException("Peripheral is connecting"));
                     return;
                 }
 
@@ -302,9 +302,9 @@ public class NativeGattPeripheral implements GattPeripheral {
                     public void onConnectionStateChanged(@NonNull BluetoothGatt gatt, int gattStatus, int newState, @NonNull Action0 removeThisListener) {
                         if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                             if (gattStatus != BluetoothGatt.GATT_SUCCESS) {
-                                logger.info(LOG_TAG, "Could not disconnect " + NativeGattPeripheral.this.toString() + "; " + BluetoothGattError.statusToString(gattStatus));
+                                logger.info(LOG_TAG, "Could not disconnect " + NativeGattPeripheral.this.toString() + "; " + GattException.statusToString(gattStatus));
 
-                                subscriber.onError(new BluetoothGattError(gattStatus, BluetoothGattError.Operation.DISCONNECT));
+                                subscriber.onError(new GattException(gattStatus, GattException.Operation.DISCONNECT));
                             } else {
                                 logger.info(LOG_TAG, "Disconnected " + NativeGattPeripheral.this.toString());
 
@@ -345,7 +345,7 @@ public class NativeGattPeripheral implements GattPeripheral {
         return Rx.serialize(stack.newConfiguredObservable(onSubscribe), serialQueue);
     }
     
-    private <T> void setupTimeout(@NonNull final OperationTimeoutError.Operation operation,
+    private <T> void setupTimeout(@NonNull final OperationTimeoutException.Operation operation,
                                   @NonNull final OperationTimeout timeout,
                                   @NonNull final Subscriber<T> subscriber,
                                   @Nullable final Action0 disconnectListener) {
@@ -357,11 +357,11 @@ public class NativeGattPeripheral implements GattPeripheral {
                         gattDispatcher.onServicesDiscovered = null;
                         break;
 
-                    case SUBSCRIBE_NOTIFICATION:
+                    case ENABLE_NOTIFICATION:
                         gattDispatcher.onDescriptorWrite = null;
                         break;
 
-                    case UNSUBSCRIBE_NOTIFICATION:
+                    case DISABLE_NOTIFICATION:
                         gattDispatcher.onDescriptorWrite = null;
                         break;
 
@@ -380,12 +380,12 @@ public class NativeGattPeripheral implements GattPeripheral {
 
                     @Override
                     public void onError(Throwable e) {
-                        subscriber.onError(new OperationTimeoutError(operation, e));
+                        subscriber.onError(new OperationTimeoutException(operation, e));
                     }
 
                     @Override
                     public void onNext(GattPeripheral gattPeripheral) {
-                        subscriber.onError(new OperationTimeoutError(operation));
+                        subscriber.onError(new OperationTimeoutException(operation));
                     }
                 });
 
@@ -467,8 +467,8 @@ public class NativeGattPeripheral implements GattPeripheral {
                         int state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
                         int previousState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
 
-                        logger.info(GattPeripheral.LOG_TAG, "Bond status changed from " + PeripheralBondAlterationError.getBondStateString(previousState) +
-                                " to " + PeripheralBondAlterationError.getBondStateString(state));
+                        logger.info(GattPeripheral.LOG_TAG, "Bond status changed from " + BondException.getBondStateString(previousState) +
+                                " to " + BondException.getBondStateString(state));
 
                         if (state == BluetoothDevice.BOND_BONDED) {
                             logger.info(LOG_TAG, "Bonding succeeded.");
@@ -478,9 +478,9 @@ public class NativeGattPeripheral implements GattPeripheral {
 
                             unsubscribe();
                         } else if (state == BluetoothDevice.ERROR || state == BOND_NONE && previousState == BOND_BONDING) {
-                            int reason = intent.getIntExtra(PeripheralBondAlterationError.EXTRA_REASON, PeripheralBondAlterationError.REASON_UNKNOWN_FAILURE);
-                            logger.error(LOG_TAG, "Bonding failed for reason " + PeripheralBondAlterationError.getReasonString(reason), null);
-                            subscriber.onError(new PeripheralBondAlterationError(reason));
+                            int reason = intent.getIntExtra(BondException.EXTRA_REASON, BondException.REASON_UNKNOWN_FAILURE);
+                            logger.error(LOG_TAG, "Bonding failed for reason " + BondException.getReasonString(reason), null);
+                            subscriber.onError(new BondException(reason));
 
                             unsubscribe();
                         }
@@ -489,7 +489,7 @@ public class NativeGattPeripheral implements GattPeripheral {
 
                 if (!tryCreateBond()) {
                     subscription.unsubscribe();
-                    subscriber.onError(new PeripheralBondAlterationError(PeripheralBondAlterationError.REASON_ANDROID_API_CHANGED));
+                    subscriber.onError(new BondException(BondException.REASON_ANDROID_API_CHANGED));
                 }
             }
         });
@@ -531,8 +531,8 @@ public class NativeGattPeripheral implements GattPeripheral {
                         int previousState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
 
                         logger.info(GattPeripheral.LOG_TAG, "Bond status changed from " +
-                                PeripheralBondAlterationError.getBondStateString(previousState) +
-                                " to " + PeripheralBondAlterationError.getBondStateString(state));
+                                BondException.getBondStateString(previousState) +
+                                " to " + BondException.getBondStateString(state));
 
                         if (state == BluetoothDevice.BOND_NONE) {
                             logger.info(LOG_TAG, "Removing bond succeeded.");
@@ -545,11 +545,11 @@ public class NativeGattPeripheral implements GattPeripheral {
                         } else if (state == BluetoothDevice.ERROR) {
                             timeout.unschedule();
 
-                            int reason = intent.getIntExtra(PeripheralBondAlterationError.EXTRA_REASON,
-                                    PeripheralBondAlterationError.REASON_UNKNOWN_FAILURE);
+                            int reason = intent.getIntExtra(BondException.EXTRA_REASON,
+                                    BondException.REASON_UNKNOWN_FAILURE);
                             logger.error(LOG_TAG, "Removing bond failed for reason " +
-                                    PeripheralBondAlterationError.getReasonString(reason), null);
-                            subscriber.onError(new PeripheralBondAlterationError(reason));
+                                    BondException.getReasonString(reason), null);
+                            subscriber.onError(new BondException(reason));
 
                             unsubscribe();
                         }
@@ -566,14 +566,14 @@ public class NativeGattPeripheral implements GattPeripheral {
                             subscriber.onNext(NativeGattPeripheral.this);
                             subscriber.onCompleted();
                         } else {
-                            subscriber.onError(new OperationTimeoutError(OperationTimeoutError.Operation.REMOVE_BOND));
+                            subscriber.onError(new OperationTimeoutException(OperationTimeoutException.Operation.REMOVE_BOND));
                         }
                     }
                 }, stack.getScheduler());
 
                 if (!tryRemoveBond()) {
                     subscription.unsubscribe();
-                    subscriber.onError(new PeripheralBondAlterationError(PeripheralBondAlterationError.REASON_ANDROID_API_CHANGED));
+                    subscriber.onError(new BondException(BondException.REASON_ANDROID_API_CHANGED));
                 } else {
                     timeout.schedule();
                 }
@@ -601,12 +601,12 @@ public class NativeGattPeripheral implements GattPeripheral {
             @Override
             public void call(final Subscriber<? super Map<UUID, PeripheralService>> subscriber) {
                 if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
-                    subscriber.onError(new PeripheralConnectionError());
+                    subscriber.onError(new ConnectionStateException());
                     return;
                 }
 
                 final Action0 onDisconnect = gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
-                setupTimeout(OperationTimeoutError.Operation.DISCOVER_SERVICES, timeout, subscriber, onDisconnect);
+                setupTimeout(OperationTimeoutException.Operation.DISCOVER_SERVICES, timeout, subscriber, onDisconnect);
 
                 gattDispatcher.onServicesDiscovered = new Action2<BluetoothGatt, Integer>() {
                     @Override
@@ -622,9 +622,9 @@ public class NativeGattPeripheral implements GattPeripheral {
 
                             gattDispatcher.onServicesDiscovered = null;
                         } else {
-                            logger.error(LOG_TAG, "Could not discover services. " + BluetoothGattError.statusToString(status), null);
+                            logger.error(LOG_TAG, "Could not discover services. " + GattException.statusToString(status), null);
 
-                            subscriber.onError(new BluetoothGattError(status, BluetoothGattError.Operation.DISCOVER_SERVICES));
+                            subscriber.onError(new GattException(status, GattException.Operation.DISCOVER_SERVICES));
 
                             gattDispatcher.onServicesDiscovered = null;
                         }
@@ -636,7 +636,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                 } else {
                     gattDispatcher.onServicesDiscovered = null;
 
-                    subscriber.onError(new PeripheralServiceDiscoveryFailedError());
+                    subscriber.onError(new ServiceDiscoveryException());
                 }
             }
         });
@@ -657,7 +657,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                 if (service != null) {
                     return Observable.just(service);
                 } else {
-                    return Observable.error(new PeripheralServiceDiscoveryFailedError());
+                    return Observable.error(new ServiceDiscoveryException());
                 }
             }
         });
@@ -684,7 +684,7 @@ public class NativeGattPeripheral implements GattPeripheral {
             @Override
             public void call(final Subscriber<? super UUID> subscriber) {
                 if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
-                    subscriber.onError(new PeripheralConnectionError());
+                    subscriber.onError(new ConnectionStateException());
                     return;
                 }
 
@@ -694,7 +694,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                 final BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicIdentifier);
                 if (gatt.setCharacteristicNotification(characteristic, true)) {
                     final Action0 onDisconnect = gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
-                    setupTimeout(OperationTimeoutError.Operation.SUBSCRIBE_NOTIFICATION, timeout, subscriber, onDisconnect);
+                    setupTimeout(OperationTimeoutException.Operation.ENABLE_NOTIFICATION, timeout, subscriber, onDisconnect);
 
                     gattDispatcher.onDescriptorWrite = new Action3<BluetoothGatt, BluetoothGattDescriptor, Integer>() {
                         @Override
@@ -709,8 +709,8 @@ public class NativeGattPeripheral implements GattPeripheral {
                                 subscriber.onNext(characteristicIdentifier);
                                 subscriber.onCompleted();
                             } else {
-                                logger.error(LOG_TAG, "Could not subscribe to characteristic. " + BluetoothGattError.statusToString(status), null);
-                                subscriber.onError(new BluetoothGattError(status, BluetoothGattError.Operation.SUBSCRIBE_NOTIFICATION));
+                                logger.error(LOG_TAG, "Could not subscribe to characteristic. " + GattException.statusToString(status), null);
+                                subscriber.onError(new GattException(status, GattException.Operation.ENABLE_NOTIFICATION));
                             }
 
                             gattDispatcher.onDescriptorWrite = null;
@@ -726,10 +726,10 @@ public class NativeGattPeripheral implements GattPeripheral {
                         gattDispatcher.onDescriptorWrite = null;
                         gattDispatcher.removeDisconnectListener(onDisconnect);
 
-                        subscriber.onError(new BluetoothGattError(BluetoothGatt.GATT_FAILURE, BluetoothGattError.Operation.SUBSCRIBE_NOTIFICATION));
+                        subscriber.onError(new GattException(BluetoothGatt.GATT_FAILURE, GattException.Operation.ENABLE_NOTIFICATION));
                     }
                 } else {
-                    subscriber.onError(new BluetoothGattError(BluetoothGatt.GATT_WRITE_NOT_PERMITTED, BluetoothGattError.Operation.SUBSCRIBE_NOTIFICATION));
+                    subscriber.onError(new GattException(BluetoothGatt.GATT_WRITE_NOT_PERMITTED, GattException.Operation.ENABLE_NOTIFICATION));
                 }
             }
         });
@@ -746,7 +746,7 @@ public class NativeGattPeripheral implements GattPeripheral {
             @Override
             public void call(final Subscriber<? super UUID> subscriber) {
                 if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
-                    subscriber.onError(new PeripheralConnectionError());
+                    subscriber.onError(new ConnectionStateException());
                     return;
                 }
 
@@ -756,7 +756,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                 final BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicIdentifier);
 
                 final Action0 onDisconnect = gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
-                setupTimeout(OperationTimeoutError.Operation.SUBSCRIBE_NOTIFICATION, timeout, subscriber, onDisconnect);
+                setupTimeout(OperationTimeoutException.Operation.ENABLE_NOTIFICATION, timeout, subscriber, onDisconnect);
 
                 gattDispatcher.onDescriptorWrite = new Action3<BluetoothGatt, BluetoothGattDescriptor, Integer>() {
                     @Override
@@ -772,11 +772,11 @@ public class NativeGattPeripheral implements GattPeripheral {
                                 subscriber.onNext(characteristicIdentifier);
                                 subscriber.onCompleted();
                             } else {
-                                logger.error(LOG_TAG, "Could not unsubscribe from characteristic. " + BluetoothGattError.statusToString(status), null);
-                                subscriber.onError(new BluetoothGattError(BluetoothGatt.GATT_FAILURE, BluetoothGattError.Operation.UNSUBSCRIBE_NOTIFICATION));
+                                logger.error(LOG_TAG, "Could not unsubscribe from characteristic. " + GattException.statusToString(status), null);
+                                subscriber.onError(new GattException(BluetoothGatt.GATT_FAILURE, GattException.Operation.DISABLE_NOTIFICATION));
                             }
                         } else {
-                            subscriber.onError(new BluetoothGattError(status, BluetoothGattError.Operation.UNSUBSCRIBE_NOTIFICATION));
+                            subscriber.onError(new GattException(status, GattException.Operation.DISABLE_NOTIFICATION));
                         }
 
                         gattDispatcher.removeDisconnectListener(onDisconnect);
@@ -792,7 +792,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                     gattDispatcher.removeDisconnectListener(onDisconnect);
                     gattDispatcher.onDescriptorWrite = null;
 
-                    subscriber.onError(new BluetoothGattError(BluetoothGatt.GATT_WRITE_NOT_PERMITTED, BluetoothGattError.Operation.UNSUBSCRIBE_NOTIFICATION));
+                    subscriber.onError(new GattException(BluetoothGatt.GATT_WRITE_NOT_PERMITTED, GattException.Operation.DISABLE_NOTIFICATION));
                 }
             }
         });
@@ -815,12 +815,12 @@ public class NativeGattPeripheral implements GattPeripheral {
             @Override
             public void call(final Subscriber<? super Void> subscriber) {
                 if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
-                    subscriber.onError(new PeripheralConnectionError());
+                    subscriber.onError(new ConnectionStateException());
                     return;
                 }
 
                 final Action0 onDisconnect = gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
-                setupTimeout(OperationTimeoutError.Operation.SUBSCRIBE_NOTIFICATION, timeout, subscriber, onDisconnect);
+                setupTimeout(OperationTimeoutException.Operation.ENABLE_NOTIFICATION, timeout, subscriber, onDisconnect);
 
                 gattDispatcher.onCharacteristicWrite = new Action3<BluetoothGatt, BluetoothGattCharacteristic, Integer>() {
                     @Override
@@ -828,8 +828,8 @@ public class NativeGattPeripheral implements GattPeripheral {
                         timeout.unschedule();
 
                         if (status != BluetoothGatt.GATT_SUCCESS) {
-                            logger.error(LOG_TAG, "Could not write command " + identifier + ", " + BluetoothGattError.statusToString(status), null);
-                            subscriber.onError(new BluetoothGattError(status, BluetoothGattError.Operation.WRITE_COMMAND));
+                            logger.error(LOG_TAG, "Could not write command " + identifier + ", " + GattException.statusToString(status), null);
+                            subscriber.onError(new GattException(status, GattException.Operation.WRITE_COMMAND));
                         } else {
                             subscriber.onNext(null);
                             subscriber.onCompleted();
@@ -852,7 +852,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                     gattDispatcher.removeDisconnectListener(onDisconnect);
                     gattDispatcher.onCharacteristicWrite = null;
 
-                    subscriber.onError(new BluetoothGattError(BluetoothGatt.GATT_WRITE_NOT_PERMITTED, BluetoothGattError.Operation.WRITE_COMMAND));
+                    subscriber.onError(new GattException(BluetoothGatt.GATT_WRITE_NOT_PERMITTED, GattException.Operation.WRITE_COMMAND));
                 }
             }
         });

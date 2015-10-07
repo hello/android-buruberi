@@ -23,7 +23,7 @@ import rx.functions.Func1;
 
 /**
  * <code>type Either 'l 'r = Left 'l | Right 'r</code>
- * <p/>
+ * <p>
  * A pseudo-discriminated union which represents one of two possible values.
  * @param <Left>    The left value type. A successful value by convention.
  * @param <Right>   The right value type. An error value by convention.

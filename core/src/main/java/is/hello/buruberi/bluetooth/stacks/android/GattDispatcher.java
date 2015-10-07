@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import is.hello.buruberi.bluetooth.errors.BluetoothConnectionLostError;
+import is.hello.buruberi.bluetooth.errors.LostConnectionException;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
@@ -59,7 +59,7 @@ class GattDispatcher extends BluetoothGattCallback {
 
                 timeout.unschedule();
 
-                subscriber.onError(new BluetoothConnectionLostError());
+                subscriber.onError(new LostConnectionException());
             }
         });
     }

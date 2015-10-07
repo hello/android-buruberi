@@ -19,12 +19,17 @@ import android.annotation.TargetApi;
 import android.bluetooth.le.ScanCallback;
 import android.os.Build;
 
+/**
+ * Indicates that a Bluetooth Low Energy scan failed due to a specified reason.
+ */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class BluetoothLeScanError extends BluetoothError {
-    public final int errorCode;
-
-    public static String stringFromErrorCode(int errorCode) {
-        switch (errorCode) {
+public class LowEnergyScanException extends BuruberiException {
+    /**
+     * Returns the corresponding constant name for a
+     * given {@code ScanCallback#SCAN_FAILED_*} value.
+     */
+    public static String scanFailureToString(int scanFailure) {
+        switch (scanFailure) {
             case ScanCallback.SCAN_FAILED_ALREADY_STARTED:
                 return "SCAN_FAILED_ALREADY_STARTED";
 
@@ -38,13 +43,20 @@ public class BluetoothLeScanError extends BluetoothError {
                 return "SCAN_FAILED_FEATURE_UNSUPPORTED";
 
             default:
-                return "UNKNOWN: " + errorCode;
+                return "UNKNOWN: " + scanFailure;
         }
     }
 
-    public BluetoothLeScanError(int errorCode) {
-        super(stringFromErrorCode(errorCode));
 
-        this.errorCode = errorCode;
+    /**
+     * The reason the scan failed. Corresponds to the error
+     * codes given by Android's {@code ScanCallback} class.
+     */
+    public final int scanFailure;
+
+    public LowEnergyScanException(int scanFailure) {
+        super(scanFailureToString(scanFailure));
+
+        this.scanFailure = scanFailure;
     }
 }

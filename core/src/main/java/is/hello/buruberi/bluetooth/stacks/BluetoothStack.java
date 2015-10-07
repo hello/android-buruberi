@@ -7,6 +7,7 @@ import android.support.annotation.RequiresPermission;
 
 import java.util.List;
 
+import is.hello.buruberi.bluetooth.errors.ChangePowerStateException;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
 import rx.Observable;
@@ -27,7 +28,7 @@ public interface BluetoothStack {
 
     /**
      * Performs a scan for peripherals matching a given set of criteria.
-     * <p/>
+     * <p>
      * Yields {@see is.hello.buruberi.bluetooth.errors.BluetoothDisabledError}
      * if the device's Bluetooth radio is currently disabled.
      *
@@ -51,7 +52,7 @@ public interface BluetoothStack {
 
     /**
      * Returns an observable that will continuously report the enabled state of the bluetooth stack.
-     * <p/>
+     * <p>
      * This seems like something that would work predictably outside of the context of the wrapper,
      * but it's not. On some (all?) devices, the broadcast for this state change reports the wrong
      * values, so we provide a nice predictable interface for clients.
@@ -72,7 +73,7 @@ public interface BluetoothStack {
     /**
      * Turns on the device's Bluetooth radio.
      *
-     * @see is.hello.buruberi.bluetooth.errors.BluetoothPowerChangeError
+     * @see ChangePowerStateException
      */
     @RequiresPermission(allOf = {
             Manifest.permission.BLUETOOTH,
@@ -83,7 +84,7 @@ public interface BluetoothStack {
     /**
      * Turns off the device's Bluetooth radio.
      *
-     * @see is.hello.buruberi.bluetooth.errors.BluetoothPowerChangeError
+     * @see ChangePowerStateException
      */
     @RequiresPermission(allOf = {
             Manifest.permission.BLUETOOTH,
