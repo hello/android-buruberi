@@ -16,15 +16,17 @@
  */
 package is.hello.buruberi.bluetooth.stacks;
 
+import android.Manifest;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresPermission;
 
 import java.util.List;
 import java.util.UUID;
 
 import rx.Observable;
 
-public interface Characteristic {
+public interface GattCharacteristic {
     //region Properties
 
     int PROPERTY_BROADCAST = BluetoothGattCharacteristic.PROPERTY_BROADCAST;
@@ -99,6 +101,7 @@ public interface Characteristic {
      * @param timeout       The timeout to apply to the operation.
      * @return The operation, waiting to be subscribed to.
      */
+    @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<UUID> enableNotification(@NonNull UUID descriptor,
                                                  @NonNull OperationTimeout timeout);
 
@@ -109,6 +112,7 @@ public interface Characteristic {
      * @param timeout       The timeout to apply to the operation.
      * @return The operation, waiting to be subscribed to.
      */
+    @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<UUID> disableNotification(@NonNull UUID descriptor,
                                                   @NonNull OperationTimeout timeout);
 
@@ -130,6 +134,7 @@ public interface Characteristic {
      * @param timeout           The timeout to wrap the operation within.
      * @return An observable that will emit a single null value, then complete upon success.
      */
+    @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<Void> write(@NonNull GattPeripheral.WriteType writeType,
                                     @NonNull byte[] payload,
                                     @NonNull OperationTimeout timeout);

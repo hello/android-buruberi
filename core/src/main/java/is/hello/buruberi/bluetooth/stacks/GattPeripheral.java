@@ -292,12 +292,22 @@ public interface GattPeripheral {
 
     //region Characteristics
 
+    /**
+     * @deprecated Prefer {@link GattCharacteristic#enableNotification(UUID, OperationTimeout)}
+     *             for all new code.
+     */
+    @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<UUID> enableNotification(@NonNull PeripheralService onPeripheralService,
                                                  @NonNull UUID characteristicIdentifier,
                                                  @NonNull UUID descriptorIdentifier,
                                                  @NonNull OperationTimeout timeout);
 
+    /**
+     * @deprecated Prefer {@link GattCharacteristic#disableNotification(UUID, OperationTimeout)}
+     *             for all new code.
+     */
+    @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<UUID> disableNotification(@NonNull PeripheralService onPeripheralService,
                                                   @NonNull UUID characteristicIdentifier,
@@ -322,7 +332,11 @@ public interface GattPeripheral {
      * @param payload           The payload to write. Must be 20 <code>bytes</code> or less.
      * @param timeout           The timeout to wrap the operation within.
      * @return An observable that will emit a single null value, then complete upon success.
+     *
+     * @deprecated Prefer {@link GattCharacteristic#write(WriteType, byte[], OperationTimeout)}
+     *             for all new code.
      */
+    @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<Void> writeCommand(@NonNull PeripheralService service,
                                            @NonNull UUID characteristic,

@@ -13,5 +13,5 @@ public interface PeripheralService {
     UUID getUuid();
     int getType();
     List<UUID> getCharacteristics();
-    Characteristic getCharacteristic(@NonNull UUID identifier);
+    GattCharacteristic getCharacteristic(@NonNull UUID identifier);
 }

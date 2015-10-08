@@ -18,7 +18,7 @@ import java.util.UUID;
 
 import is.hello.buruberi.bluetooth.errors.GattException;
 import is.hello.buruberi.bluetooth.errors.LostConnectionException;
-import is.hello.buruberi.bluetooth.stacks.Characteristic;
+import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.bluetooth.stacks.util.ErrorListener;
@@ -83,7 +83,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<UUID> enable = characteristic.enableNotification(Testing.NOTIFY_DESCRIPTOR,
                                                                           timeout);
 
@@ -118,7 +118,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<UUID> enable = characteristic.enableNotification(Testing.NOTIFY_DESCRIPTOR,
                                                                           timeout);
 
@@ -154,7 +154,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<UUID> enable = characteristic.enableNotification(Testing.NOTIFY_DESCRIPTOR,
                                                                           timeout);
 
@@ -190,7 +190,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<UUID> disable = characteristic.disableNotification(Testing.NOTIFY_DESCRIPTOR,
                                                                             timeout);
 
@@ -225,7 +225,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<UUID> disable = characteristic.disableNotification(Testing.NOTIFY_DESCRIPTOR,
                                                                             timeout);
 
@@ -261,7 +261,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<UUID> disable = characteristic.disableNotification(Testing.NOTIFY_DESCRIPTOR,
                                                                             timeout);
 
@@ -302,7 +302,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<Void> write = characteristic.write(GattPeripheral.WriteType.DEFAULT,
                                                             WRITE_PAYLOAD,
                                                             timeout);
@@ -336,7 +336,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<Void> write = characteristic.write(GattPeripheral.WriteType.DEFAULT,
                                                             WRITE_PAYLOAD,
                                                             timeout);
@@ -371,7 +371,7 @@ public class NativeCharacteristicTests extends BuruberiTestCase {
         final BluetoothGattService nativeService = Testing.createMockGattService();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
         final NativePeripheralService service = new NativePeripheralService(nativeService, peripheral);
-        final Characteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final GattCharacteristic characteristic = service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         final Observable<Void> write = characteristic.write(GattPeripheral.WriteType.DEFAULT,
                                                             WRITE_PAYLOAD,
                                                             timeout);

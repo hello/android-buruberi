@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import is.hello.buruberi.bluetooth.stacks.Characteristic;
+import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.bluetooth.stacks.PeripheralService;
@@ -61,10 +61,10 @@ public final class NativePeripheralService implements PeripheralService {
     }
 
     @Override
-    public Characteristic getCharacteristic(@NonNull UUID identifier) {
+    public GattCharacteristic getCharacteristic(@NonNull UUID identifier) {
         final BluetoothGattCharacteristic characteristic = service.getCharacteristic(identifier);
         if (characteristic != null) {
-            return new NativeCharacteristic(characteristic);
+            return new NativeGattCharacteristic(characteristic);
         } else {
             return null;
         }
@@ -95,10 +95,10 @@ public final class NativePeripheralService implements PeripheralService {
     }
 
 
-    class NativeCharacteristic implements Characteristic {
+    class NativeGattCharacteristic implements GattCharacteristic {
         private final BluetoothGattCharacteristic nativeCharacteristic;
 
-        NativeCharacteristic(@NonNull BluetoothGattCharacteristic nativeCharacteristic) {
+        NativeGattCharacteristic(@NonNull BluetoothGattCharacteristic nativeCharacteristic) {
             this.nativeCharacteristic = nativeCharacteristic;
         }
 
