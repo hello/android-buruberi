@@ -11,6 +11,13 @@ Buruberi is a small library that wraps the Android Bluetooth Low Energy APIs,
 and tries to insulate you from as many of these problems as it can. When it
 can't insulate you from a problem, it does its best to provide mitigation tools.
 
+# TODO
+
+- Clean up implementation of characteristic writes.
+- Clean up implementation of descriptor notification control.
+- Sort out generating jars for distribution.
+- Sort out maven hosting.
+
 # License
 
 	Copyright 2015 Hello, Inc
