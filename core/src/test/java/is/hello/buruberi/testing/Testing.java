@@ -54,7 +54,7 @@ public class Testing {
 
     public static BluetoothGattService createMockGattService() {
         BluetoothGattService service = spy(new BluetoothGattService(SERVICE_PRIMARY,
-                                                                BluetoothGattService.SERVICE_TYPE_PRIMARY));
+                                                                    BluetoothGattService.SERVICE_TYPE_PRIMARY));
 
         BluetoothGattCharacteristic characteristic = spy(new BluetoothGattCharacteristic(WRITE_CHARACTERISTIC,
                                                                                          BluetoothGattCharacteristic.PROPERTY_WRITE,

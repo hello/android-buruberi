@@ -18,18 +18,19 @@ import java.util.concurrent.TimeUnit;
 import is.hello.buruberi.bluetooth.errors.ConnectionStateException;
 import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
+import is.hello.buruberi.util.NonGuaranteed;
 import rx.Observable;
 
 /**
  * Represents a Bluetooth Low Energy device that communicates over a gatt profile.
  * <p>
- * All Observable objects returned by a Peripheral must be subscribed
+ * All Observable objects returned by a GattPeripheral must be subscribed
  * to before they will perform their work. No guarantees are made about
  * what scheduler the Observables will do, and yield their work on.
  */
 public interface GattPeripheral {
     /**
-     * The logging tag that should be used by implementations of the Peripheral interface.
+     * The logging tag that should be used by implementations of the GattPeripheral interface.
      */
     String LOG_TAG = "Bluetooth." + GattPeripheral.class.getSimpleName();
 
@@ -37,7 +38,7 @@ public interface GattPeripheral {
     //region Local Broadcasts
 
     /**
-     * A local broadcast that informs interested listeners that a Peripheral has disconnected.
+     * A local broadcast that informs interested listeners that a GattPeripheral has disconnected.
      *
      * @see #EXTRA_NAME
      * @see #EXTRA_ADDRESS
@@ -45,14 +46,14 @@ public interface GattPeripheral {
     String ACTION_DISCONNECTED = GattPeripheral.class.getName() + ".ACTION_DISCONNECTED";
 
     /**
-     * The name of the affected Peripheral.
+     * The name of the affected GattPeripheral.
      *
      * @see #ACTION_DISCONNECTED
      */
     String EXTRA_NAME = GattPeripheral.class.getName() + ".EXTRA_NAME";
 
     /**
-     * The address of the affected Peripheral.
+     * The address of the affected GattPeripheral.
      *
      * @see #ACTION_DISCONNECTED
      */
@@ -64,21 +65,21 @@ public interface GattPeripheral {
     //region Bond Status
 
     /**
-     * Indicates the peripheral is not bonded.
+     * Indicates that no bond exists.
      */
     int BOND_NONE = BluetoothDevice.BOND_NONE;
 
     /**
-     * Indicates the peripheral is in the process of being bonded.
+     * Indicates the bond is in the process of changing.
      */
-    int BOND_BONDING = BluetoothDevice.BOND_BONDING;
+    int BOND_CHANGING = BluetoothDevice.BOND_BONDING;
 
     /**
      * Indicates the peripheral is bonded.
      */
     int BOND_BONDED = BluetoothDevice.BOND_BONDED;
 
-    @IntDef({BOND_NONE, BOND_BONDING, BOND_BONDED})
+    @IntDef({BOND_NONE, BOND_CHANGING, BOND_BONDED})
     @Retention(RetentionPolicy.SOURCE)
     @interface BondStatus {}
 
@@ -88,22 +89,22 @@ public interface GattPeripheral {
     //region Connection Status
 
     /**
-     * Indicates the Peripheral is not connected.
+     * Indicates the GattPeripheral is not connected.
      */
     int STATUS_DISCONNECTED = BluetoothProfile.STATE_DISCONNECTED;
 
     /**
-     * Indicates the Peripheral is in the process of connecting.
+     * Indicates the GattPeripheral is in the process of connecting.
      */
     int STATUS_CONNECTING = BluetoothProfile.STATE_CONNECTING;
 
     /**
-     * Indicates the Peripheral is connected.
+     * Indicates the GattPeripheral is connected.
      */
     int STATUS_CONNECTED = BluetoothProfile.STATE_CONNECTED;
 
     /**
-     * Indicates the Peripheral is in the process of disconnecting.
+     * Indicates the GattPeripheral is in the process of disconnecting.
      */
     int STATUS_DISCONNECTING = BluetoothProfile.STATE_DISCONNECTING;
 
@@ -117,7 +118,7 @@ public interface GattPeripheral {
     //region Properties
 
     /**
-     * Returns the received signal strength of the Peripheral
+     * Returns the received signal strength of the GattPeripheral
      * when it was discovered by the {@see BluetoothStack}.
      * <p>
      * This value does not update.
@@ -125,26 +126,26 @@ public interface GattPeripheral {
     int getScanTimeRssi();
 
     /**
-     * Returns the address of the Peripheral.
+     * Returns the address of the GattPeripheral.
      * <p>
      * This value should be included in the implementation's toString method.
      */
     String getAddress();
 
     /**
-     * Returns the name of the Peripheral.
+     * Returns the name of the GattPeripheral.
      * <p>
      * This value should be included in the implementation's toString method.
      */
     String getName();
 
     /**
-     * Returns the advertising data associated with the Peripheral.
+     * Returns the advertising data associated with the GattPeripheral.
      */
     @NonNull AdvertisingData getAdvertisingData();
 
     /**
-     * Returns the stack this Peripheral is tied to.
+     * Returns the stack this GattPeripheral is tied to.
      * <p>
      * @see is.hello.buruberi.bluetooth.stacks.BluetoothStack#newConfiguredObservable(Observable.OnSubscribe)
      */
@@ -156,7 +157,7 @@ public interface GattPeripheral {
     //region Timeouts
 
     /**
-     * Returns a new operation timeout for use with the Peripheral.
+     * Returns a new operation timeout for use with the GattPeripheral.
      */
     @NonNull OperationTimeout createOperationTimeout(@NonNull String name, long duration, @NonNull TimeUnit timeUnit);
 
@@ -215,7 +216,7 @@ public interface GattPeripheral {
      * <p>
      * <em>Important:</em> the behavior of this method varies depending
      * on the device's Android version. In API levels 18 and 19 (JB and KitKat),
-     * this method can only be called if the Peripheral is currently connected.
+     * this method can only be called if the GattPeripheral is currently connected.
      * <p>
      * However, starting in API level 21 (Lollipop), this method will <em>fail</em>
      * if you call it when the device is connected. If you need a bond, you should
@@ -229,24 +230,28 @@ public interface GattPeripheral {
 
     /**
      * Removes any bond to the peripheral from the current device.
-     * <p />
      * Does nothing if the device is not bonded.
      * <p>
      * <em>Note:</em> this method does not exhibit the same inconsistent behavior
      * that {@link #createBond()} does between device Android versions.
      * @param timeout   The timeout to apply to the operation.
+     *
+     * @see NonGuaranteed The current implementation of this method depends on the existence
+     *                    of a private method on {@code BluetoothDevice}, and may stop functioning
+     *                    in a future release of Android.
      */
     @RequiresPermission(allOf = {
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
     })
+    @NonGuaranteed
     @NonNull Observable<GattPeripheral> removeBond(@NonNull OperationTimeout timeout);
 
     /**
      * Returns the bond status of the peripheral.
      *
      * @see GattPeripheral#BOND_NONE
-     * @see GattPeripheral#BOND_BONDING
+     * @see GattPeripheral#BOND_CHANGING
      * @see GattPeripheral#BOND_BONDED
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
@@ -287,12 +292,22 @@ public interface GattPeripheral {
 
     //region Characteristics
 
+    /**
+     * @deprecated Prefer {@link GattCharacteristic#enableNotification(UUID, OperationTimeout)}
+     *             for all new code.
+     */
+    @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<UUID> enableNotification(@NonNull PeripheralService onPeripheralService,
                                                  @NonNull UUID characteristicIdentifier,
                                                  @NonNull UUID descriptorIdentifier,
                                                  @NonNull OperationTimeout timeout);
 
+    /**
+     * @deprecated Prefer {@link GattCharacteristic#disableNotification(UUID, OperationTimeout)}
+     *             for all new code.
+     */
+    @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<UUID> disableNotification(@NonNull PeripheralService onPeripheralService,
                                                   @NonNull UUID characteristicIdentifier,
@@ -301,12 +316,12 @@ public interface GattPeripheral {
 
     /**
      * Writes a given payload to a characteristic belonging to a service on the peripheral.
-     * <p />
+     * <p>
      * <em>Important:</em> it appears on some devices that writes are asynchronous on multiple
      * levels. Although the stack may report the write was successful, it doesn't mean the
      * write has actually completed. If you're going to disconnect after a write operation,
      * it's a good idea to add a delay of a few seconds.
-     * <p />
+     * <p>
      * The value of {@literal writeType} is supposed to be automatically inferred during service
      * discovery, but some devices do not consistently populate the value (Verizon Note 4).
      * As such, this value must be provided for every write command call.
@@ -317,7 +332,11 @@ public interface GattPeripheral {
      * @param payload           The payload to write. Must be 20 <code>bytes</code> or less.
      * @param timeout           The timeout to wrap the operation within.
      * @return An observable that will emit a single null value, then complete upon success.
+     *
+     * @deprecated Prefer {@link GattCharacteristic#write(WriteType, byte[], OperationTimeout)}
+     *             for all new code.
      */
+    @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<Void> writeCommand(@NonNull PeripheralService service,
                                            @NonNull UUID characteristic,
@@ -327,10 +346,10 @@ public interface GattPeripheral {
 
     /**
      * Associates a given packet handler with the Peripheral.
-     * <p />
+     * <p>
      * Characteristic read and change data will be sent to the
      * packet handler for processing, and outward propagation.
-     * <p />
+     * <p>
      * While it is not required that you provide a packet handler,
      * it is strongly recommended.
      */
@@ -374,7 +393,7 @@ public interface GattPeripheral {
      */
     interface PacketHandler {
         /**
-         * The size of a Bluetooth packet.
+         * The maximum length of a Bluetooth Low Energy packet.
          */
         int PACKET_LENGTH = 20;
 

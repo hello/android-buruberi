@@ -25,6 +25,7 @@ import java.util.UUID;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.bluetooth.stacks.PeripheralService;
+import is.hello.buruberi.util.NonGuaranteed;
 
 /**
  * Indicates low level gatt errors from the Android SDK.
@@ -38,20 +39,33 @@ import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 public class GattException extends BuruberiException {
     //region Error codes
 
+    @NonGuaranteed
     public static final int GATT_ILLEGAL_PARAMETER = 0x0087;
+    
+    @NonGuaranteed
     public static final int GATT_NO_RESOURCES = 0x0080;
 
     /**
      * Generic internal error code from the low level Bluetooth implementation.
      * <p>
-     * Undocumented status code from AoSP project.
+     * @see NonGuaranteed Undocumented status code from AoSP project.
      */
+    @NonGuaranteed
     public static final int GATT_INTERNAL_ERROR = 0x0081;
 
+    @NonGuaranteed
     public static final int GATT_WRONG_STATE = 0x0082;
+
+    @NonGuaranteed
     public static final int GATT_DB_FULL = 0x0083;
+
+    @NonGuaranteed
     public static final int GATT_BUSY = 0x0084;
+
+    @NonGuaranteed
     public static final int GATT_AUTH_FAIL = 0x0089;
+
+    @NonGuaranteed
     public static final int GATT_INVALID_CFG = 0x008b;
 
     /**
@@ -65,39 +79,44 @@ public class GattException extends BuruberiException {
      * If this error is reported more than once, the phone's Bluetooth has become unstable,
      * and won't be fixed until the user power cycles their phone's Wi-Fi and Bluetooth radios.
      * <p>
-     * Undocumented status code from AoSP project.
+     * @see NonGuaranteed Undocumented status code from AoSP project.
      *
      * @see #isRecoverableConnectError(int)
      * @see #isInstabilityLikely()
      */
+    @NonGuaranteed
     public static final int GATT_STACK_ERROR = 0x0085;
 
     /**
      * Connection terminated by local host.
      * <p>
-     * Undocumented status code from AoSP project.
+     * @see NonGuaranteed Undocumented status code from AoSP project.
      */
+    @NonGuaranteed
     public static final int GATT_CONN_TERMINATE_LOCAL_HOST = 0x16;
 
     /**
      * Connection terminate by peer user.
      * <p>
-     * Undocumented status code from AoSP project.
+     * @see NonGuaranteed Undocumented status code from AoSP project.
      */
+    @NonGuaranteed
     public static final int GATT_CONN_TERMINATE_PEER_USER = 0x13;
 
     /**
      * Connection timeout.
      * <p>
-     * Undocumented status code from AoSP project.
+     * @see NonGuaranteed Undocumented status code from AoSP project.
      */
+    @NonGuaranteed
     public static final int GATT_CONN_TIMEOUT = 0x08;
 
     /**
      * Connection failed to establish.
      * <p>
-     * Undocumented status code from AoSP project.
+     * @see NonGuaranteed Undocumented status code from AoSP project.
      */
+    @NonGuaranteed
     public static final int GATT_CONN_FAIL_ESTABLISH = 0x03E;
 
 

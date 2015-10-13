@@ -43,9 +43,9 @@ public final class Buruberi {
 
     /**
      * <em>Required</em>
-     * <p />
+     * <p>
      * Sets the application context used by the BluetoothStack.
-     * <p />
+     * <p>
      * Calls <code>#getApplicationContext()</code> on the given <code>Context</code>.
      */
     public Buruberi setApplicationContext(@NonNull Context applicationContext) {
@@ -55,7 +55,7 @@ public final class Buruberi {
 
     /**
      * Sets the error listener to call whenever an error occurs within the BluetoothStack.
-     * <p />
+     * <p>
      * Builder provides a default implementation that does nothing.
      */
     public Buruberi setErrorListener(@NonNull ErrorListener errorListener) {
@@ -65,7 +65,7 @@ public final class Buruberi {
 
     /**
      * Sets the logger facade to be used by the BluetoothStack.
-     * <p />
+     * <p>
      * Builder provides a default implementation that logs to logcat.
      */
     public Buruberi setLoggerFacade(@NonNull LoggerFacade loggerFacade) {

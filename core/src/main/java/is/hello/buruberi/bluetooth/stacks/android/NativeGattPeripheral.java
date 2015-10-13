@@ -476,7 +476,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                             subscriber.onCompleted();
 
                             unsubscribe();
-                        } else if (state == BluetoothDevice.ERROR || state == BOND_NONE && previousState == BOND_BONDING) {
+                        } else if (state == BluetoothDevice.ERROR || state == BOND_NONE && previousState == BOND_CHANGING) {
                             int reason = intent.getIntExtra(BondException.EXTRA_REASON, BondException.REASON_UNKNOWN_FAILURE);
                             logger.error(LOG_TAG, "Bonding failed for reason " + BondException.getReasonString(reason), null);
                             subscriber.onError(new BondException(reason));
@@ -615,7 +615,9 @@ public class NativeGattPeripheral implements GattPeripheral {
                         gattDispatcher.removeDisconnectListener(onDisconnect);
 
                         if (status == BluetoothGatt.GATT_SUCCESS) {
-                            Map<UUID, PeripheralService> services = NativePeripheralService.wrapGattServices(gatt.getServices());
+                            final Map<UUID, PeripheralService> services =
+                                    NativePeripheralService.wrap(gatt.getServices(),
+                                                                 NativeGattPeripheral.this);
                             subscriber.onNext(services);
                             subscriber.onCompleted();
 
