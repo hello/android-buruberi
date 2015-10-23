@@ -18,9 +18,11 @@ package is.hello.buruberi.bluetooth;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresPermission;
+import android.support.annotation.VisibleForTesting;
 
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.android.NativeBluetoothStack;
@@ -92,6 +94,15 @@ public final class Buruberi {
         }
     }
 
+    @VisibleForTesting boolean hasPermissions() {
+        final int bluetoothStatus =
+                    applicationContext.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH);
+        final int adminStatus =
+                applicationContext.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH_ADMIN);
+        return (bluetoothStatus == PackageManager.PERMISSION_GRANTED &&
+                adminStatus == PackageManager.PERMISSION_GRANTED);
+    }
+
     /**
      * Creates a new BluetoothStack instance
      * using the parameters of this builder.
@@ -104,7 +115,11 @@ public final class Buruberi {
     })
     public BluetoothStack build() {
         assertValid();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2 || !hasPermissions()) {
+            loggerFacade.error(getClass().getSimpleName(),
+                               "Buruberi is running in an unsupported environment. " +
+                                       "Are you on API level 18 with all required permissions?",
+                               null);
             return new NoOpBluetoothStack(loggerFacade);
         } else {
             return new NativeBluetoothStack(applicationContext,
