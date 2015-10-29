@@ -18,6 +18,10 @@ can't insulate you from a problem, it does its best to provide mitigation tools.
 - Sort out generating jars for distribution.
 - Sort out maven hosting.
 
+# Contributing
+
+If you'd like to contribute to `android-buruberi`, fork the project on GitHub, and submit a pull request with your changes. Please be sure to include unit tests for any changes you make, and follow the coding style of the project as closely as possible. The full contribution guidelines can be found [here](https://github.com/hello/android-buruberi/blob/master/CONTRIBUTING.md).
+
 # License
 
 	Copyright 2015 Hello Inc.
