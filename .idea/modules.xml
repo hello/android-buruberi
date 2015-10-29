@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/android-buruberi.iml" filepath="$PROJECT_DIR$/android-buruberi.iml" />
-      <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/buruberi-core/buruberi-core.iml" filepath="$PROJECT_DIR$/buruberi-core/buruberi-core.iml" />
     </modules>
   </component>
 </project>

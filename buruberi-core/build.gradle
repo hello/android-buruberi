@@ -56,7 +56,7 @@ publishing {
                 pom.withXml {
                     asNode().children().last() + {
                         resolveStrategy = DELEGATE_FIRST
-                        name 'buruberi'
+                        name 'buruberi-core'
                         description 'Less flaky Bluetooth Low Energy for Android'
                         url 'https://github.com/hello/android-buruberi'
                         scm {
