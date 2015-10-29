@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015 Hello Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package is.hello.buruberi.testing;
 
 import android.support.annotation.NonNull;
@@ -8,8 +23,6 @@ import org.junit.Assert;
 import java.util.Iterator;
 
 import rx.Observable;
-import rx.functions.Action0;
-import rx.functions.Action1;
 import rx.observables.BlockingObservable;
 
 /**
@@ -37,22 +50,6 @@ public final class Sync<T> implements Iterable<T> {
         return new Sync<>(source);
     }
 
-    /**
-     * Wraps a given observable, <code>take</code>ing one emitted value from it,
-     * and firing a given action block before returning.
-     * <p>
-     * This method should be used with ValuePresenter subclasses when updating them:
-     * <pre>
-     *     Account account = Sync.wrapAfter(presenter::update, presenter.account).last();
-     * </pre>
-     */
-    public static <T> Sync<T> wrapAfter(@NonNull Action0 action, @NonNull Observable<T> source) {
-        Observable<T> next = source.take(1);
-        Sync<T> sync = new Sync<>(next);
-        action.call();
-        return sync;
-    }
-
 
     private Sync(@NonNull Observable<T> source) {
         this.observable = source.toBlocking();
@@ -74,25 +71,10 @@ public final class Sync<T> implements Iterable<T> {
     }
 
     /**
-     * Calls a given action for each value emitted by the wrapped
-     * observable, blocking until the observable completes.
-     */
-    public void forEach(@NonNull Action1<T> action) {
-        observable.forEach(action);
-    }
-
-    /**
      * Blocks until the observable completes, then returns the last emitted value.
      */
     public T last() {
         return observable.last();
-    }
-
-    /**
-     * Blocks until the observable completes, ignoring the emitted value.
-     */
-    public void await() {
-        last();
     }
 
     //endregion

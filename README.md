@@ -20,7 +20,7 @@ can't insulate you from a problem, it does its best to provide mitigation tools.
 
 # License
 
-	Copyright 2015 Hello, Inc
+	Copyright 2015 Hello Inc.
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
 	You may obtain a copy of the License at
