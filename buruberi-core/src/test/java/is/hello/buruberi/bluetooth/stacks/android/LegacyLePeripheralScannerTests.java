@@ -30,7 +30,7 @@ import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
 import is.hello.buruberi.testing.BuruberiTestCase;
 import is.hello.buruberi.testing.Testing;
-import is.hello.buruberi.testing.shadows.ShadowBluetoothAdapterExt;
+import is.hello.buruberi.testing.ShadowBluetoothAdapterExt;
 import is.hello.buruberi.util.AdvertisingDataBuilder;
 import is.hello.buruberi.util.Defaults;
 import rx.Subscriber;

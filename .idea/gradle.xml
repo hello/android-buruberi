@@ -10,6 +10,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/buruberi-core" />
+            <option value="$PROJECT_DIR$/buruberi-testing" />
           </set>
         </option>
       </GradleProjectSettings>
