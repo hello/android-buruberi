@@ -30,12 +30,12 @@ import org.robolectric.shadows.ShadowContextImpl;
 import org.robolectric.util.ReflectionHelpers;
 
 import is.hello.buruberi.BuildConfig;
-import is.hello.buruberi.testing.shadows.BuruberiShadows;
-import is.hello.buruberi.testing.shadows.ShadowBluetoothAdapterExt;
-import is.hello.buruberi.testing.shadows.ShadowBluetoothDeviceExt;
-import is.hello.buruberi.testing.shadows.ShadowBluetoothGatt;
-import is.hello.buruberi.testing.shadows.ShadowBluetoothLeScanner;
-import is.hello.buruberi.testing.shadows.ShadowBluetoothManager;
+import is.hello.buruberi.testing.BuruberiShadows;
+import is.hello.buruberi.testing.ShadowBluetoothAdapterExt;
+import is.hello.buruberi.testing.ShadowBluetoothDeviceExt;
+import is.hello.buruberi.testing.ShadowBluetoothGatt;
+import is.hello.buruberi.testing.ShadowBluetoothLeScanner;
+import is.hello.buruberi.testing.ShadowBluetoothManager;
 
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(constants = BuildConfig.class,
@@ -49,14 +49,8 @@ import is.hello.buruberi.testing.shadows.ShadowBluetoothManager;
         })
 public abstract class BuruberiTestCase {
     protected BuruberiTestCase() {
-        try {
-            final Context baseContext = RuntimeEnvironment.application.getBaseContext();
-            final BluetoothManager bluetoothManager = ReflectionHelpers.newInstance(BluetoothManager.class);
-            final ShadowContextImpl shadowContext = (ShadowContextImpl) Shadows.shadowOf(baseContext);
-            shadowContext.setSystemService(Context.BLUETOOTH_SERVICE, bluetoothManager);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        final Context baseContext = RuntimeEnvironment.application.getBaseContext();
+        BuruberiShadows.setUpSystemServices(baseContext);
     }
 
     @Before

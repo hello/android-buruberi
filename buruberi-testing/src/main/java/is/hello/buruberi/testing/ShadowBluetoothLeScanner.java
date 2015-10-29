@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package is.hello.buruberi.testing.shadows;
+package is.hello.buruberi.testing;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;

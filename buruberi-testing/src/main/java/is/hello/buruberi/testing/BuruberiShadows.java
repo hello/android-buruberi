@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package is.hello.buruberi.testing.shadows;
+package is.hello.buruberi.testing;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.content.Context;
 import android.support.annotation.NonNull;
 
+import org.robolectric.Shadows;
 import org.robolectric.internal.ShadowExtractor;
+import org.robolectric.shadows.ShadowContextImpl;
+import org.robolectric.util.ReflectionHelpers;
 
 /**
  * Convenience methods for extracting shadows specific to the Buruberi project.
@@ -30,6 +34,12 @@ import org.robolectric.internal.ShadowExtractor;
  * Project local copy of {@link org.robolectric.Shadows}.
  */
 public class BuruberiShadows {
+    public static void setUpSystemServices(@NonNull Context context) {
+        final BluetoothManager bluetoothManager = ReflectionHelpers.newInstance(BluetoothManager.class);
+        final ShadowContextImpl shadowContext = (ShadowContextImpl) Shadows.shadowOf(context);
+        shadowContext.setSystemService(Context.BLUETOOTH_SERVICE, bluetoothManager);
+    }
+
     public static ShadowBluetoothManager shadowOf(@NonNull BluetoothManager bluetoothManager) {
         return (ShadowBluetoothManager) ShadowExtractor.extract(bluetoothManager);
     }

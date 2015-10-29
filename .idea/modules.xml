@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/android-buruberi.iml" filepath="$PROJECT_DIR$/android-buruberi.iml" />
       <module fileurl="file://$PROJECT_DIR$/buruberi-core/buruberi-core.iml" filepath="$PROJECT_DIR$/buruberi-core/buruberi-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/buruberi-testing/buruberi-testing.iml" filepath="$PROJECT_DIR$/buruberi-testing/buruberi-testing.iml" />
     </modules>
   </component>
 </project>

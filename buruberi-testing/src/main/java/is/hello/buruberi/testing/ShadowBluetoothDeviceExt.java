@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package is.hello.buruberi.testing.shadows;
+package is.hello.buruberi.testing;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -24,8 +24,6 @@ import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
 import org.robolectric.shadows.ShadowBluetoothDevice;
 import org.robolectric.util.ReflectionHelpers;
-
-import static is.hello.buruberi.testing.shadows.BuruberiShadows.shadowOf;
 
 @SuppressWarnings("unused")
 @Implements(
@@ -94,9 +92,9 @@ public class ShadowBluetoothDeviceExt extends ShadowBluetoothDevice {
     @Implementation
     public BluetoothGatt connectGatt(Context context, boolean autoConnect,
                                      BluetoothGattCallback callback) {
-        BluetoothGatt bluetoothGatt = ReflectionHelpers.newInstance(BluetoothGatt.class);
+        final BluetoothGatt bluetoothGatt = ReflectionHelpers.newInstance(BluetoothGatt.class);
 
-        ShadowBluetoothGatt shadow = shadowOf(bluetoothGatt);
+        final ShadowBluetoothGatt shadow = BuruberiShadows.shadowOf(bluetoothGatt);
         shadow.setAutoConnect(autoConnect);
         shadow.setGattCallback(callback);
 
