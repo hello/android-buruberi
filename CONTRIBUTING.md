@@ -37,4 +37,4 @@ code formatting tool.
 - [`BluetoothLeScanner` reference](http://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner.html)
 - [`BluetoothDevice` reference](http://developer.android.com/reference/android/bluetooth/BluetoothDevice.html)
 - [`BluetoothGatt` reference](http://developer.android.com/reference/android/bluetooth/BluetoothGatt.html)
-- [The Scantastic example app](tree/master/example)
+- [The Scantastic example app](tree/master/buruberi-example)
