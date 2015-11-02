@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Scantastic</string>
-    <string name="action_scan">Scan</string>
+    <string name="action_start_scan">Scan</string>
+    <string name="peripheral_name_placeholder"><i>Unknown</i></string>
+    <string name="peripheral_details_format">%1$s, %2$s, RSSI: %3$d</string>
+    <string name="bond_status_none">Not bonded</string>
+    <string name="bond_status_changing">Bond changing</string>
+    <string name="bond_status_bonded">Bonded</string>
 </resources>

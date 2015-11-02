@@ -1,6 +1,7 @@
 package is.hello.buruberi.example.adapters;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -13,21 +14,28 @@ import java.util.List;
 
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.example.R;
+import is.hello.buruberi.example.util.GattPeripherals;
 
 public class ScanResultsAdapter extends RecyclerView.Adapter<ScanResultsAdapter.ViewHolder> {
     private final LayoutInflater inflater;
+    private final Resources resources;
     private final List<GattPeripheral> peripherals = new ArrayList<>();
+    private final OnItemClickListener onItemClickListener;
 
-    public ScanResultsAdapter(@NonNull Context context) {
+    public ScanResultsAdapter(@NonNull Context context,
+                              @NonNull OnItemClickListener onItemClickListener) {
         this.inflater = LayoutInflater.from(context);
+        this.resources = context.getResources();
+        this.onItemClickListener = onItemClickListener;
     }
 
-    public void setPeripherals(@NonNull List<GattPeripheral> newPeripherals) {
-        if (!peripherals.isEmpty()) {
-            peripherals.clear();
-            notifyItemRangeRemoved(0, peripherals.size());
-        }
+    public void clear() {
+        final int oldSize = peripherals.size();
+        peripherals.clear();
+        notifyItemRangeRemoved(0, oldSize);
+    }
 
+    public void addPeripherals(@NonNull List<GattPeripheral> newPeripherals) {
         peripherals.addAll(newPeripherals);
         if (!peripherals.isEmpty()) {
             notifyItemRangeInserted(0, newPeripherals.size());
@@ -52,11 +60,11 @@ public class ScanResultsAdapter extends RecyclerView.Adapter<ScanResultsAdapter.
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         final GattPeripheral peripheral = getItem(position);
-        holder.title.setText(peripheral.getName());
-        holder.details.setText(peripheral.getAddress());
+        holder.title.setText(GattPeripherals.getDisplayName(peripheral, resources));
+        holder.details.setText(GattPeripherals.getDetails(peripheral, resources));
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         final TextView title;
         final TextView details;
 
@@ -65,6 +73,20 @@ public class ScanResultsAdapter extends RecyclerView.Adapter<ScanResultsAdapter.
 
             this.title = (TextView) itemView.findViewById(R.id.item_scan_result_title);
             this.details = (TextView) itemView.findViewById(R.id.item_scan_result_details);
+
+            itemView.setOnClickListener(this);
         }
+
+        @Override
+        public void onClick(View sender) {
+            final int adapterPosition = getAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION) {
+                onItemClickListener.onItemClick(adapterPosition, getItem(adapterPosition));
+            }
+        }
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(int position, @NonNull GattPeripheral peripheral);
     }
 }

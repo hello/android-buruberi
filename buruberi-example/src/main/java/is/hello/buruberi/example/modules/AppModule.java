@@ -1,6 +1,7 @@
 package is.hello.buruberi.example.modules;
 
 import dagger.Module;
+import is.hello.buruberi.example.activities.PeripheralActivity;
 import is.hello.buruberi.example.activities.ScanActivity;
 
 @Module(complete = false,
@@ -8,7 +9,8 @@ import is.hello.buruberi.example.activities.ScanActivity;
                 BluetoothModule.class,
         },
         injects = {
-                ScanActivity.class
+                ScanActivity.class,
+                PeripheralActivity.class,
         })
 public class AppModule {
 }

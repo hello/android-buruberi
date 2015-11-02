@@ -1,8 +1,8 @@
 package is.hello.buruberi.example.activities;
 
-import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -17,39 +17,32 @@ import javax.inject.Inject;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.example.R;
 import is.hello.buruberi.example.adapters.ScanResultsAdapter;
-import is.hello.buruberi.example.modules.Injection;
+import is.hello.buruberi.example.presenters.PeripheralPresenter;
 import is.hello.buruberi.example.presenters.ScanPresenter;
-import is.hello.buruberi.util.Rx;
 import rx.Observable;
 import rx.functions.Action1;
-import rx.functions.Func1;
 
-public class ScanActivity extends AppCompatActivity {
-    private static final Func1<Activity, Boolean> IS_VALID = new Func1<Activity, Boolean>() {
-        @Override
-        public Boolean call(Activity activity) {
-            return !activity.isDestroyed();
-        }
-    };
-
+public class ScanActivity extends BaseActivity
+        implements ScanResultsAdapter.OnItemClickListener {
     @Inject ScanPresenter scanPresenter;
+    @Inject PeripheralPresenter peripheralPresenter;
 
+    private MenuItem scanItem;
     private ProgressBar progressBar;
+    private RecyclerView recyclerView;
     private ScanResultsAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Injection.inject(this);
-
         setContentView(R.layout.activity_scan);
 
         this.progressBar = (ProgressBar) findViewById(R.id.activity_scan_progress);
 
-        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.activity_scan_recycler);
+        this.recyclerView = (RecyclerView) findViewById(R.id.activity_scan_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        this.adapter = new ScanResultsAdapter(this);
+        this.adapter = new ScanResultsAdapter(this, this);
         recyclerView.setAdapter(adapter);
     }
 
@@ -57,22 +50,28 @@ public class ScanActivity extends AppCompatActivity {
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        final Observable<List<GattPeripheral>> peripherals = scanPresenter.peripherals
-                .lift(new Rx.OperatorConditionalBinding<List<GattPeripheral>, Activity>(this, IS_VALID));
+        final Observable<List<GattPeripheral>> peripherals = bind(scanPresenter.peripherals);
         peripherals.subscribe(new Action1<List<GattPeripheral>>() {
             @Override
             public void call(List<GattPeripheral> gattPeripherals) {
-                adapter.setPeripherals(gattPeripherals);
-                setScanning(false);
+                adapter.addPeripherals(gattPeripherals);
             }
         });
 
-        setScanning(scanPresenter.isScanning());
+        final Observable<Boolean> working = bind(scanPresenter.working);
+        working.subscribe(new Action1<Boolean>() {
+            @Override
+            public void call(Boolean working) {
+                setWorking(working);
+            }
+        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.scan, menu);
+        this.scanItem = menu.findItem(R.id.action_scan);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -80,7 +79,7 @@ public class ScanActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_scan: {
-
+                scan();
                 return true;
             }
             default: {
@@ -89,11 +88,33 @@ public class ScanActivity extends AppCompatActivity {
         }
     }
 
-    private void setScanning(boolean isScanning) {
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        scanItem.setEnabled(!scanPresenter.isScanning());
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void setWorking(boolean isScanning) {
         if (isScanning) {
+            recyclerView.setVisibility(View.GONE);
             progressBar.setVisibility(View.VISIBLE);
         } else {
+            recyclerView.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
         }
+
+        supportInvalidateOptionsMenu();
+    }
+
+    private void scan() {
+        adapter.clear();
+        scanPresenter.scan();
+    }
+
+    @Override
+    public void onItemClick(int position, @NonNull GattPeripheral peripheral) {
+        peripheralPresenter.setPeripheral(peripheral);
+        startActivity(new Intent(this, PeripheralActivity.class));
     }
 }

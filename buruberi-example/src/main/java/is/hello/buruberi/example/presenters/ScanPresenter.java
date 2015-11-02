@@ -9,6 +9,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
@@ -17,20 +18,20 @@ import rx.Subscriber;
 import rx.Subscription;
 import rx.subjects.ReplaySubject;
 
-@Singleton public class ScanPresenter {
+@Singleton public class ScanPresenter extends BasePresenter {
     static final String LOG_TAG = ScanPresenter.class.getSimpleName();
 
     public final ReplaySubject<List<GattPeripheral>> peripherals = ReplaySubject.createWithSize(1);
 
-    private final PeripheralPresenter peripheralPresenter;
+    private final BluetoothStack bluetoothStack;
     private final LoggerFacade logger;
 
     private @NonNull PeripheralCriteria scanCriteria = new PeripheralCriteria();
     private @Nullable Subscription scanSubscription;
 
-    @Inject public ScanPresenter(@NonNull PeripheralPresenter peripheralPresenter,
+    @Inject public ScanPresenter(@NonNull BluetoothStack bluetoothStack,
                                  @NonNull LoggerFacade logger) {
-        this.peripheralPresenter = peripheralPresenter;
+        this.bluetoothStack = bluetoothStack;
         this.logger = logger;
 
         peripherals.onNext(Collections.<GattPeripheral>emptyList());
@@ -41,7 +42,8 @@ import rx.subjects.ReplaySubject;
             return;
         }
 
-        final Observable<List<GattPeripheral>> scan = peripheralPresenter.scan(scanCriteria);
+        final Observable<List<GattPeripheral>> scan =
+                bind(bluetoothStack.discoverPeripherals(scanCriteria));
         this.scanSubscription = scan.subscribe(new Subscriber<List<GattPeripheral>>() {
             @Override
             public void onCompleted() {
@@ -70,29 +72,12 @@ import rx.subjects.ReplaySubject;
 
     //region Attributes
 
-    public void setPeripheralAddresses(@NonNull List<String> addresses) {
-        scanCriteria.peripheralAddresses.clear();
-        scanCriteria.peripheralAddresses.addAll(addresses);
-    }
-
-    public void clearAdvertisingDataMatches() {
-        scanCriteria.predicates.clear();
-    }
-
-    public void addAdvertisingDataMatch(int type, @NonNull String toMatch) {
-        scanCriteria.addExactMatchPredicate(type, toMatch);
-    }
-
     public void setLimit(int limit) {
         scanCriteria.setLimit(limit);
     }
 
     public void setDuration(long duration) {
         scanCriteria.setDuration(duration);
-    }
-
-    public void setWantsHighPowerPreScan(boolean wantsHighPowerPreScan) {
-        scanCriteria.setWantsHighPowerPreScan(wantsHighPowerPreScan);
     }
 
     //endregion
