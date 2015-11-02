@@ -21,8 +21,10 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import rx.functions.Func1;
@@ -33,23 +35,23 @@ import rx.functions.Func1;
  * instance.
  */
 public final class AdvertisingData {
-    private final Map<Integer, Collection<byte[]>> records = new HashMap<>();
+    private final Map<Integer, List<byte[]>> records = new HashMap<>();
 
     public static @NonNull AdvertisingData parse(@NonNull byte[] raw) {
-        AdvertisingData parsedResponses = new AdvertisingData();
+        final AdvertisingData parsedResponses = new AdvertisingData();
         int index = 0;
         while (index < raw.length) {
-            byte dataLength = raw[index++];
+            final byte dataLength = raw[index++];
             if (dataLength == 0) {
                 break;
             }
 
-            int dataType = raw[index];
+            final int dataType = raw[index];
             if (dataType == 0) {
                 break;
             }
 
-            byte[] payload = Arrays.copyOfRange(raw, index + 1, index + dataLength);
+            final byte[] payload = Arrays.copyOfRange(raw, index + 1, index + dataLength);
             parsedResponses.addRecord(dataType, payload);
 
             index += dataLength;
@@ -62,7 +64,7 @@ public final class AdvertisingData {
 
 
     private void addRecord(int type, @NonNull byte[] contents) {
-        Collection<byte[]> typeItems = getRecordsForType(type);
+        List<byte[]> typeItems = getRecordsForType(type);
         if (typeItems == null) {
             typeItems = new ArrayList<>(1);
             records.put(type, typeItems);
@@ -80,9 +82,18 @@ public final class AdvertisingData {
     }
 
     /**
+     * Returns a sorted copy of the record types contained in the advertising data.
+     */
+    public List<Integer> copyRecordTypes() {
+        final List<Integer> recordTypes = new ArrayList<>(records.keySet());
+        Collections.sort(recordTypes);
+        return recordTypes;
+    }
+
+    /**
      * Returns the records matching a given type.
      */
-    public @Nullable Collection<byte[]> getRecordsForType(int type) {
+    public @Nullable List<byte[]> getRecordsForType(int type) {
         return records.get(type);
     }
 
@@ -91,7 +102,7 @@ public final class AdvertisingData {
      * data of a given type match a given predicate functor.
      */
     public boolean anyRecordMatches(int type, @NonNull Func1<byte[], Boolean> predicate) {
-        Collection<byte[]> recordsForType = getRecordsForType(type);
+        final Collection<byte[]> recordsForType = getRecordsForType(type);
         if (recordsForType == null) {
             return false;
         }
@@ -123,11 +134,14 @@ public final class AdvertisingData {
     @Override
     public String toString() {
         String string = "{";
-        for (Iterator<Map.Entry<Integer, Collection<byte[]>>> recordIterator = records.entrySet().iterator(); recordIterator.hasNext(); ) {
-            Map.Entry<Integer, Collection<byte[]>> entry = recordIterator.next();
+        final Iterator<Map.Entry<Integer, List<byte[]>>> recordIterator =
+                records.entrySet().iterator();
+        while (recordIterator.hasNext()) {
+            final Map.Entry<Integer, List<byte[]>> entry = recordIterator.next();
             string += typeToString(entry.getKey());
             string += "=[";
-            for (Iterator<byte[]> entryIterator = entry.getValue().iterator(); entryIterator.hasNext(); ) {
+            final Iterator<byte[]> entryIterator = entry.getValue().iterator();
+            while (entryIterator.hasNext()) {
                 byte[] contents = entryIterator.next();
                 string += Bytes.toString(contents);
                 if (entryIterator.hasNext()) {

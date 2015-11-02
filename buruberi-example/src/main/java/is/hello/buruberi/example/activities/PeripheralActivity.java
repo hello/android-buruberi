@@ -4,6 +4,7 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 
@@ -11,6 +12,7 @@ import javax.inject.Inject;
 
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.example.R;
+import is.hello.buruberi.example.adapters.PeripheralDetailsAdapter;
 import is.hello.buruberi.example.presenters.PeripheralPresenter;
 import is.hello.buruberi.example.util.GattPeripherals;
 import rx.Observable;
@@ -40,12 +42,18 @@ public class PeripheralActivity extends BaseActivity {
         if (actionBar != null) {
             final Resources resources = getResources();
             actionBar.setTitle(GattPeripherals.getDisplayName(peripheral, resources));
-            actionBar.setSubtitle(GattPeripherals.getDetails(peripheral, resources));
         }
 
         this.busyShield = findViewById(R.id.activity_peripheral_busy_shield);
         this.connectionButton = (Button) findViewById(R.id.activity_peripheral_connection);
         this.bondButton = (Button) findViewById(R.id.activity_peripheral_bond);
+
+        final RecyclerView recyclerView =
+                (RecyclerView) findViewById(R.id.activity_peripheral_details_recycler);
+
+        final PeripheralDetailsAdapter adapter = new PeripheralDetailsAdapter(this);
+        adapter.bindAdvertisingData(peripheral.getAdvertisingData());
+        recyclerView.setAdapter(adapter);
     }
 
     @Override
