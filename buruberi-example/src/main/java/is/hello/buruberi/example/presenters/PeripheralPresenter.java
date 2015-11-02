@@ -10,6 +10,7 @@ import javax.inject.Singleton;
 
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
 import is.hello.buruberi.example.util.Optional;
 import rx.Observable;
@@ -22,9 +23,13 @@ import rx.subjects.ReplaySubject;
     public final ReplaySubject<Optional<GattPeripheral>> peripheral = ReplaySubject.createWithSize(1);
 
     private final BluetoothStack stack;
+    private final LoggerFacade logger;
 
-    @Inject public PeripheralPresenter(@NonNull BluetoothStack stack) {
+    @Inject public PeripheralPresenter(@NonNull BluetoothStack stack,
+                                       @NonNull LoggerFacade logger) {
         this.stack = stack;
+        this.logger = logger;
+
         peripheral.onNext(Optional.<GattPeripheral>empty());
     }
 
