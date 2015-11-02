@@ -6,4 +6,9 @@
     <string name="bond_status_none">Not bonded</string>
     <string name="bond_status_changing">Bond changing</string>
     <string name="bond_status_bonded">Bonded</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_bond">Bond</string>
+    <string name="action_unbond">Unbond</string>
+    <string name="title_error">Error</string>
 </resources>
