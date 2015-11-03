@@ -11,19 +11,26 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.bluetooth.stacks.util.Bytes;
 import is.hello.buruberi.example.R;
 
 public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDetailsAdapter.BaseViewHolder> {
     private static final int TYPE_RECORD = 0;
+    private static final int TYPE_SERVICE = 1;
 
     private final LayoutInflater inflater;
+    private final OnItemClickListener onItemClickListener;
+
     private final List<Integer> advertisingDataRecords = new ArrayList<>();
     private final List<String> advertisingDataValues = new ArrayList<>();
+    private final List<PeripheralService> services = new ArrayList<>();
 
-    public PeripheralDetailsAdapter(@NonNull Context context) {
+    public PeripheralDetailsAdapter(@NonNull Context context,
+                                    @NonNull OnItemClickListener onItemClickListener) {
         this.inflater = LayoutInflater.from(context);
+        this.onItemClickListener = onItemClickListener;
 
     }
 
@@ -53,20 +60,41 @@ public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDet
         notifyDataSetChanged();
     }
 
+    public void bindServices(@NonNull List<PeripheralService> services) {
+        this.services.clear();
+        this.services.addAll(services);
+
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemViewType(int position) {
-        return TYPE_RECORD;
+        if (position < advertisingDataRecords.size()) {
+            return TYPE_RECORD;
+        } else {
+            return TYPE_SERVICE;
+        }
     }
 
     @Override
     public int getItemCount() {
-        return advertisingDataRecords.size();
+        return advertisingDataRecords.size() + services.size();
     }
 
     @Override
     public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        final View view = inflater.inflate(R.layout.item_peripheral_record, parent, false);
-        return new RecordViewHolder(view);
+        final View view = inflater.inflate(R.layout.item_peripheral_detail, parent, false);
+        switch (viewType) {
+            case TYPE_RECORD: {
+                return new RecordViewHolder(view);
+            }
+            case TYPE_SERVICE: {
+                return new ServiceViewHolder(view);
+            }
+            default: {
+                throw new IllegalArgumentException();
+            }
+        }
     }
 
     @Override
@@ -74,32 +102,88 @@ public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDet
         holder.bind(position);
     }
 
-    abstract class BaseViewHolder extends RecyclerView.ViewHolder {
+    abstract class BaseViewHolder extends RecyclerView.ViewHolder
+        implements View.OnClickListener {
+        final TextView title;
+        final TextView detail;
+
         BaseViewHolder(@NonNull View itemView) {
             super(itemView);
+
+            this.title = (TextView) itemView.findViewById(R.id.item_peripheral_detail_title);
+            this.detail = (TextView) itemView.findViewById(R.id.item_peripheral_detail_detail);
+
+            itemView.setOnClickListener(this);
         }
 
         abstract void bind(int position);
     }
 
     class RecordViewHolder extends BaseViewHolder {
-        final TextView recordType;
-        final TextView recordValues;
-
         RecordViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            this.recordType = (TextView) itemView.findViewById(R.id.item_peripheral_record_type);
-            this.recordValues = (TextView) itemView.findViewById(R.id.item_peripheral_record_values);
         }
 
         @Override
         void bind(int position) {
             final Integer type = advertisingDataRecords.get(position);
-            recordType.setText(AdvertisingData.typeToString(type));
+            title.setText(AdvertisingData.typeToString(type));
 
             final String values = advertisingDataValues.get(position);
-            recordValues.setText(values);
+            detail.setText(values);
         }
+
+        @Override
+        public void onClick(View ignored) {
+            final int adapterPosition = getAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION) {
+                onItemClickListener.onAdvertisingRecordClick(advertisingDataRecords.get(adapterPosition),
+                                                             advertisingDataValues.get(adapterPosition));
+            }
+        }
+    }
+
+    class ServiceViewHolder extends BaseViewHolder {
+        ServiceViewHolder(@NonNull View itemView) {
+            super(itemView);
+        }
+
+        @Override
+        void bind(int position) {
+            final PeripheralService service = services.get(position - advertisingDataRecords.size());
+            title.setText(service.getUuid().toString());
+
+            final String type;
+            switch (service.getType()) {
+                case PeripheralService.SERVICE_TYPE_PRIMARY: {
+                    type = "SERVICE_TYPE_PRIMARY";
+                    break;
+                }
+                case PeripheralService.SERVICE_TYPE_SECONDARY: {
+                    type = "SERVICE_TYPE_SECONDARY";
+                    break;
+                }
+                default: {
+                    throw new IllegalArgumentException();
+                }
+            }
+            detail.setText(type);
+        }
+
+        @Override
+        public void onClick(View ignored) {
+            final int adapterPosition = getAdapterPosition();
+            if (adapterPosition != RecyclerView.NO_POSITION) {
+                final PeripheralService service =
+                        services.get(adapterPosition - advertisingDataRecords.size());
+                onItemClickListener.onServiceClick(service);
+            }
+        }
+    }
+
+
+    public interface OnItemClickListener {
+        void onAdvertisingRecordClick(int type, @NonNull String value);
+        void onServiceClick(@NonNull PeripheralService service);
     }
 }

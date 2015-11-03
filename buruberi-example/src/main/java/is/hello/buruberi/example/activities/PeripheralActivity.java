@@ -8,9 +8,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import is.hello.buruberi.example.R;
 import is.hello.buruberi.example.adapters.PeripheralDetailsAdapter;
 import is.hello.buruberi.example.presenters.PeripheralPresenter;
@@ -18,12 +21,15 @@ import is.hello.buruberi.example.util.GattPeripherals;
 import rx.Observable;
 import rx.functions.Action1;
 
-public class PeripheralActivity extends BaseActivity {
+public class PeripheralActivity extends BaseActivity
+        implements PeripheralDetailsAdapter.OnItemClickListener {
     @Inject PeripheralPresenter peripheralPresenter;
 
     private View busyShield;
     private Button connectionButton;
     private Button bondButton;
+    private Button discoverServicesButton;
+    private PeripheralDetailsAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,11 +53,12 @@ public class PeripheralActivity extends BaseActivity {
         this.busyShield = findViewById(R.id.activity_peripheral_busy_shield);
         this.connectionButton = (Button) findViewById(R.id.activity_peripheral_connection);
         this.bondButton = (Button) findViewById(R.id.activity_peripheral_bond);
+        this.discoverServicesButton = (Button) findViewById(R.id.activity_peripheral_discover_services);
 
         final RecyclerView recyclerView =
                 (RecyclerView) findViewById(R.id.activity_peripheral_details_recycler);
 
-        final PeripheralDetailsAdapter adapter = new PeripheralDetailsAdapter(this);
+        this.adapter = new PeripheralDetailsAdapter(this, this);
         adapter.bindAdvertisingData(peripheral.getAdvertisingData());
         recyclerView.setAdapter(adapter);
     }
@@ -77,8 +84,10 @@ public class PeripheralActivity extends BaseActivity {
             @Override
             public void call(Boolean isConnected) {
                 if (isConnected) {
+                    discoverServicesButton.setEnabled(true);
                     connectionButton.setText(R.string.action_disconnect);
                 } else {
+                    discoverServicesButton.setEnabled(false);
                     connectionButton.setText(R.string.action_connect);
                 }
             }
@@ -93,6 +102,14 @@ public class PeripheralActivity extends BaseActivity {
                 } else {
                     bondButton.setText(R.string.action_bond);
                 }
+            }
+        });
+
+        final Observable<List<PeripheralService>> services = bind(peripheralPresenter.services);
+        services.subscribe(new Action1<List<PeripheralService>>() {
+            @Override
+            public void call(List<PeripheralService> services) {
+                adapter.bindServices(services);
             }
         });
     }
@@ -111,5 +128,19 @@ public class PeripheralActivity extends BaseActivity {
         } else {
             presentError(peripheralPresenter.createBond());
         }
+    }
+
+    public void discoverServices(@NonNull View ignored) {
+        presentError(peripheralPresenter.discoverServices());
+    }
+
+    @Override
+    public void onAdvertisingRecordClick(int type, @NonNull String value) {
+        
+    }
+
+    @Override
+    public void onServiceClick(@NonNull PeripheralService service) {
+
     }
 }

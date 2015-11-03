@@ -39,11 +39,23 @@
 
     </LinearLayout>
 
+    <Button
+        android:id="@+id/activity_peripheral_discover_services"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/activity_peripheral_controls"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:layout_marginBottom="@dimen/gap_medium"
+        android:text="@string/action_discover_services"
+        android:onClick="discoverServices"
+        style="@style/Widget.AppCompat.Button.Colored" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/activity_peripheral_details_recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/activity_peripheral_controls"
+        android:layout_below="@id/activity_peripheral_discover_services"
         app:layoutManager="android.support.v7.widget.LinearLayoutManager"/>
 
     <FrameLayout

@@ -11,4 +11,5 @@
     <string name="action_bond">Bond</string>
     <string name="action_unbond">Unbond</string>
     <string name="title_error">Error</string>
+    <string name="action_discover_services">Discover Services</string>
 </resources>
