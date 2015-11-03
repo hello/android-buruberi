@@ -1,8 +1,13 @@
 package is.hello.buruberi.example.activities;
 
+import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.PermissionChecker;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,6 +29,8 @@ import rx.functions.Action1;
 
 public class ScanActivity extends BaseActivity
         implements ScanResultsAdapter.OnItemClickListener {
+    private static final int LOCATION_REQUEST_CODE = 0x1C;
+
     @Inject ScanPresenter scanPresenter;
     @Inject PeripheralPresenter peripheralPresenter;
 
@@ -108,8 +115,46 @@ public class ScanActivity extends BaseActivity
     }
 
     private void scan() {
-        adapter.clear();
-        scanPresenter.scan();
+        final int permissionStatus =
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+        if (permissionStatus == PermissionChecker.PERMISSION_GRANTED) {
+            adapter.clear();
+            scanPresenter.scan();
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            showLocationPermissionExplanation();
+        } else {
+            requestLocationPermission();
+        }
+    }
+
+    private void showLocationPermissionExplanation() {
+        final AlertDialog.Builder explanation = new AlertDialog.Builder(this);
+        explanation.setTitle(R.string.location_permission_explanation_title);
+        explanation.setMessage(R.string.location_permission_explanation_message);
+        explanation.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                requestLocationPermission();
+            }
+        });
+        explanation.show();
+    }
+
+    private void requestLocationPermission() {
+        final String[] permissions = { Manifest.permission.ACCESS_COARSE_LOCATION };
+        ActivityCompat.requestPermissions(this, permissions, LOCATION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LOCATION_REQUEST_CODE &&
+                grantResults[0] == PermissionChecker.PERMISSION_GRANTED) {
+            scan();
+        }
     }
 
     @Override

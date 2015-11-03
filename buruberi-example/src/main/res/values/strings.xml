@@ -12,4 +12,6 @@
     <string name="action_unbond">Unbond</string>
     <string name="title_error">Error</string>
     <string name="action_discover_services">Discover Services</string>
+    <string name="location_permission_explanation_title">Location Needed</string>
+    <string name="location_permission_explanation_message">Access to your location is required in order to perform a Bluetooth Low Energy scan.</string>
 </resources>
