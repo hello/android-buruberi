@@ -1,6 +1,7 @@
 package is.hello.buruberi.example.adapters;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -15,12 +16,14 @@ import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.bluetooth.stacks.util.Bytes;
 import is.hello.buruberi.example.R;
+import is.hello.buruberi.example.util.PeripheralServices;
 
 public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDetailsAdapter.BaseViewHolder> {
     private static final int TYPE_RECORD = 0;
     private static final int TYPE_SERVICE = 1;
 
     private final LayoutInflater inflater;
+    private final Resources resources;
     private final OnItemClickListener onItemClickListener;
 
     private final List<Integer> advertisingDataRecords = new ArrayList<>();
@@ -30,11 +33,14 @@ public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDet
     public PeripheralDetailsAdapter(@NonNull Context context,
                                     @NonNull OnItemClickListener onItemClickListener) {
         this.inflater = LayoutInflater.from(context);
+        this.resources = context.getResources();
         this.onItemClickListener = onItemClickListener;
 
     }
 
     public void bindAdvertisingData(@NonNull AdvertisingData advertisingData) {
+        final int oldSize = getItemCount();
+
         advertisingDataRecords.clear();
         advertisingDataValues.clear();
 
@@ -57,14 +63,29 @@ public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDet
             advertisingDataValues.add(valueBuilder.toString());
         }
 
-        notifyDataSetChanged();
+        notifyDataSetChanged(oldSize);
     }
 
     public void bindServices(@NonNull List<PeripheralService> services) {
+        final int oldSize = getItemCount();
+
         this.services.clear();
         this.services.addAll(services);
 
-        notifyDataSetChanged();
+        notifyDataSetChanged(oldSize);
+    }
+
+    private void notifyDataSetChanged(int oldSize) {
+        final int newSize = getItemCount();
+        if (newSize > oldSize) {
+            notifyItemRangeChanged(0, oldSize);
+            notifyItemRangeInserted(oldSize, newSize - oldSize);
+        } else if (newSize < oldSize) {
+            notifyItemChanged(0, newSize);
+            notifyItemRangeRemoved(newSize, oldSize - newSize);
+        } else {
+            notifyItemRangeChanged(0, newSize);
+        }
     }
 
     @Override
@@ -151,23 +172,8 @@ public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDet
         @Override
         void bind(int position) {
             final PeripheralService service = services.get(position - advertisingDataRecords.size());
-            title.setText(service.getUuid().toString());
-
-            final String type;
-            switch (service.getType()) {
-                case PeripheralService.SERVICE_TYPE_PRIMARY: {
-                    type = "SERVICE_TYPE_PRIMARY";
-                    break;
-                }
-                case PeripheralService.SERVICE_TYPE_SECONDARY: {
-                    type = "SERVICE_TYPE_SECONDARY";
-                    break;
-                }
-                default: {
-                    throw new IllegalArgumentException();
-                }
-            }
-            detail.setText(type);
+            title.setText(PeripheralServices.getDisplayName(service));
+            detail.setText(PeripheralServices.getDetails(service, resources));
         }
 
         @Override

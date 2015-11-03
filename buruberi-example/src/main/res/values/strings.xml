@@ -10,6 +10,9 @@
     <string name="action_disconnect">Disconnect</string>
     <string name="action_bond">Bond</string>
     <string name="action_unbond">Unbond</string>
+    <string name="peripheral_service_details_format">%1$s\n%2$s</string>
+    <string name="service_type_primary">Primary service</string>
+    <string name="service_type_secondary">Secondary service</string>
     <string name="title_error">Error</string>
     <string name="action_discover_services">Discover Services</string>
     <string name="location_permission_explanation_title">Location Needed</string>

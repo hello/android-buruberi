@@ -48,6 +48,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
                 break;
             }
 
+            dividerPaint.setAlpha(Math.round(255f * child.getAlpha()));
             c.drawRect(child.getLeft() + leftInset, child.getBottom(),
                        child.getRight(), child.getBottom() + dividerHeight,
                        dividerPaint);

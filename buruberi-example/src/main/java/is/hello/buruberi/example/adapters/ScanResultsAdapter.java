@@ -32,13 +32,25 @@ public class ScanResultsAdapter extends RecyclerView.Adapter<ScanResultsAdapter.
     public void clear() {
         final int oldSize = peripherals.size();
         peripherals.clear();
-        notifyItemRangeRemoved(0, oldSize);
+        notifyDataSetChanged(oldSize);
     }
 
     public void addPeripherals(@NonNull List<GattPeripheral> newPeripherals) {
+        final int oldSize = getItemCount();
         peripherals.addAll(newPeripherals);
-        if (!peripherals.isEmpty()) {
-            notifyItemRangeInserted(0, newPeripherals.size());
+        notifyDataSetChanged(oldSize);
+    }
+
+    private void notifyDataSetChanged(int oldSize) {
+        final int newSize = getItemCount();
+        if (newSize > oldSize) {
+            notifyItemRangeChanged(0, oldSize);
+            notifyItemRangeInserted(oldSize, newSize - oldSize);
+        } else if (newSize < oldSize) {
+            notifyItemChanged(0, newSize);
+            notifyItemRangeRemoved(newSize, oldSize - newSize);
+        } else {
+            notifyItemRangeChanged(0, newSize);
         }
     }
 

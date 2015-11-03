@@ -16,6 +16,7 @@ import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import is.hello.buruberi.example.R;
 import is.hello.buruberi.example.adapters.PeripheralDetailsAdapter;
+import is.hello.buruberi.example.dialogs.LoadingDialog;
 import is.hello.buruberi.example.presenters.PeripheralPresenter;
 import is.hello.buruberi.example.util.DividerItemDecoration;
 import is.hello.buruberi.example.util.GattPeripherals;
@@ -26,10 +27,10 @@ public class PeripheralActivity extends BaseActivity
         implements PeripheralDetailsAdapter.OnItemClickListener {
     @Inject PeripheralPresenter peripheralPresenter;
 
-    private View busyShield;
     private Button connectionButton;
     private Button bondButton;
     private Button discoverServicesButton;
+
     private PeripheralDetailsAdapter adapter;
 
     @Override
@@ -51,7 +52,6 @@ public class PeripheralActivity extends BaseActivity
             actionBar.setTitle(GattPeripherals.getDisplayName(peripheral, resources));
         }
 
-        this.busyShield = findViewById(R.id.activity_peripheral_busy_shield);
         this.connectionButton = (Button) findViewById(R.id.activity_peripheral_connection);
         this.bondButton = (Button) findViewById(R.id.activity_peripheral_bond);
         this.discoverServicesButton = (Button) findViewById(R.id.activity_peripheral_discover_services);
@@ -71,12 +71,20 @@ public class PeripheralActivity extends BaseActivity
 
         final Observable<Boolean> working = bind(peripheralPresenter.working);
         working.subscribe(new Action1<Boolean>() {
+            LoadingDialog loadingDialog = null;
+
             @Override
             public void call(Boolean isWorking) {
                 if (isWorking) {
-                    busyShield.setVisibility(View.VISIBLE);
+                    if (loadingDialog == null) {
+                        this.loadingDialog = new LoadingDialog(PeripheralActivity.this);
+                        loadingDialog.show();
+                    }
                 } else {
-                    busyShield.setVisibility(View.GONE);
+                    if (loadingDialog != null) {
+                        loadingDialog.dismiss();
+                        this.loadingDialog = null;
+                    }
                 }
             }
         });
