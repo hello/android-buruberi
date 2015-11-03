@@ -3,7 +3,6 @@ package is.hello.buruberi.example.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +18,7 @@ import is.hello.buruberi.example.R;
 import is.hello.buruberi.example.adapters.ScanResultsAdapter;
 import is.hello.buruberi.example.presenters.PeripheralPresenter;
 import is.hello.buruberi.example.presenters.ScanPresenter;
+import is.hello.buruberi.example.util.DividerItemDecoration;
 import rx.Observable;
 import rx.functions.Action1;
 
@@ -40,7 +40,7 @@ public class ScanActivity extends BaseActivity
         this.progressBar = (ProgressBar) findViewById(R.id.activity_scan_progress);
 
         this.recyclerView = (RecyclerView) findViewById(R.id.activity_scan_recycler);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.addItemDecoration(new DividerItemDecoration(getResources(), true));
 
         this.adapter = new ScanResultsAdapter(this, this);
         recyclerView.setAdapter(adapter);

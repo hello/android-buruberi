@@ -17,6 +17,7 @@ import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import is.hello.buruberi.example.R;
 import is.hello.buruberi.example.adapters.PeripheralDetailsAdapter;
 import is.hello.buruberi.example.presenters.PeripheralPresenter;
+import is.hello.buruberi.example.util.DividerItemDecoration;
 import is.hello.buruberi.example.util.GattPeripherals;
 import rx.Observable;
 import rx.functions.Action1;
@@ -44,9 +45,9 @@ public class PeripheralActivity extends BaseActivity
 
         setContentView(R.layout.activity_peripheral);
 
+        final Resources resources = getResources();
         final ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            final Resources resources = getResources();
             actionBar.setTitle(GattPeripherals.getDisplayName(peripheral, resources));
         }
 
@@ -57,6 +58,7 @@ public class PeripheralActivity extends BaseActivity
 
         final RecyclerView recyclerView =
                 (RecyclerView) findViewById(R.id.activity_peripheral_details_recycler);
+        recyclerView.addItemDecoration(new DividerItemDecoration(resources, false));
 
         this.adapter = new PeripheralDetailsAdapter(this, this);
         adapter.bindAdvertisingData(peripheral.getAdvertisingData());
@@ -136,7 +138,7 @@ public class PeripheralActivity extends BaseActivity
 
     @Override
     public void onAdvertisingRecordClick(int type, @NonNull String value) {
-        
+
     }
 
     @Override

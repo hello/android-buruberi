@@ -7,4 +7,6 @@
     <dimen name="gap_medium">10dp</dimen>
     <dimen name="gap_large">15dp</dimen>
     <dimen name="gap_huge">20dp</dimen>
+
+    <dimen name="divider_size">1px</dimen>
 </resources>
