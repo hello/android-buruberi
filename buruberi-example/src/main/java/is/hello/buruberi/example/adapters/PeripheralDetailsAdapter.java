@@ -16,6 +16,7 @@ import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.bluetooth.stacks.util.Bytes;
 import is.hello.buruberi.example.R;
+import is.hello.buruberi.example.util.GattPeripherals;
 import is.hello.buruberi.example.util.PeripheralServices;
 
 public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDetailsAdapter.BaseViewHolder> {
@@ -148,7 +149,7 @@ public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDet
         @Override
         void bind(int position) {
             final Integer type = advertisingDataRecords.get(position);
-            title.setText(AdvertisingData.typeToString(type));
+            title.setText(GattPeripherals.getAdvertisingDataTypeString(type));
 
             final String values = advertisingDataValues.get(position);
             detail.setText(values);
