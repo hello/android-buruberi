@@ -3,11 +3,6 @@ package is.hello.buruberi.example.presenters;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -16,18 +11,14 @@ import javax.inject.Singleton;
 import is.hello.buruberi.bluetooth.errors.ConnectionStateException;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
-import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import rx.Observable;
 import rx.functions.Action0;
-import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.subjects.ReplaySubject;
 
 @Singleton public class PeripheralPresenter extends BasePresenter {
     public final ReplaySubject<Boolean> connected = ReplaySubject.createWithSize(1);
     public final ReplaySubject<Boolean> bonded = ReplaySubject.createWithSize(1);
-    public final ReplaySubject<List<PeripheralService>> services = ReplaySubject.createWithSize(1);
 
     private final LoggerFacade logger;
     private @Nullable GattPeripheral peripheral;
@@ -37,7 +28,6 @@ import rx.subjects.ReplaySubject;
 
         updateConnected();
         updateBonded();
-        services.onNext(Collections.<PeripheralService>emptyList());
     }
 
     private void updateConnected() {
@@ -54,6 +44,10 @@ import rx.subjects.ReplaySubject;
         } else {
             bonded.onNext(false);
         }
+    }
+
+    private void logEvent(@NonNull String event) {
+        logger.debug(getClass().getSimpleName(), event);
     }
 
     public void setPeripheral(@Nullable GattPeripheral peripheral) {
@@ -79,6 +73,8 @@ import rx.subjects.ReplaySubject;
     }
 
     public Observable<GattPeripheral> connect() {
+        logEvent("connect()");
+
         if (peripheral == null) {
             return Observable.error(new ConnectionStateException());
         }
@@ -97,6 +93,8 @@ import rx.subjects.ReplaySubject;
     }
 
     public Observable<GattPeripheral> disconnect() {
+        logEvent("disconnect()");
+
         if (peripheral == null) {
             return Observable.error(new ConnectionStateException());
         }
@@ -114,6 +112,8 @@ import rx.subjects.ReplaySubject;
 
     @NonNull
     public Observable<GattPeripheral> createBond() {
+        logEvent("createBond()");
+
         if (peripheral == null) {
             return Observable.error(new ConnectionStateException());
         }
@@ -131,6 +131,7 @@ import rx.subjects.ReplaySubject;
 
     @NonNull
     public Observable<GattPeripheral> removeBond() {
+        logEvent("removeBond()");
         if (peripheral == null) {
             return Observable.error(new ConnectionStateException());
         }
@@ -146,30 +147,5 @@ import rx.subjects.ReplaySubject;
                               }
                           });
         return bind(removeBond);
-    }
-
-    @NonNull
-    public Observable<List<PeripheralService>> discoverServices() {
-        if (peripheral == null) {
-            return Observable.error(new ConnectionStateException());
-        }
-
-        final OperationTimeout timeout =
-                peripheral.createOperationTimeout("Remove Bond", 30L, TimeUnit.SECONDS);
-        final Observable<List<PeripheralService>> discoverServices =
-                peripheral.discoverServices(timeout)
-                          .map(new Func1<Map<UUID, PeripheralService>, List<PeripheralService>>() {
-                              @Override
-                              public List<PeripheralService> call(Map<UUID, PeripheralService> serviceMap) {
-                                  return new ArrayList<>(serviceMap.values());
-                              }
-                          })
-                          .doOnNext(new Action1<List<PeripheralService>>() {
-                              @Override
-                              public void call(List<PeripheralService> peripheralServices) {
-                                  services.onNext(peripheralServices);
-                              }
-                          });
-        return bind(discoverServices);
     }
 }
