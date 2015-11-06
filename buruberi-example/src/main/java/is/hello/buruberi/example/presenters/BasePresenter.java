@@ -18,6 +18,10 @@ public abstract class BasePresenter {
         this.working.onNext(working);
     }
 
+    public boolean isWorking() {
+        return working.toBlocking().first();
+    }
+
     protected <U> Observable<U> bind(@NonNull Observable<U> observable) {
         return observable.doOnSubscribe(new Action0() {
             @Override

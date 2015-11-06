@@ -97,7 +97,7 @@ public class ScanActivity extends BaseActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        scanItem.setEnabled(!scanPresenter.isScanning());
+        scanItem.setEnabled(!scanPresenter.isWorking());
 
         return super.onPrepareOptionsMenu(menu);
     }

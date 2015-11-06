@@ -66,10 +66,6 @@ import rx.subjects.ReplaySubject;
         });
     }
 
-    public boolean isScanning() {
-        return (scanSubscription != null);
-    }
-
     //region Attributes
 
     public void setLimit(int limit) {
