@@ -8,6 +8,9 @@ import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.example.R;
 
+/**
+ * Convenience methods for displaying information about {@code GattPeripheral} objects.
+ */
 public class GattPeripherals {
     public static CharSequence getDisplayName(@NonNull GattPeripheral peripheral,
                                               @NonNull Resources resources) {

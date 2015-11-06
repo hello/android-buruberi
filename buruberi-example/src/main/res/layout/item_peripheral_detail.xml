@@ -3,12 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingLeft="@dimen/gap_outer"
+    android:paddingRight="@dimen/gap_outer"
     android:paddingTop="@dimen/gap_small"
     android:paddingBottom="@dimen/gap_small"
-    android:orientation="vertical"
-    android:background="?attr/selectableItemBackground">
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/item_peripheral_detail_title"

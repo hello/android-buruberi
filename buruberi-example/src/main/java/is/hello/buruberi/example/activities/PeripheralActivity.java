@@ -20,8 +20,10 @@ import is.hello.buruberi.example.util.GattPeripherals;
 import rx.Observable;
 import rx.functions.Action1;
 
-public class PeripheralActivity extends BaseActivity
-        implements PeripheralDetailsAdapter.OnItemClickListener {
+/**
+ * Displays information about a peripheral chosen by the user.
+ */
+public class PeripheralActivity extends BaseActivity {
     @Inject PeripheralPresenter peripheralPresenter;
 
     private Button connectionButton;
@@ -32,6 +34,9 @@ public class PeripheralActivity extends BaseActivity
         super.onCreate(savedInstanceState);
         final GattPeripheral peripheral = peripheralPresenter.getPeripheral();
         if (peripheral == null) {
+            // We can't do anything if there's no peripheral being presented.
+            // This can happen if the app hibernates, since `GattPeripheral`
+            // currently does not support serialization.
             setResult(RESULT_CANCELED);
             finish();
 
@@ -53,7 +58,7 @@ public class PeripheralActivity extends BaseActivity
                 (RecyclerView) findViewById(R.id.activity_peripheral_details_recycler);
         recyclerView.addItemDecoration(new DividerItemDecoration(resources, false));
 
-        final PeripheralDetailsAdapter adapter = new PeripheralDetailsAdapter(this, this);
+        final PeripheralDetailsAdapter adapter = new PeripheralDetailsAdapter(this);
         adapter.bindAdvertisingData(peripheral.getAdvertisingData());
         recyclerView.setAdapter(adapter);
     }
@@ -122,9 +127,4 @@ public class PeripheralActivity extends BaseActivity
             presentError(peripheralPresenter.createBond());
         }
     }
-
-    @Override
-    public void onAdvertisingRecordClick(int type, @NonNull String value) {
-    }
-
 }

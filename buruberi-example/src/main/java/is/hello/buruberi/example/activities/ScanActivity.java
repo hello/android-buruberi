@@ -27,6 +27,10 @@ import is.hello.buruberi.example.util.DividerItemDecoration;
 import rx.Observable;
 import rx.functions.Action1;
 
+/**
+ * Allows the user to conduct a Bluetooth Low Energy peripheral scan,
+ * and select peripherals to interact with.
+ */
 public class ScanActivity extends BaseActivity
         implements ScanResultsAdapter.OnItemClickListener {
     private static final int LOCATION_REQUEST_CODE = 0x1C;
@@ -158,7 +162,7 @@ public class ScanActivity extends BaseActivity
     }
 
     @Override
-    public void onItemClick(int position, @NonNull GattPeripheral peripheral) {
+    public void onItemClick(@NonNull GattPeripheral peripheral) {
         peripheralPresenter.setPeripheral(peripheral);
         startActivity(new Intent(this, PeripheralActivity.class));
     }

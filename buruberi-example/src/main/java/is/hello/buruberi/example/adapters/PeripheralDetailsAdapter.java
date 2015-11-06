@@ -18,15 +18,12 @@ import is.hello.buruberi.example.util.GattPeripherals;
 
 public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDetailsAdapter.RecordViewHolder> {
     private final LayoutInflater inflater;
-    private final OnItemClickListener onItemClickListener;
 
     private final List<Integer> advertisingDataRecords = new ArrayList<>();
     private final List<String> advertisingDataValues = new ArrayList<>();
 
-    public PeripheralDetailsAdapter(@NonNull Context context,
-                                    @NonNull OnItemClickListener onItemClickListener) {
+    public PeripheralDetailsAdapter(@NonNull Context context) {
         this.inflater = LayoutInflater.from(context);
-        this.onItemClickListener = onItemClickListener;
 
     }
 
@@ -76,8 +73,7 @@ public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDet
         holder.detail.setText(values);
     }
 
-    class RecordViewHolder extends RecyclerView.ViewHolder
-            implements View.OnClickListener {
+    class RecordViewHolder extends RecyclerView.ViewHolder {
         final TextView title;
         final TextView detail;
 
@@ -86,22 +82,6 @@ public class PeripheralDetailsAdapter extends RecyclerView.Adapter<PeripheralDet
 
             this.title = (TextView) itemView.findViewById(R.id.item_peripheral_detail_title);
             this.detail = (TextView) itemView.findViewById(R.id.item_peripheral_detail_detail);
-
-            itemView.setOnClickListener(this);
         }
-
-        @Override
-        public void onClick(View ignored) {
-            final int adapterPosition = getAdapterPosition();
-            if (adapterPosition != RecyclerView.NO_POSITION) {
-                onItemClickListener.onAdvertisingRecordClick(advertisingDataRecords.get(adapterPosition),
-                                                             advertisingDataValues.get(adapterPosition));
-            }
-        }
-    }
-
-
-    public interface OnItemClickListener {
-        void onAdvertisingRecordClick(int type, @NonNull String value);
     }
 }

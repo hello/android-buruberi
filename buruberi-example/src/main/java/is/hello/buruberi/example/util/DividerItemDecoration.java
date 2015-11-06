@@ -11,6 +11,9 @@ import android.view.View;
 
 import is.hello.buruberi.example.R;
 
+/**
+ * Adds dividers in between items within a recycler view.
+ */
 public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     private final Paint dividerPaint = new Paint();
     private final int dividerHeight;
@@ -19,7 +22,7 @@ public class DividerItemDecoration extends RecyclerView.ItemDecoration {
     public DividerItemDecoration(@NonNull Resources resources, boolean includeInset) {
         this.dividerHeight = resources.getDimensionPixelSize(R.dimen.divider_size);
         if (includeInset) {
-            this.leftInset = resources.getDimensionPixelSize(R.dimen.activity_horizontal_margin);
+            this.leftInset = resources.getDimensionPixelSize(R.dimen.gap_outer);
         } else {
             this.leftInset = 0;
         }

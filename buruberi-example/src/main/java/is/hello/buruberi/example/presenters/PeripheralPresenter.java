@@ -1,5 +1,6 @@
 package is.hello.buruberi.example.presenters;
 
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -16,8 +17,19 @@ import rx.Observable;
 import rx.functions.Action0;
 import rx.subjects.ReplaySubject;
 
+/**
+ * Wraps the connectivity and bond state of a Bluetooth Low Energy
+ * peripheral and provides observable hooks.
+ */
 @Singleton public class PeripheralPresenter extends BasePresenter {
+    /**
+     * The connected state of the peripheral.
+     */
     public final ReplaySubject<Boolean> connected = ReplaySubject.createWithSize(1);
+
+    /**
+     * The bond state of the peripheral.
+     */
     public final ReplaySubject<Boolean> bonded = ReplaySubject.createWithSize(1);
 
     private final LoggerFacade logger;
@@ -50,6 +62,9 @@ import rx.subjects.ReplaySubject;
         logger.debug(getClass().getSimpleName(), event);
     }
 
+    /**
+     * Set the peripheral whose state the presenter should track.
+     */
     public void setPeripheral(@Nullable GattPeripheral peripheral) {
         this.peripheral = peripheral;
 
@@ -72,6 +87,13 @@ import rx.subjects.ReplaySubject;
                 peripheral.getBondStatus() == GattPeripheral.BOND_BONDED);
     }
 
+    /**
+     * Attempts to connect to the peripheral, timing out after
+     * 30 seconds if the remote peripheral does not respond.
+     * <p>
+     * Updates the value of {@link #connected} upon completion.
+     */
+    @CheckResult
     public Observable<GattPeripheral> connect() {
         logEvent("connect()");
 
@@ -92,6 +114,13 @@ import rx.subjects.ReplaySubject;
         return bind(connect);
     }
 
+    /**
+     * Attempts to disconnect from the peripheral. Does nothing if
+     * the peripheral is not currently connected.
+     * <p>
+     * Updates the value of {@link #connected} upon completion.
+     */
+    @CheckResult
     public Observable<GattPeripheral> disconnect() {
         logEvent("disconnect()");
 
@@ -110,7 +139,14 @@ import rx.subjects.ReplaySubject;
         return bind(disconnect);
     }
 
-    @NonNull
+    /**
+     * Attempts to pair with the peripheral.
+     * <p>
+     * Updates the value of {@link #bonded} upon completion.
+     *
+     * @see GattPeripheral#createBond() for more info about this method's behavior.
+     */
+    @CheckResult
     public Observable<GattPeripheral> createBond() {
         logEvent("createBond()");
 
@@ -129,7 +165,15 @@ import rx.subjects.ReplaySubject;
         return bind(createBond);
     }
 
-    @NonNull
+    /**
+     * Attempts to un-pair with the peripheral, timing out after 30 seconds if
+     * the peripheral does not respond.
+     * <p>
+     * Updates the value of {@link #bonded} upon completion.
+     *
+     * @see GattPeripheral#createBond() for more info about this method's behavior.
+     */
+    @CheckResult
     public Observable<GattPeripheral> removeBond() {
         logEvent("removeBond()");
         if (peripheral == null) {

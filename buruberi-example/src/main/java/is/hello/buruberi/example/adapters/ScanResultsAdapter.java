@@ -93,12 +93,12 @@ public class ScanResultsAdapter extends RecyclerView.Adapter<ScanResultsAdapter.
         public void onClick(View sender) {
             final int adapterPosition = getAdapterPosition();
             if (adapterPosition != RecyclerView.NO_POSITION) {
-                onItemClickListener.onItemClick(adapterPosition, getItem(adapterPosition));
+                onItemClickListener.onItemClick(getItem(adapterPosition));
             }
         }
     }
 
     public interface OnItemClickListener {
-        void onItemClick(int position, @NonNull GattPeripheral peripheral);
+        void onItemClick(@NonNull GattPeripheral peripheral);
     }
 }
