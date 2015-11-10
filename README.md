@@ -8,19 +8,45 @@ Working with Bluetooth Low Energy on Android can be a real pain. Major quality
 differences between manufacturers, mysterious undocumented error codes, bugs
 introduced between OS releases... These are not the things dreams are made of.
 Buruberi is a small library that wraps the Android Bluetooth Low Energy APIs,
-and tries to insulate you from as many of these problems as it can. When it
-can't insulate you from a problem, it does its best to provide mitigation tools.
+and tries to insulate you from as many of these problems as it can.
 
-# TODO
+# Using AnimeAndroidGo99
 
-- Clean up implementation of characteristic writes.
-- Clean up implementation of descriptor notification control.
-- Sort out generating jars for distribution.
-- Sort out maven hosting.
+## Scanning for Peripherals
+
+## Connecting and Bonding
+
+## Using Services
+
+## Writing to Characteristics
+
+## Processing Packets
+
+# Download
+
+## Gradle
+
+```groovy
+dependencies {
+    compile 'is.hello:buruberi-core:0.9.0'
+    testCompile 'is.hello:buruberi-testing:0.9.0'
+}
+```
+
+Make sure that your project's root `build.gradle` file contains the `jcenter()` repository.
+
+## Jar
+
+Get it on the [releases](https://github.com/hello/anime-android-go-99/releases) page.
+
+_Does not include convenience resources._
 
 # Contributing
 
-If you'd like to contribute to `android-buruberi`, fork the project on GitHub, and submit a pull request with your changes. Please be sure to include unit tests for any changes you make, and follow the coding style of the project as closely as possible. The full contribution guidelines can be found [here](https://github.com/hello/android-buruberi/blob/master/CONTRIBUTING.md).
+If you'd like to contribute to `android-buruberi`, fork the project on GitHub, and submit a pull
+request with your changes. Please be sure to include unit tests for any changes you make, and
+follow the coding style of the project as closely as possible. The full contribution guidelines
+can be found [here](https://github.com/hello/android-buruberi/blob/master/CONTRIBUTING.md).
 
 # License
 
