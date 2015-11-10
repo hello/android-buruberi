@@ -18,8 +18,8 @@ package is.hello.buruberi.bluetooth.errors;
 import java.util.UUID;
 
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
-import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 
 /**
  * Indicates that a Bluetooth operation timed out before completion.
@@ -63,12 +63,12 @@ public class OperationTimeoutException extends BuruberiException {
         DISCOVER_SERVICES,
 
         /**
-         * Corresponds to {@link GattPeripheral#enableNotification(PeripheralService, UUID, UUID, OperationTimeout)}.
+         * Corresponds to {@link GattPeripheral#enableNotification(GattService, UUID, UUID, OperationTimeout)}.
          */
         ENABLE_NOTIFICATION,
 
         /**
-         * Corresponds to {@link GattPeripheral#disableNotification(PeripheralService, UUID, UUID, OperationTimeout)}.
+         * Corresponds to {@link GattPeripheral#disableNotification(GattService, UUID, UUID, OperationTimeout)}.
          */
         DISABLE_NOTIFICATION,
 
@@ -78,7 +78,7 @@ public class OperationTimeoutException extends BuruberiException {
         REMOVE_BOND,
 
         /**
-         * Corresponds to {@link GattPeripheral#writeCommand(PeripheralService, UUID, GattPeripheral.WriteType, byte[], OperationTimeout)}.
+         * Corresponds to {@link GattPeripheral#writeCommand(GattService, UUID, GattPeripheral.WriteType, byte[], OperationTimeout)}.
          */
         WRITE_COMMAND,
 

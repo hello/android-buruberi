@@ -46,8 +46,8 @@ import is.hello.buruberi.bluetooth.errors.OperationTimeoutException;
 import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
-import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.util.Rx;
@@ -610,10 +610,10 @@ public class NativeGattPeripheral implements GattPeripheral {
     @NonNull
     @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<Map<UUID, PeripheralService>> discoverServices(final @NonNull OperationTimeout timeout) {
-        Observable<Map<UUID, PeripheralService>> discoverServices = createObservable(new Observable.OnSubscribe<Map<UUID, PeripheralService>>() {
+    public Observable<Map<UUID, GattService>> discoverServices(final @NonNull OperationTimeout timeout) {
+        Observable<Map<UUID, GattService>> discoverServices = createObservable(new Observable.OnSubscribe<Map<UUID, GattService>>() {
             @Override
-            public void call(final Subscriber<? super Map<UUID, PeripheralService>> subscriber) {
+            public void call(final Subscriber<? super Map<UUID, GattService>> subscriber) {
                 if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
                     subscriber.onError(new ConnectionStateException());
                     return;
@@ -630,9 +630,9 @@ public class NativeGattPeripheral implements GattPeripheral {
                         gattDispatcher.removeDisconnectListener(onDisconnect);
 
                         if (status == BluetoothGatt.GATT_SUCCESS) {
-                            final Map<UUID, PeripheralService> services =
-                                    NativePeripheralService.wrap(gatt.getServices(),
-                                                                 NativeGattPeripheral.this);
+                            final Map<UUID, GattService> services =
+                                    NativeGattService.wrap(gatt.getServices(),
+                                                           NativeGattPeripheral.this);
                             subscriber.onNext(services);
                             subscriber.onCompleted();
 
@@ -665,11 +665,11 @@ public class NativeGattPeripheral implements GattPeripheral {
     @NonNull
     @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<PeripheralService> discoverService(final @NonNull UUID serviceIdentifier, @NonNull OperationTimeout timeout) {
-        return discoverServices(timeout).flatMap(new Func1<Map<UUID, PeripheralService>, Observable<? extends PeripheralService>>() {
+    public Observable<GattService> discoverService(final @NonNull UUID serviceIdentifier, @NonNull OperationTimeout timeout) {
+        return discoverServices(timeout).flatMap(new Func1<Map<UUID, GattService>, Observable<? extends GattService>>() {
             @Override
-            public Observable<? extends PeripheralService> call(Map<UUID, PeripheralService> services) {
-                PeripheralService service = services.get(serviceIdentifier);
+            public Observable<? extends GattService> call(Map<UUID, GattService> services) {
+                GattService service = services.get(serviceIdentifier);
                 if (service != null) {
                     return Observable.just(service);
                 } else {
@@ -685,14 +685,14 @@ public class NativeGattPeripheral implements GattPeripheral {
 
     //region Characteristics
 
-    private @NonNull BluetoothGattService getGattService(@NonNull PeripheralService onPeripheralService) {
-        return ((NativePeripheralService) onPeripheralService).service;
+    private @NonNull BluetoothGattService getGattService(@NonNull GattService onGattService) {
+        return ((NativeGattService) onGattService).service;
     }
 
     @NonNull
     @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<UUID> enableNotification(final @NonNull PeripheralService onPeripheralService,
+    public Observable<UUID> enableNotification(final @NonNull GattService onGattService,
                                                final @NonNull UUID characteristicIdentifier,
                                                final @NonNull UUID descriptorIdentifier,
                                                final @NonNull OperationTimeout timeout) {
@@ -706,7 +706,7 @@ public class NativeGattPeripheral implements GattPeripheral {
 
                 logger.info(GattPeripheral.LOG_TAG, "Subscribing to " + characteristicIdentifier);
 
-                final BluetoothGattService service = getGattService(onPeripheralService);
+                final BluetoothGattService service = getGattService(onGattService);
                 final BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicIdentifier);
                 if (gatt.setCharacteristicNotification(characteristic, true)) {
                     final Action0 onDisconnect = gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
@@ -754,7 +754,7 @@ public class NativeGattPeripheral implements GattPeripheral {
     @NonNull
     @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<UUID> disableNotification(final @NonNull PeripheralService onPeripheralService,
+    public Observable<UUID> disableNotification(final @NonNull GattService onGattService,
                                                 final @NonNull UUID characteristicIdentifier,
                                                 final @NonNull UUID descriptorIdentifier,
                                                 final @NonNull OperationTimeout timeout) {
@@ -768,7 +768,7 @@ public class NativeGattPeripheral implements GattPeripheral {
 
                 logger.info(GattPeripheral.LOG_TAG, "Unsubscribing from " + characteristicIdentifier);
 
-                final BluetoothGattService service = getGattService(onPeripheralService);
+                final BluetoothGattService service = getGattService(onGattService);
                 final BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicIdentifier);
 
                 final Action0 onDisconnect = gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
@@ -817,7 +817,7 @@ public class NativeGattPeripheral implements GattPeripheral {
     @NonNull
     @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<Void> writeCommand(final @NonNull PeripheralService onPeripheralService,
+    public Observable<Void> writeCommand(final @NonNull GattService onGattService,
                                          final @NonNull UUID identifier,
                                          final @NonNull WriteType writeType,
                                          final @NonNull byte[] payload,
@@ -856,7 +856,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                     }
                 };
 
-                BluetoothGattService service = getGattService(onPeripheralService);
+                BluetoothGattService service = getGattService(onGattService);
                 BluetoothGattCharacteristic characteristic = service.getCharacteristic(identifier);
                 // Looks like write type might need to be specified for some phones. See
                 // <http://stackoverflow.com/questions/25888817/android-bluetooth-status-133-in-oncharacteristicwrite>

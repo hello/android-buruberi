@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright 2015 Hello Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,9 +21,9 @@ import android.support.annotation.NonNull;
 import java.util.List;
 import java.util.UUID;
 
-public interface PeripheralService {
-    int SERVICE_TYPE_PRIMARY = BluetoothGattService.SERVICE_TYPE_PRIMARY;
-    int SERVICE_TYPE_SECONDARY = BluetoothGattService.SERVICE_TYPE_SECONDARY;
+public interface GattService {
+    int TYPE_PRIMARY = BluetoothGattService.SERVICE_TYPE_PRIMARY;
+    int TYPE_SECONDARY = BluetoothGattService.SERVICE_TYPE_SECONDARY;
 
     UUID getUuid();
     int getType();

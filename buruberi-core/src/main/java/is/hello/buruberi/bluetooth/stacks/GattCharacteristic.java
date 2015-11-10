@@ -74,7 +74,8 @@ public interface GattCharacteristic {
     /**
      * Returns the service that owns this characteristic.
      */
-    @NonNull PeripheralService getService();
+    @NonNull
+    GattService getService();
 
     /**
      * Returns the descriptors of the characteristic.

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import is.hello.buruberi.bluetooth.stacks.PeripheralService;
+import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.testing.BuruberiTestCase;
 
 import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY;
@@ -36,7 +36,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class NativePeripheralServiceTests extends BuruberiTestCase {
+public class NativeGattServiceTests extends BuruberiTestCase {
     private final NativeGattPeripheral peripheral = mock(NativeGattPeripheral.class);
 
     @Test
@@ -47,8 +47,8 @@ public class NativePeripheralServiceTests extends BuruberiTestCase {
         final List<BluetoothGattService> services =
                 Arrays.asList(new BluetoothGattService(first, SERVICE_TYPE_PRIMARY),
                               new BluetoothGattService(second, SERVICE_TYPE_SECONDARY));
-        final Map<UUID, PeripheralService> wrappedServices =
-                NativePeripheralService.wrap(services, peripheral);
+        final Map<UUID, GattService> wrappedServices =
+                NativeGattService.wrap(services, peripheral);
         assertThat(wrappedServices, is(notNullValue()));
         assertThat(wrappedServices.size(), is(equalTo(2)));
 
@@ -60,7 +60,7 @@ public class NativePeripheralServiceTests extends BuruberiTestCase {
     public void getUuid() {
         final UUID uuid = UUID.randomUUID();
         final BluetoothGattService service = new BluetoothGattService(uuid, SERVICE_TYPE_PRIMARY);
-        final NativePeripheralService peripheralService = new NativePeripheralService(service, peripheral);
+        final NativeGattService peripheralService = new NativeGattService(service, peripheral);
         assertThat(peripheralService.getUuid(), is(equalTo(uuid)));
     }
 
@@ -68,16 +68,16 @@ public class NativePeripheralServiceTests extends BuruberiTestCase {
     public void getType() {
         final UUID uuid = UUID.randomUUID();
         final BluetoothGattService service = new BluetoothGattService(uuid, SERVICE_TYPE_PRIMARY);
-        final NativePeripheralService peripheralService = new NativePeripheralService(service, peripheral);
-        assertThat(peripheralService.getType(), is(equalTo(PeripheralService.SERVICE_TYPE_PRIMARY)));
+        final NativeGattService peripheralService = new NativeGattService(service, peripheral);
+        assertThat(peripheralService.getType(), is(equalTo(GattService.TYPE_PRIMARY)));
     }
 
     @Test
     public void identity() {
         final UUID uuid = UUID.randomUUID();
         final BluetoothGattService service = new BluetoothGattService(uuid, SERVICE_TYPE_PRIMARY);
-        final NativePeripheralService peripheralService1 = new NativePeripheralService(service, peripheral);
-        final NativePeripheralService peripheralService2 = new NativePeripheralService(service, peripheral);
+        final NativeGattService peripheralService1 = new NativeGattService(service, peripheral);
+        final NativeGattService peripheralService2 = new NativeGattService(service, peripheral);
 
         assertThat(peripheralService1, is(equalTo(peripheralService2)));
         assertThat(peripheralService1.hashCode(), is(equalTo(peripheralService2.hashCode())));

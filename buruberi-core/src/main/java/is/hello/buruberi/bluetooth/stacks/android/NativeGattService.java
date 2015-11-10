@@ -28,29 +28,29 @@ import java.util.UUID;
 
 import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
-import is.hello.buruberi.bluetooth.stacks.PeripheralService;
 import rx.Observable;
 
-public final class NativePeripheralService implements PeripheralService {
+public final class NativeGattService implements GattService {
     final @NonNull BluetoothGattService service;
     final @NonNull NativeGattPeripheral peripheral;
 
 
-    static @NonNull Map<UUID, PeripheralService> wrap(@NonNull List<BluetoothGattService> services,
+    static @NonNull Map<UUID, GattService> wrap(@NonNull List<BluetoothGattService> services,
                                                       @NonNull NativeGattPeripheral peripheral) {
-        final Map<UUID, PeripheralService> peripheralServices = new HashMap<>();
+        final Map<UUID, GattService> peripheralServices = new HashMap<>();
 
         for (final BluetoothGattService nativeService : services) {
             peripheralServices.put(nativeService.getUuid(),
-                                   new NativePeripheralService(nativeService, peripheral));
+                                   new NativeGattService(nativeService, peripheral));
         }
 
         return peripheralServices;
     }
 
-    NativePeripheralService(@NonNull BluetoothGattService service,
-                            @NonNull NativeGattPeripheral peripheral) {
+    NativeGattService(@NonNull BluetoothGattService service,
+                      @NonNull NativeGattPeripheral peripheral) {
         this.service = service;
         this.peripheral = peripheral;
     }
@@ -91,7 +91,7 @@ public final class NativePeripheralService implements PeripheralService {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        NativePeripheralService that = (NativePeripheralService) o;
+        NativeGattService that = (NativeGattService) o;
 
         return service.equals(that.service);
     }
@@ -134,8 +134,8 @@ public final class NativePeripheralService implements PeripheralService {
 
         @NonNull
         @Override
-        public PeripheralService getService() {
-            return NativePeripheralService.this;
+        public GattService getService() {
+            return NativeGattService.this;
         }
 
         @NonNull

@@ -284,7 +284,7 @@ public interface GattPeripheral {
      * if the peripheral is not connected when this method is called.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<Map<UUID, PeripheralService>> discoverServices(@NonNull OperationTimeout timeout);
+    @NonNull Observable<Map<UUID, GattService>> discoverServices(@NonNull OperationTimeout timeout);
 
     /**
      * Performs service discovery on the peripheral,
@@ -299,7 +299,7 @@ public interface GattPeripheral {
      * @see #discoverServices(OperationTimeout)
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<PeripheralService> discoverService(@NonNull UUID serviceIdentifier,
+    @NonNull Observable<GattService> discoverService(@NonNull UUID serviceIdentifier,
                                                            @NonNull OperationTimeout timeout);
 
     //endregion
@@ -313,7 +313,7 @@ public interface GattPeripheral {
      */
     @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<UUID> enableNotification(@NonNull PeripheralService onPeripheralService,
+    @NonNull Observable<UUID> enableNotification(@NonNull GattService onGattService,
                                                  @NonNull UUID characteristicIdentifier,
                                                  @NonNull UUID descriptorIdentifier,
                                                  @NonNull OperationTimeout timeout);
@@ -324,7 +324,7 @@ public interface GattPeripheral {
      */
     @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<UUID> disableNotification(@NonNull PeripheralService onPeripheralService,
+    @NonNull Observable<UUID> disableNotification(@NonNull GattService onGattService,
                                                   @NonNull UUID characteristicIdentifier,
                                                   @NonNull UUID descriptorIdentifier,
                                                   @NonNull OperationTimeout timeout);
@@ -353,7 +353,7 @@ public interface GattPeripheral {
      */
     @Deprecated
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<Void> writeCommand(@NonNull PeripheralService service,
+    @NonNull Observable<Void> writeCommand(@NonNull GattService service,
                                            @NonNull UUID characteristic,
                                            @NonNull WriteType writeType,
                                            @NonNull byte[] payload,
