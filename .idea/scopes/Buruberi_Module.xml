@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Buruberi Module" pattern="((src[buruberi-core]:*..*||src[buruberi-testing]:*..*)&amp;&amp;!src[buruberi-core]:is.hello.buruberi.bluetooth.stacks.android..*&amp;&amp;!src[buruberi-core]:is.hello.buruberi.bluetooth.stacks.noop..*&amp;&amp;!src[buruberi-core]:is.hello.buruberi.util..*&amp;&amp;!src[buruberi-core]:is.hello.buruberi.BuildConfig||src[buruberi-core]:is.hello.buruberi.util.NonGuaranteed)&amp;&amp;!src[buruberi-testing]:android.net.http.*&amp;&amp;!src[buruberi-testing]:is.hello.buruberi.testing.BuildConfig" />
+</component>

@@ -232,7 +232,7 @@ public class GattException extends BuruberiException {
     }
 
     /**
-     * @return {@link true} if {@link #GATT_STACK_ERROR} is reported; {@code false} otherwise.
+     * @return {@code true} if {@link #GATT_STACK_ERROR} is reported; {@code false} otherwise.
      *
      * @see #GATT_STACK_ERROR for more info.
      */

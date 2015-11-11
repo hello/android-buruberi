@@ -72,7 +72,7 @@ public final class Bytes {
     /**
      * Converts a string of the format <code>0122FF</code> to an array of bytes.
      * <p>
-     * The same as {@see #fromString(String)}, but it does not throw exceptions.
+     * The same as {@link #fromString(String)}, but it does not throw exceptions.
      *
      * @return A <code>byte[]</code> array if the string could be converted; null otherwise.
      */

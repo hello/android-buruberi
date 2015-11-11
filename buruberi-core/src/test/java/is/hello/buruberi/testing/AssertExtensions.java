@@ -24,7 +24,7 @@ import junit.framework.Assert;
  */
 public class AssertExtensions {
     /**
-     * Checks that a given {@see ThrowingRunnable} throws an exception, calling fail if it does not.
+     * Checks that a given {@link ThrowingRunnable} throws an exception, calling fail if it does not.
      * @param runnable  The runnable that should throw an exception. Required.
      */
     public static void assertThrows(@NonNull ThrowingRunnable runnable) {

@@ -40,7 +40,7 @@ public class BondException extends BuruberiException {
     }
 
     /**
-     * @return {@link true} if {@link #REASON_REMOVED} is reported; {@code false} otherwise.
+     * @return {@code true} if {@link #REASON_REMOVED} is reported; {@code false} otherwise.
      *
      * @see #REASON_REMOVED for more info.
      */

@@ -27,7 +27,7 @@ import rx.Subscription;
 import rx.functions.Action0;
 
 /**
- * Simple implementation of {@see OperationTimeout} that uses deferred workers.
+ * Simple implementation of {@link OperationTimeout} that uses deferred workers.
  */
 public final class SchedulerOperationTimeout implements OperationTimeout {
     private final String name;
