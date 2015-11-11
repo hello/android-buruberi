@@ -63,7 +63,7 @@ public class NoOpBluetoothStack implements BluetoothStack {
     }
 
     @Override
-    public <T> Observable<T> newConfiguredObservable(Observable.OnSubscribe<T> onSubscribe) {
+    public <T> Observable<T> newConfiguredObservable(@NonNull Observable.OnSubscribe<T> onSubscribe) {
         return Observable.create(onSubscribe)
                          .subscribeOn(getScheduler());
     }

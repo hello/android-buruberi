@@ -31,23 +31,23 @@ public class AdvertisingDataBuilder {
     private int totalSize = 0;
 
     public AdvertisingDataBuilder add(int type, @NonNull String payload) {
-        byte[] payloadAsBytes = Bytes.fromString(payload);
+        final byte[] payloadAsBytes = Bytes.fromString(payload);
         entries.add(Pair.create(type, payloadAsBytes));
         totalSize += HEADER_LENGTH + payloadAsBytes.length;
         return this;
     }
 
     public byte[] buildRaw() {
-        byte[] buffer = new byte[totalSize];
+        final byte[] buffer = new byte[totalSize];
 
         int pointer = 0;
-        for (Pair<Integer, byte[]> entry : entries) {
+        for (final Pair<Integer, byte[]> entry : entries) {
             //noinspection UnnecessaryLocalVariable
-            int lengthOffset = pointer;
-            int typeOffset = pointer + 1;
-            int dataOffset = pointer + 2;
-            int dataLength = entry.second.length;
-            int entryLength = dataLength + 1;
+            final int lengthOffset = pointer;
+            final int typeOffset = pointer + 1;
+            final int dataOffset = pointer + 2;
+            final int dataLength = entry.second.length;
+            final int entryLength = dataLength + 1;
 
             buffer[lengthOffset] = (byte) entryLength;
             buffer[typeOffset] = entry.first.byteValue();

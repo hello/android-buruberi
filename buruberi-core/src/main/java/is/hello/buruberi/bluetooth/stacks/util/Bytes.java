@@ -19,8 +19,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+/**
+ * Utility methods for converting arrays of {@code byte}s to and from {@code String}s.
+ */
 public final class Bytes {
-
     /**
      * Converts a subsection of an array of bytes to a string of the format <code>0122FF</code>
      */
@@ -59,7 +61,7 @@ public final class Bytes {
             throw new IllegalArgumentException("string length is odd");
         }
 
-        byte[] bytes = new byte[string.length() / 2];
+        final byte[] bytes = new byte[string.length() / 2];
         for (int i = 0, length = string.length(); i < length; i += 2) {
             bytes[i / 2] = (byte) Integer.parseInt(string.substring(i, i + 2), 16);
         }
@@ -82,6 +84,12 @@ public final class Bytes {
         }
     }
 
+    /**
+     * Determines if a given byte array starts with another given byte array.
+     * @param haystack  The byte array to check.
+     * @param needle    The byte array the {@code haystack} should start with.
+     * @return true if {@code haystack} started with {@code needle}; false otherwise.
+     */
     public static boolean startWith(@NonNull byte[] haystack, @NonNull byte[] needle) {
         if (haystack.length < needle.length) {
             return false;
@@ -96,14 +104,18 @@ public final class Bytes {
         return true;
     }
 
+    /**
+     * Searches a given byte array for a given byte.
+     * @param haystack  The array to search.
+     * @param needle    The byte to search for.
+     * @return true if the array contained the byte; false otherwise.
+     */
     public static boolean contains(@NonNull byte[] haystack, byte needle) {
-        for (byte b : haystack) {
+        for (final byte b : haystack) {
             if (b == needle) {
                 return true;
             }
         }
-
         return false;
     }
-
 }

@@ -19,29 +19,31 @@ import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.android.DeviceSupport;
 import rx.functions.Func1;
 
 /**
- * Describes what a {@see is.hello.buruberi.bluetooth.stacks.BluetoothStack} should look for when
- * performing a BLE scan. Provides simple device address matching, maximum match count and
- * duration constraints, and a free-form system for matching against advertising data scanned
- * from available BLE peripherals.
+ * Describes what a {@link BluetoothStack} should look for when performing discovery.
+ * Provides simple device address matching, maximum match count and duration constraints,
+ * and a free-form system for matching against advertising data scanned from peripherals.
  */
 public final class PeripheralCriteria {
     /**
-     * The default timeout duration.
+     * The default timeout duration. 10 seconds.
      */
-    public static final int DEFAULT_DURATION_MS = 10000;
+    public static final int DEFAULT_DURATION_MS = 10 * 1000;
 
     /**
      * Device addresses to match against.
      * <p>
      * This list being empty has the effect of all addresses being acceptable.
      */
-    public final List<String> peripheralAddresses = new ArrayList<>();
+    public final Set<String> peripheralAddresses = new HashSet<>();
 
     /**
      * A list of predicate functions that will be called to determine
@@ -73,7 +75,7 @@ public final class PeripheralCriteria {
      * Returns a configured criteria that will search for one instance of a given address.
      */
     public static @NonNull PeripheralCriteria forAddress(@NonNull String address) {
-        PeripheralCriteria criteria = new PeripheralCriteria();
+        final PeripheralCriteria criteria = new PeripheralCriteria();
         criteria.addPeripheralAddress(address);
         criteria.setLimit(1);
         return criteria;
@@ -121,6 +123,9 @@ public final class PeripheralCriteria {
         });
     }
 
+    /**
+     * Convenience method for using {@link #addExactMatchPredicate(int, byte[])} with a {@code String}.
+     */
     public PeripheralCriteria addExactMatchPredicate(final int type, final @NonNull String toMatch) {
         return addExactMatchPredicate(type, Bytes.fromString(toMatch));
     }
@@ -142,6 +147,9 @@ public final class PeripheralCriteria {
         });
     }
 
+    /**
+     * Convenience method for using {@link #addStartsWithPredicate(int, byte[])} with a {@code String}.
+     */
     public PeripheralCriteria addStartsWithPredicate(int type, @NonNull String prefix) {
         return addStartsWithPredicate(type, Bytes.fromString(prefix));
     }
@@ -188,7 +196,7 @@ public final class PeripheralCriteria {
      * the criteria is satisfied by a given advertising data collection.
      */
     public boolean matches(@NonNull AdvertisingData scanResponses) {
-        for (Func1<AdvertisingData, Boolean> predicate : predicates) {
+        for (final Func1<AdvertisingData, Boolean> predicate : predicates) {
             if (!predicate.call(scanResponses)) {
                 return false;
             }

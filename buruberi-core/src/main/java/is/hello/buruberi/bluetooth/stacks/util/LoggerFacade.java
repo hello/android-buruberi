@@ -18,6 +18,10 @@ package is.hello.buruberi.bluetooth.stacks.util;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+/**
+ * Represents all logging operations in buruberi. Allows client apps to provide their own logging
+ * implementations if the default logcat implementation is insufficient for their needs.
+ */
 public interface LoggerFacade {
     void error(@NonNull String tag, @Nullable String message, @Nullable Throwable e);
     void warn(@NonNull String tag, @Nullable String message, @Nullable Throwable e);

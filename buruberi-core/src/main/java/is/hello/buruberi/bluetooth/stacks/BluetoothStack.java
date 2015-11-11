@@ -23,20 +23,21 @@ import android.support.annotation.RequiresPermission;
 import java.util.List;
 
 import is.hello.buruberi.bluetooth.errors.ChangePowerStateException;
+import is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
 import rx.Observable;
 import rx.Scheduler;
 
 /**
- * A semi-opaque interface intended to contain all of the necessary logic to interact
- * with a platform Bluetooth stack. Responsible for scanning and vending Peripherals.
+ * Provides methods for discovering Bluetooth Low Energy peripherals, inspecting user
+ * device support level, and controlling power state of the device's Bluetooth radio.
  *
  * @see GattPeripheral
  */
 public interface BluetoothStack {
     /**
-     * The logging tag that implementations of BluetoothStack should use.
+     * The log tag that of BluetoothStack use.
      */
     String LOG_TAG = "Bluetooth." + BluetoothStack.class.getSimpleName();
 
@@ -44,10 +45,10 @@ public interface BluetoothStack {
     /**
      * Performs a scan for peripherals matching a given set of criteria.
      * <p>
-     * Yields {@link is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException}
-     * if the device's Bluetooth radio is currently disabled.
+     * Yields {@link UserDisabledBuruberiException} if
+     * the device's Bluetooth radio is currently disabled.
      *
-     * @see is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria
+     * @see PeripheralCriteria
      */
     @RequiresPermission(allOf = {
             Manifest.permission.BLUETOOTH,
@@ -56,29 +57,28 @@ public interface BluetoothStack {
     @NonNull Observable<List<GattPeripheral>> discoverPeripherals(@NonNull PeripheralCriteria peripheralCriteria);
 
     /**
-     * Returns the Rx scheduler used for all stack operations.
+     * Returns the RxJava {@code Scheduler} used for all stack operations.
      */
     @NonNull Scheduler getScheduler();
 
     /**
-     * Vends an observable configured appropriately for use with the BluetoothStack.
+     * Vends an observable configured appropriately for use with this {@code BluetoothStack}.
+     * @return A configured {@code Observable}.
+     * @see #getScheduler()
      */
-    <T> Observable<T> newConfiguredObservable(Observable.OnSubscribe<T> onSubscribe);
+    <T> Observable<T> newConfiguredObservable(@NonNull Observable.OnSubscribe<T> onSubscribe);
 
     /**
-     * Returns an observable that will continuously report the enabled state of the bluetooth stack.
-     * <p>
-     * This seems like something that would work predictably outside of the context of the wrapper,
-     * but it's not. On some (all?) devices, the broadcast for this state change reports the wrong
-     * values, so we provide a nice predictable interface for clients.
+     * Returns an observable that will continuously report the power state
+     * of the device's bluetooth radio.
      *
-     * @see #isEnabled() for instantaneous values.
+     * @see #isEnabled() for one time values.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     Observable<Boolean> enabled();
 
     /**
-     * Returns whether or not Bluetooth is currently enabled.
+     * Returns the current power state of the device's bluetooth radio.
      *
      * @see #enabled() for observations over time.
      */
@@ -109,15 +109,15 @@ public interface BluetoothStack {
 
 
     /**
-     * Returns a boolean indicating whether or not a given error is
-     * fatal in the context of the bluetooth stack implementation,
-     * and the client code should disconnect and perform a rediscovery.
+     * Returns a boolean indicating whether or not a given error
+     * is fatal for the {@code BluetoothStack} implementation, and
+     * the client code should disconnect and perform a rediscovery.
      */
     boolean errorRequiresReconnect(@Nullable Throwable e);
 
 
     /**
-     * Returns the logger facade associated with the BluetoothStack.
+     * Returns the logger facade associated with the {@code BluetoothStack}.
      */
     @NonNull LoggerFacade getLogger();
 

@@ -62,8 +62,10 @@ public final class NativeGattService implements GattService {
     }
 
     @Override
+    @Type
     public int getType() {
-        return service.getType();
+        final @Type int type = service.getType();
+        return type;
     }
 
     @Override
@@ -123,13 +125,17 @@ public final class NativeGattService implements GattService {
         }
 
         @Override
+        @Properties
         public int getProperties() {
-            return nativeCharacteristic.getProperties();
+            final @Properties int properties = nativeCharacteristic.getProperties();
+            return properties;
         }
 
         @Override
+        @Permissions
         public int getPermissions() {
-            return nativeCharacteristic.getPermissions();
+            final @Permissions int permissions = nativeCharacteristic.getPermissions();
+            return permissions;
         }
 
         @NonNull
@@ -148,13 +154,15 @@ public final class NativeGattService implements GattService {
             return identifiers;
         }
 
+        @Permissions
         @Override
         public int getDescriptorPermissions(@NonNull UUID identifier) {
             final BluetoothGattDescriptor descriptor = nativeCharacteristic.getDescriptor(identifier);
             if (descriptor != null) {
-                return descriptor.getPermissions();
+                final @Permissions int permissions = descriptor.getPermissions();
+                return permissions;
             } else {
-                return 0;
+                return PERMISSION_NULL;
             }
         }
 

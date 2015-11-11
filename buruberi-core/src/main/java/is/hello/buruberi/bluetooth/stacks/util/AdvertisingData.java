@@ -30,28 +30,32 @@ import java.util.Map;
 import rx.functions.Func1;
 
 /**
- * Parses a raw BLE advertising data blob into a multi-map collection for querying by
- * predicates contained in a {@see is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria}
- * instance.
+ * Parses a raw BLE advertising data blob into a multi-map collection for querying
+ * by predicates contained in a {@link PeripheralCriteria} instance.
  */
 public final class AdvertisingData {
     private final Map<Integer, List<byte[]>> records = new HashMap<>();
 
-    public static @NonNull AdvertisingData parse(@NonNull byte[] raw) {
+    //region Creation
+
+    /**
+     * Parses a given byte array into an advertising data object.
+     */
+    public static @NonNull AdvertisingData parse(@NonNull byte[] rawData) {
         final AdvertisingData parsedResponses = new AdvertisingData();
         int index = 0;
-        while (index < raw.length) {
-            final byte dataLength = raw[index++];
+        while (index < rawData.length) {
+            final byte dataLength = rawData[index++];
             if (dataLength == 0) {
                 break;
             }
 
-            final int dataType = raw[index];
+            final int dataType = rawData[index];
             if (dataType == 0) {
                 break;
             }
 
-            final byte[] payload = Arrays.copyOfRange(raw, index + 1, index + dataLength);
+            final byte[] payload = Arrays.copyOfRange(rawData, index + 1, index + dataLength);
             parsedResponses.addRecord(dataType, payload);
 
             index += dataLength;
@@ -61,7 +65,6 @@ public final class AdvertisingData {
 
     private AdvertisingData() {
     }
-
 
     private void addRecord(int type, @NonNull byte[] contents) {
         List<byte[]> typeItems = getRecordsForType(type);
@@ -73,6 +76,10 @@ public final class AdvertisingData {
         typeItems.add(contents);
     }
 
+    //endregion
+
+
+    //region Querying
 
     /**
      * Returns whether or not there are no advertising data records.
@@ -116,6 +123,10 @@ public final class AdvertisingData {
         return false;
     }
 
+    //endregion
+
+
+    //region Identity
 
     @Override
     public boolean equals(Object o) {
@@ -158,6 +169,8 @@ public final class AdvertisingData {
         return string;
     }
 
+    //endregion
+
 
     // See https://www.bluetooth.org/en-us/specification/assigned-numbers/generic-access-profile
     public static final int TYPE_FLAGS = 0x01;
@@ -197,102 +210,70 @@ public final class AdvertisingData {
         switch (type) {
             case TYPE_FLAGS:
                 return "TYPE_FLAGS";
-
             case TYPE_INCOMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS:
                 return "TYPE_INCOMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS";
-
             case TYPE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS:
                 return "TYPE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS";
-
             case TYPE_INCOMPLETE_LIST_OF_32_BIT_SERVICE_CLASS_UUIDS:
                 return "TYPE_INCOMPLETE_LIST_OF_32_BIT_SERVICE_CLASS_UUIDS";
-
             case TYPE_LIST_OF_32_BIT_SERVICE_CLASS_UUIDS:
                 return "TYPE_LIST_OF_32_BIT_SERVICE_CLASS_UUIDS";
-
             case TYPE_INCOMPLETE_LIST_OF_128_BIT_SERVICE_CLASS_UUIDS:
                 return "TYPE_INCOMPLETE_LIST_OF_128_BIT_SERVICE_CLASS_UUIDS";
-
             case TYPE_LIST_OF_128_BIT_SERVICE_CLASS_UUIDS:
                 return "TYPE_LIST_OF_128_BIT_SERVICE_CLASS_UUIDS";
-
             case TYPE_SHORTENED_LOCAL_NAME:
                 return "TYPE_SHORTENED_LOCAL_NAME";
-
             case TYPE_LOCAL_NAME:
                 return "TYPE_LOCAL_NAME";
-
             case TYPE_TX_POWER_LEVEL:
                 return "TYPE_TX_POWER_LEVEL";
-
             case TYPE_CLASS_OF_DEVICE:
                 return "TYPE_CLASS_OF_DEVICE";
-
             case TYPE_SIMPLE_PAIRING_HASH_C:
                 return "TYPE_SIMPLE_PAIRING_HASH_C";
-
             case TYPE_SIMPLE_PAIRING_RANDOMIZER_R:
                 return "TYPE_SIMPLE_PAIRING_RANDOMIZER_R";
-
             case TYPE_DEVICE_ID:
                 return "TYPE_DEVICE_ID";
-
             case TYPE_SECURITY_MANAGER_OUT_OF_BAND_FLAGS:
                 return "TYPE_SECURITY_MANAGER_OUT_OF_BAND_FLAGS";
-
             case TYPE_SLAVE_CONNECTION_INTERVAL_RANGE:
                 return "TYPE_SLAVE_CONNECTION_INTERVAL_RANGE";
-
             case TYPE_LIST_OF_16_BIT_SERVICE_SOLICITATION_UUIDS:
                 return "TYPE_LIST_OF_16_BIT_SERVICE_SOLICITATION_UUIDS";
-
             case TYPE_LIST_OF_32_BIT_SERVICE_SOLICITATION_UUIDS:
                 return "TYPE_LIST_OF_32_BIT_SERVICE_SOLICITATION_UUIDS";
-
             case TYPE_LIST_OF_128_BIT_SERVICE_SOLICITATION_UUIDS:
                 return "TYPE_LIST_OF_128_BIT_SERVICE_SOLICITATION_UUIDS";
-
             case TYPE_SERVICE_DATA:
                 return "TYPE_SERVICE_DATA";
-
             case TYPE_SERVICE_DATA_32_BIT_UUID:
                 return "TYPE_SERVICE_DATA_32_BIT_UUID";
-
             case TYPE_SERVICE_DATA_128_BIT_UUID:
                 return "TYPE_SERVICE_DATA_128_BIT_UUID";
-
             case TYPE_PUBLIC_TARGET_ADDRESS:
                 return "TYPE_PUBLIC_TARGET_ADDRESS";
-
             case TYPE_RANDOM_TARGET_ADDRESS:
                 return "TYPE_RANDOM_TARGET_ADDRESS";
-
             case TYPE_APPEARANCE:
                 return "TYPE_APPEARANCE";
-
             case TYPE_ADVERTISING_INTERVAL:
                 return "TYPE_ADVERTISING_INTERVAL";
-
             case TYPE_MANUFACTURER_SPECIFIC_DATA:
                 return "TYPE_MANUFACTURER_SPECIFIC_DATA";
-
             case TYPE_LE_BLUETOOTH_DEVICE_ADDRESS:
                 return "TYPE_LE_BLUETOOTH_DEVICE_ADDRESS";
-
             case TYPE_LE_ROLE:
                 return "TYPE_LE_ROLE";
-
             case TYPE_SIMPLE_PAIRING_HASH_C_256:
                 return "TYPE_SIMPLE_PAIRING_HASH_C_256";
-
             case TYPE_SIMPLE_PAIRING_RANDOMIZER_R_256:
                 return "TYPE_SIMPLE_PAIRING_RANDOMIZER_R_256";
-
             case TYPE_3D_INFORMATION_DATA:
                 return "TYPE_3D_INFORMATION_DATA";
-
             default:
-                return "TYPE_UNKNOWN";
+                return Integer.toHexString(type);
         }
     }
 }

@@ -46,9 +46,9 @@ public final class Buruberi {
     /**
      * <em>Required</em>
      * <p>
-     * Sets the application context used by the BluetoothStack.
+     * Sets the application context used by the {@code BluetoothStack}.
      * <p>
-     * Calls <code>#getApplicationContext()</code> on the given <code>Context</code>.
+     * Calls {@code #getApplicationContext()} on the given {@code Context}.
      */
     public Buruberi setApplicationContext(@NonNull Context applicationContext) {
         this.applicationContext = applicationContext.getApplicationContext();
@@ -56,7 +56,7 @@ public final class Buruberi {
     }
 
     /**
-     * Sets the error listener to call whenever an error occurs within the BluetoothStack.
+     * Sets the error listener to call whenever an error occurs within the {@code BluetoothStack}.
      * <p>
      * Builder provides a default implementation that does nothing.
      */
@@ -66,7 +66,7 @@ public final class Buruberi {
     }
 
     /**
-     * Sets the logger facade to be used by the BluetoothStack.
+     * Sets the logger facade to be used by the {@code BluetoothStack}.
      * <p>
      * Builder provides a default implementation that logs to logcat.
      */
@@ -104,8 +104,7 @@ public final class Buruberi {
     }
 
     /**
-     * Creates a new BluetoothStack instance
-     * using the parameters of this builder.
+     * Creates a new {@code BluetoothStack} instance using the parameters of this builder.
      *
      * @throws IllegalStateException if any <em>required</em> fields are missing.
      */
