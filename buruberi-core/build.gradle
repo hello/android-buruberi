@@ -3,7 +3,7 @@ plugins {
 }
 
 // Used for both the 'aar' file and publish.
-def VERSION_NAME = '0.9.0-SNAPSHOT'
+def VERSION_NAME = '0.9.0'
 def GROUP_ID = 'is.hello'
 def NAME = 'buruberi-core'
 def DESCRIPTION = 'Less flaky Bluetooth Low Energy for Android'
@@ -142,7 +142,7 @@ if (propertiesFile.exists()) {
             userOrg = user
             licenses = ['Apache-2.0']
             vcsUrl = 'https://github.com/hello/android-buruberi.git'
-            labels = ['android', 'animation']
+            labels = ['android', 'bluetooth', 'ble']
             publicDownloadNumbers = false
             version {
                 name = VERSION_NAME
