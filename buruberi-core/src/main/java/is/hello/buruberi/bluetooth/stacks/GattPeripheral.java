@@ -414,13 +414,16 @@ public interface GattPeripheral {
 
         /**
          * Attempt to process an incoming packet from a characteristic.
+         *
+         * @param characteristicIdentifier The identifier of the characteristic which received data.
+         * @param payload The data which was received.
          */
-        boolean processIncomingPacket(@NonNull UUID characteristicIdentifier,
-                                      @NonNull byte[] payload);
+        void processIncomingPacket(@NonNull UUID characteristicIdentifier,
+                                   @NonNull byte[] payload);
 
         /**
-         * Informs the packet handler that the Bluetooth transport has disconnected.
+         * Informs the packet handler that the {@code GattPeripheral} has disconnected.
          */
-        void transportDisconnected();
+        void peripheralDisconnected();
     }
 }

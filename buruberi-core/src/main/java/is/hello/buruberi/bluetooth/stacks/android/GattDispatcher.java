@@ -99,7 +99,7 @@ class GattDispatcher extends BluetoothGattCallback {
                 disconnectListeners.clear();
 
                 if (packetHandler != null) {
-                    packetHandler.transportDisconnected();
+                    packetHandler.peripheralDisconnected();
                 }
             }
         });
@@ -159,9 +159,8 @@ class GattDispatcher extends BluetoothGattCallback {
             @Override
             public void run() {
                 if (packetHandler != null) {
-                    if (!packetHandler.processIncomingPacket(characteristic.getUuid(), characteristic.getValue())) {
-                        logger.warn(GattPeripheral.LOG_TAG, "No packet handler for characteristic read " + characteristic.getUuid());
-                    }
+                    packetHandler.processIncomingPacket(characteristic.getUuid(),
+                                                        characteristic.getValue());
                 }
             }
         });
@@ -195,9 +194,8 @@ class GattDispatcher extends BluetoothGattCallback {
             @Override
             public void run() {
                 if (packetHandler != null) {
-                    if (!packetHandler.processIncomingPacket(characteristic.getUuid(), characteristic.getValue())) {
-                        logger.warn(GattPeripheral.LOG_TAG, "No packet handler for characteristic changed " + characteristic.getUuid());
-                    }
+                    packetHandler.processIncomingPacket(characteristic.getUuid(),
+                                                        characteristic.getValue());
                 }
             }
         });
