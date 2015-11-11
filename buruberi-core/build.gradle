@@ -57,6 +57,7 @@ task javadoc(type: Javadoc) {
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
     classpath += configurations.javadocDeps
     options.links("http://docs.oracle.com/javase/7/docs/api/");
+    failOnError false
     exclude '**/BuildConfig.java'
     exclude '**/R.java'
 }
@@ -139,7 +140,7 @@ if (propertiesFile.exists()) {
         pkg {
             repo = 'maven'
             name = NAME
-            userOrg = user
+            userOrg = properties.getProperty('bintrayOrg')
             licenses = ['Apache-2.0']
             vcsUrl = 'https://github.com/hello/android-buruberi.git'
             labels = ['android', 'bluetooth', 'ble']
