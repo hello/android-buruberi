@@ -30,7 +30,7 @@ code formatting tool.
 
 ## Useful References
 
-- [Project Javadocs](#)
+- [Project Javadocs](http://hello.github.io/buruberi/javadoc/index.html)
 - [Bluetooth Low Energy introduction](http://developer.android.com/guide/topics/connectivity/bluetooth-le.html)
 - [`BluetoothManager` reference](http://developer.android.com/reference/android/bluetooth/BluetoothManager.html)
 - [`BluetoothAdapter` reference](http://developer.android.com/reference/android/bluetooth/BluetoothAdapter.html)
