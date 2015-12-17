@@ -32,7 +32,6 @@ import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
@@ -446,30 +445,6 @@ public class NativeGattPeripheral implements GattPeripheral {
                 });
     }
 
-    private boolean tryCreateBond() {
-        try {
-            final Method method =
-                    bluetoothDevice.getClass().getMethod("createBond", (Class[]) null);
-            method.invoke(bluetoothDevice, (Object[]) null);
-            return true;
-        } catch (Exception e) {
-            logger.error(LOG_TAG, "Could not invoke `createBond` on BluetoothDevice.", e);
-            return false;
-        }
-    }
-
-    private boolean tryRemoveBond() {
-        try {
-            final Method method =
-                    bluetoothDevice.getClass().getMethod("removeBond", (Class[]) null);
-            method.invoke(bluetoothDevice, (Object[]) null);
-            return true;
-        } catch (Exception e) {
-            logger.error(LOG_TAG, "Could not invoke `createBond` on BluetoothDevice.", e);
-            return false;
-        }
-    }
-
     @NonNull
     @Override
     @RequiresPermission(allOf = {
@@ -528,7 +503,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                     }
                 });
 
-                if (!tryCreateBond()) {
+                if (!BluetoothDeviceCompat.createBond(bluetoothDevice)) {
                     subscription.unsubscribe();
                     subscriber.onError(new BondException(BondException.REASON_ANDROID_API_CHANGED));
                 }
@@ -614,7 +589,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                     }
                 }, stack.getScheduler());
 
-                if (!tryRemoveBond()) {
+                if (!BluetoothDeviceCompat.removeBond(bluetoothDevice)) {
                     subscription.unsubscribe();
                     subscriber.onError(new BondException(BondException.REASON_ANDROID_API_CHANGED));
                 } else {
