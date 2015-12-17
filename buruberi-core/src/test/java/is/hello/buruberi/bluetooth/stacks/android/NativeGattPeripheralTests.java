@@ -101,6 +101,19 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
     //region Connectivity
 
+    @Test
+    public void getTransportFromConnectFlags() {
+        final NativeGattPeripheral peripheral = createConnectedPeripheral();
+        assertThat(peripheral.getTransportFromConnectFlags(GattPeripheral.CONNECT_FLAG_TRANSPORT_AUTO),
+                   is(equalTo(BluetoothDeviceCompat.TRANSPORT_AUTO)));
+        assertThat(peripheral.getTransportFromConnectFlags(GattPeripheral.CONNECT_FLAG_TRANSPORT_BREDR),
+                   is(equalTo(BluetoothDeviceCompat.TRANSPORT_BREDR)));
+        assertThat(peripheral.getTransportFromConnectFlags(GattPeripheral.CONNECT_FLAG_TRANSPORT_LE),
+                   is(equalTo(BluetoothDeviceCompat.TRANSPORT_LE)));
+        assertThat(peripheral.getTransportFromConnectFlags(0),
+                   is(equalTo(BluetoothDeviceCompat.TRANSPORT_AUTO)));
+    }
+
     @SuppressWarnings("ConstantConditions")
     @Test
     public void unexpectedDisconnectBroadcast() throws Exception {
@@ -128,7 +141,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
                                                                          Testing.EMPTY_ADVERTISING_DATA);
 
         final Testing.Result<GattPeripheral> result = new Testing.Result<>();
-        peripheral.connect(timeout).subscribe(result);
+        peripheral.connect(GattPeripheral.CONNECT_FLAG_DEFAULTS, timeout).subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
         final ShadowBluetoothGatt shadowGatt = BuruberiShadows.shadowOf(gatt);
@@ -136,7 +149,8 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         verify(timeout).setTimeoutAction(any(Action0.class), any(Scheduler.class));
         verify(timeout).schedule();
 
-        shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS, BluetoothGatt.STATE_CONNECTED);
+        shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS,
+                                                             BluetoothGatt.STATE_CONNECTED);
         assertThat(result.isCompleted(), is(true));
         assertThat(result.getValues().size(), is(equalTo(1)));
         verify(timeout).unschedule();
@@ -153,7 +167,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
                                                                          Testing.EMPTY_ADVERTISING_DATA);
 
         final Testing.Result<GattPeripheral> result = new Testing.Result<>();
-        peripheral.connect(timeout).subscribe(result);
+        peripheral.connect(GattPeripheral.CONNECT_FLAG_DEFAULTS, timeout).subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
         final ShadowBluetoothGatt shadowGatt = BuruberiShadows.shadowOf(gatt);
@@ -163,12 +177,14 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         try (TestReceiver receiver = new TestReceiver(new IntentFilter(GattPeripheral.ACTION_DISCONNECTED))) {
             shadowGatt.clearCalls();
-            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
+            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST,
+                                                                 BluetoothGatt.STATE_DISCONNECTED);
             shadowGatt.verifyCall(ShadowBluetoothGatt.Call.CONNECT, timeout);
             verify(timeout).reschedule();
             assertThat(receiver.wasInvoked, is(false));
 
-            shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS, BluetoothGatt.STATE_CONNECTED);
+            shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS,
+                                                                 BluetoothGatt.STATE_CONNECTED);
             assertThat(result.isCompleted(), is(true));
             assertThat(result.getValues().size(), is(equalTo(1)));
             verify(timeout).unschedule();
@@ -186,7 +202,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
                                                                          Testing.EMPTY_ADVERTISING_DATA);
 
         final Testing.Result<GattPeripheral> result = new Testing.Result<>();
-        peripheral.connect(timeout).subscribe(result);
+        peripheral.connect(GattPeripheral.CONNECT_FLAG_DEFAULTS, timeout).subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
         final ShadowBluetoothGatt shadowGatt = BuruberiShadows.shadowOf(gatt);
@@ -196,12 +212,14 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         try (TestReceiver receiver = new TestReceiver(new IntentFilter(GattPeripheral.ACTION_DISCONNECTED))) {
             shadowGatt.clearCalls();
-            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
+            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST,
+                                                                 BluetoothGatt.STATE_DISCONNECTED);
             shadowGatt.verifyCall(ShadowBluetoothGatt.Call.CONNECT, timeout);
             verify(timeout).reschedule();
             assertThat(receiver.wasInvoked, is(false));
 
-            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST, BluetoothGatt.STATE_DISCONNECTED);
+            shadowGatt.getGattCallback().onConnectionStateChange(gatt, GattException.GATT_CONN_TERMINATE_LOCAL_HOST,
+                                                                 BluetoothGatt.STATE_DISCONNECTED);
             assertThat(result.isCompleted(), is(false));
             assertThat(result.getError(), is(instanceOf(GattException.class)));
             verify(timeout).unschedule();
@@ -219,7 +237,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
                                                                          Testing.EMPTY_ADVERTISING_DATA);
 
         final Testing.Result<GattPeripheral> result = new Testing.Result<>();
-        peripheral.connect(timeout).subscribe(result);
+        peripheral.connect(GattPeripheral.CONNECT_FLAG_DEFAULTS, timeout).subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
         final ShadowBluetoothGatt shadowGatt = BuruberiShadows.shadowOf(gatt);
@@ -227,7 +245,8 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         verify(timeout).setTimeoutAction(any(Action0.class), any(Scheduler.class));
         verify(timeout).schedule();
 
-        shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, BluetoothGatt.STATE_DISCONNECTED);
+        shadowGatt.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED,
+                                                             BluetoothGatt.STATE_DISCONNECTED);
         assertThat(result.isCompleted(), is(false));
         assertThat(result.getError(), is(instanceOf(GattException.class)));
         verify(timeout).unschedule();

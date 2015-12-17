@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import is.hello.buruberi.bluetooth.errors.ConnectionStateException;
 import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
+import is.hello.buruberi.bluetooth.stacks.android.BluetoothDeviceCompat;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.util.NonGuaranteed;
 import rx.Observable;
@@ -165,6 +166,76 @@ public interface GattPeripheral {
     //endregion
 
 
+    //region Connect Flags
+
+    /**
+     * If set, connect will wait for the remote device to become
+     * available before issuing the connection attempt.
+     * <p>
+     * Equivalent to passing {@code autoConnect: true} with
+     * {@code BluetoothGatt#(Context, boolean, BluetoothGattCallback)}.
+     */
+    int CONNECT_FLAG_WAIT_AVAILABLE = (1 << 1);
+
+    /**
+     * Corresponds to {@link BluetoothDeviceCompat#TRANSPORT_AUTO}.
+     * It is undefined behavior to include more than one transport flag.
+     * <p>
+     * Only applies to devices on API level 23 (Marshmallow) or later.
+     */
+    int CONNECT_FLAG_TRANSPORT_AUTO = (1 << 2);
+
+    /**
+     * Corresponds to {@link BluetoothDeviceCompat#TRANSPORT_BREDR}.
+     * It is undefined behavior to include more than one transport flag.
+     * <p>
+     * Only applies to devices on API level 23 (Marshmallow) or later.
+     */
+    int CONNECT_FLAG_TRANSPORT_BREDR = (1 << 3);
+
+    /**
+     * Corresponds to {@link BluetoothDeviceCompat#TRANSPORT_LE}.
+     * It is undefined behavior to include more than one transport flag.
+     * <p>
+     * Only applies to devices on API level 23 (Marshmallow) or later.
+     */
+    int CONNECT_FLAG_TRANSPORT_LE = (1 << 4);
+
+    /**
+     * The recommended default flags to use with gatt connections.
+     */
+    int CONNECT_FLAG_DEFAULTS = (CONNECT_FLAG_WAIT_AVAILABLE | CONNECT_FLAG_TRANSPORT_LE);
+
+    /**
+     * Marks an {@code int} as containing one of the
+     * connect flag constants from {@code GattPeripheral}.
+     *
+     * @see #CONNECT_FLAG_WAIT_AVAILABLE
+     * @see #CONNECT_FLAG_TRANSPORT_AUTO
+     * @see #CONNECT_FLAG_TRANSPORT_BREDR
+     * @see #CONNECT_FLAG_TRANSPORT_LE
+     * @see #CONNECT_FLAG_DEFAULTS
+     */
+    @Target({
+            ElementType.FIELD,
+            ElementType.PARAMETER,
+            ElementType.METHOD,
+            ElementType.LOCAL_VARIABLE
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    @Documented
+    @IntDef(flag = true, value = {
+            CONNECT_FLAG_WAIT_AVAILABLE,
+            CONNECT_FLAG_TRANSPORT_AUTO,
+            CONNECT_FLAG_TRANSPORT_BREDR,
+            CONNECT_FLAG_TRANSPORT_LE,
+            CONNECT_FLAG_DEFAULTS,
+    })
+    @interface ConnectFlags {}
+
+    //endregion
+
+
     //region Properties
 
     /**
@@ -221,19 +292,33 @@ public interface GattPeripheral {
     //region Connectivity
 
     /**
+     * Legacy connect method that is equivalent to calling {@link #connect(int, OperationTimeout)}
+     * with {@link #CONNECT_FLAG_DEFAULTS}. New code should not use this method.
+     *
+     * @deprecated Prefer {@link #connect(int, OperationTimeout)} for all new code.
+     */
+    @Deprecated
+    @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @NonNull Observable<GattPeripheral> connect(@NonNull OperationTimeout timeout);
+
+    /**
      * Attempts to create a gatt connection to the peripheral.
      * <p>
      * Does nothing if there is already an active connection.
      * <p>
      * Yields an {@link ConnectionStateException} if called
      * when peripheral connection status is changing.
-     * @param timeout   The timeout to apply to the connect operation.
      * <p>
      * <em>Important:</em> The order in which you connect and create bonds depends
      * on the device's Android version. {@link #createBond()} for more info.
+     *
+     * @param timeout   The timeout to apply to the connect operation.
+     * @param flags     The configuration of the connect operation.
+     * @return An observable that represents the connect operation.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<GattPeripheral> connect(@NonNull OperationTimeout timeout);
+    @NonNull Observable<GattPeripheral> connect(@ConnectFlags int flags,
+                                                @NonNull OperationTimeout timeout);
 
     /**
      * Ends the gatt connection of the peripheral.

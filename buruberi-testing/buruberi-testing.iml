@@ -89,6 +89,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/symbols" />
       <excludeFolder url="file://$MODULE_DIR$/build/libs" />
       <excludeFolder url="file://$MODULE_DIR$/build/outputs" />
+      <excludeFolder url="file://$MODULE_DIR$/build/publications" />
       <excludeFolder url="file://$MODULE_DIR$/build/reports" />
       <excludeFolder url="file://$MODULE_DIR$/build/test-results" />
       <excludeFolder url="file://$MODULE_DIR$/build/tmp" />
@@ -101,17 +102,17 @@
     <orderEntry type="library" exported="" name="accessibility-test-framework-1.0" level="project" />
     <orderEntry type="library" exported="" name="hamcrest-library-1.3" level="project" />
     <orderEntry type="library" exported="" name="robolectric-resources-3.0" level="project" />
+    <orderEntry type="library" exported="" name="ant-launcher-1.8.0" level="project" />
     <orderEntry type="library" exported="" name="robolectric-annotations-3.0" level="project" />
     <orderEntry type="library" exported="" name="asm-commons-5.0.1" level="project" />
-    <orderEntry type="library" exported="" name="ant-launcher-1.8.0" level="project" />
-    <orderEntry type="library" exported="" name="sqlite4java-0.282" level="project" />
     <orderEntry type="library" exported="" name="asm-tree-5.0.1" level="project" />
+    <orderEntry type="library" exported="" name="sqlite4java-0.282" level="project" />
     <orderEntry type="library" exported="" name="asm-5.0.1" level="project" />
     <orderEntry type="library" exported="" name="shadows-core-3.0" level="project" />
-    <orderEntry type="library" exported="" name="robolectric-utils-3.0" level="project" />
     <orderEntry type="library" exported="" name="asm-analysis-5.0.1" level="project" />
-    <orderEntry type="library" exported="" name="vtd-xml-2.11" level="project" />
+    <orderEntry type="library" exported="" name="robolectric-utils-3.0" level="project" />
     <orderEntry type="library" exported="" name="hamcrest-core-1.3" level="project" />
+    <orderEntry type="library" exported="" name="vtd-xml-2.11" level="project" />
     <orderEntry type="library" exported="" name="junit-4.8.2" level="project" />
     <orderEntry type="library" exported="" name="asm-util-5.0.1" level="project" />
     <orderEntry type="library" exported="" name="bcprov-jdk16-1.46" level="project" />
