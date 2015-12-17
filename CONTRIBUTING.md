@@ -30,11 +30,11 @@ code formatting tool.
 
 ## Useful References
 
-- [Project Javadocs](#)
+- [Project Javadocs](http://hello.github.io/buruberi/javadoc/index.html)
 - [Bluetooth Low Energy introduction](http://developer.android.com/guide/topics/connectivity/bluetooth-le.html)
 - [`BluetoothManager` reference](http://developer.android.com/reference/android/bluetooth/BluetoothManager.html)
 - [`BluetoothAdapter` reference](http://developer.android.com/reference/android/bluetooth/BluetoothAdapter.html)
 - [`BluetoothLeScanner` reference](http://developer.android.com/reference/android/bluetooth/le/BluetoothLeScanner.html)
 - [`BluetoothDevice` reference](http://developer.android.com/reference/android/bluetooth/BluetoothDevice.html)
 - [`BluetoothGatt` reference](http://developer.android.com/reference/android/bluetooth/BluetoothGatt.html)
-- [The Scantastic example app](tree/master/buruberi-example)
+- [The Scantastic example app](buruberi-example)

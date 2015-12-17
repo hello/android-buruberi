@@ -10,7 +10,7 @@ introduced between OS releases... These are not the things dreams are made of.
 Buruberi is a small library that wraps the Android Bluetooth Low Energy APIs,
 and tries to insulate you from as many of these problems as it can.
 
-# Using AnimeAndroidGo99
+# Using Burūberī
 
 ## Creating a Stack
 
