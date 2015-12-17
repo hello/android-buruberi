@@ -101,5 +101,11 @@ public class ShadowBluetoothDeviceExt extends ShadowBluetoothDevice {
         return bluetoothGatt;
     }
 
+    @Implementation
+    public BluetoothGatt connectGatt(Context context, boolean autoConnect,
+                                     BluetoothGattCallback callback, int transport) {
+        return connectGatt(context, autoConnect, callback);
+    }
+
     //endregion
 }
