@@ -170,10 +170,25 @@ public class NativeGattPeripheral implements GattPeripheral {
         }
     }
 
+    int getTransportFromConnectFlags(@ConnectFlags final int flags) {
+        if ((flags & CONNECT_FLAG_TRANSPORT_AUTO) == CONNECT_FLAG_TRANSPORT_AUTO) {
+            return BluetoothDeviceCompat.TRANSPORT_AUTO;
+        } else if ((flags & CONNECT_FLAG_TRANSPORT_BREDR) == CONNECT_FLAG_TRANSPORT_BREDR) {
+            return BluetoothDeviceCompat.TRANSPORT_BREDR;
+        } else if ((flags & CONNECT_FLAG_TRANSPORT_LE) == CONNECT_FLAG_TRANSPORT_LE) {
+            return BluetoothDeviceCompat.TRANSPORT_LE;
+        } else {
+            logger.warn(LOG_TAG, "ConnectFlags missing transport mask " +
+                    Integer.toHexString(flags));
+            return BluetoothDeviceCompat.TRANSPORT_AUTO;
+        }
+    }
+
     @NonNull
     @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<GattPeripheral> connect(final @NonNull OperationTimeout timeout) {
+    public Observable<GattPeripheral> connect(@ConnectFlags final int flags,
+                                              @NonNull final OperationTimeout timeout) {
         return createObservable(new Observable.OnSubscribe<GattPeripheral>() {
             @Override
             public void call(final Subscriber<? super GattPeripheral> subscriber) {
@@ -187,6 +202,9 @@ public class NativeGattPeripheral implements GattPeripheral {
                     subscriber.onError(new ConnectionStateException("Peripheral is changing connection status."));
                     return;
                 }
+
+                final boolean autoConnect = ((flags & CONNECT_FLAG_WAIT_AVAILABLE) == CONNECT_FLAG_WAIT_AVAILABLE);
+                final int transport = getTransportFromConnectFlags(flags);
 
                 final AtomicBoolean hasRetried = new AtomicBoolean(false);
                 final GattDispatcher.ConnectionStateListener listener = new GattDispatcher.ConnectionStateListener() {
@@ -204,9 +222,9 @@ public class NativeGattPeripheral implements GattPeripheral {
                             NativeGattPeripheral.this.gatt =
                                     BluetoothDeviceCompat.connectGatt(bluetoothDevice,
                                                                       stack.applicationContext,
-                                                                      false,
+                                                                      autoConnect,
                                                                       gattDispatcher,
-                                                                      BluetoothDeviceCompat.TRANSPORT_LE);
+                                                                      transport);
                             if (NativeGattPeripheral.this.gatt != null) {
                                 timeout.reschedule();
                             } else {
@@ -291,9 +309,9 @@ public class NativeGattPeripheral implements GattPeripheral {
                     NativeGattPeripheral.this.gatt =
                             BluetoothDeviceCompat.connectGatt(bluetoothDevice,
                                                               stack.applicationContext,
-                                                              false,
+                                                              autoConnect,
                                                               gattDispatcher,
-                                                              BluetoothDeviceCompat.TRANSPORT_LE);
+                                                              transport);
                     if (gatt != null) {
                         NativeGattPeripheral.this.suspendDisconnectBroadcasts = true;
                         timeout.schedule();
@@ -304,6 +322,13 @@ public class NativeGattPeripheral implements GattPeripheral {
                 }
             }
         });
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    public Observable<GattPeripheral> connect(@NonNull OperationTimeout timeout) {
+        return connect(CONNECT_FLAG_DEFAULTS, timeout);
     }
 
     @NonNull

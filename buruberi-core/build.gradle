@@ -3,7 +3,7 @@ plugins {
 }
 
 // Used for both the 'aar' file and publish.
-def VERSION_NAME = '0.9.0'
+def VERSION_NAME = '0.9.1'
 def GROUP_ID = 'is.hello'
 def NAME = 'buruberi-core'
 def DESCRIPTION = 'Less flaky Bluetooth Low Energy for Android'
