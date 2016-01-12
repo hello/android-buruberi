@@ -26,6 +26,10 @@ public class DeviceSupportTests {
         return DeviceSupport.isModelSupported(DeviceSupport.getManufacturerSupportedPattern(manufacturer), model);
     }
 
+    public static boolean isSupported(@NonNull String model) {
+        return DeviceSupport.isModelSupported(model);
+    }
+
     @Test
     public void samsung() throws Exception {
         assertTrue(isSupported(DeviceSupport.MANUFACTURER_SAMSUNG, "GT-I9301I"));
@@ -202,5 +206,47 @@ public class DeviceSupportTests {
     public void other() throws Exception {
         assertTrue(isSupported("", "D6708"));
         assertTrue(isSupported("", "A0001"));
+
+        assertTrue(isSupported("SM-G800F"));
+        assertTrue(isSupported( "Nexus 5X"));
+        assertTrue(isSupported( "Nexus 6P"));
+        assertTrue(isSupported( "HTC6525LVW"));
+        assertTrue(isSupported( "SM-G800F"));
+        assertTrue(isSupported( "SM-N9005"));
+        assertTrue(isSupported( "GT-I9195"));
+        assertTrue(isSupported("D5503"));
+        assertTrue(isSupported("LG-D855"));
+        assertTrue(isSupported( "D6603"));
+        assertTrue(isSupported( "C6903"));
+        assertTrue(isSupported( "E5823"));
+        assertTrue(isSupported( "VS986"));
+        assertTrue(isSupported( "LG-D802"));
+        assertTrue(isSupported( "ASUS_Z00AD"));
+        assertTrue(isSupported( "D6503"));
+        assertTrue(isSupported( "E6653"));
+        assertTrue(isSupported( "LG-H815"));
+        assertTrue(isSupported( "ONE A2003"));
+        assertTrue(isSupported( "831C"));
+        assertTrue(isSupported( "LG-D851"));
+        assertTrue(isSupported("D5833"));
+        assertTrue(isSupported("MotoG3"));
+        assertTrue(isSupported( "HTC6500LVW"));
+        assertTrue(isSupported( "SCH-I435"));
+        assertTrue(isSupported( "D6616"));
+        assertTrue(isSupported( "LG-D850"));
+        assertTrue(isSupported( "LG-H811"));
+        assertTrue(isSupported( "LGLS990"));
+        assertTrue(isSupported( "VS980 4G"));
+        assertTrue(isSupported( "E6533"));
+        assertTrue(isSupported( "LG-D852"));
+        assertTrue(isSupported( "HTC6535LVW"));
+        assertTrue(isSupported( "Pixel C"));
+        assertTrue(isSupported( "ONE A2005"));
+        assertTrue(isSupported( "D6708"));
+        assertTrue(isSupported( "LG-D405"));
+        assertTrue(isSupported( "ONE E1003"));
+        assertTrue(isSupported( "LG-D800"));
+        assertTrue(isSupported( "One X"));
+        assertTrue(isSupported( "HTC One M8s"));
     }
 }

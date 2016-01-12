@@ -29,6 +29,12 @@ public final class DeviceSupport {
     static final String MANUFACTURER_MOTOROLA = "motorola";
 
     static boolean isModelSupported(@NonNull String manufacturerPattern, @NonNull String model) {
+        return Pattern.compile(manufacturerPattern, Pattern.CASE_INSENSITIVE)
+                      .matcher(model)
+                      .matches();
+    }
+
+    static boolean isModelSupported(@NonNull String model){
         switch(model){
             case "Nexus 5X":
             case "Nexus 6P":
@@ -72,10 +78,7 @@ public final class DeviceSupport {
             case "HTC One M8s":
                 return true;
         }
-
-        return Pattern.compile(manufacturerPattern, Pattern.CASE_INSENSITIVE)
-                      .matcher(model)
-                      .matches();
+        return false;
     }
 
     static String getManufacturerSupportedPattern(@NonNull String manufacturer) {
@@ -100,7 +103,7 @@ public final class DeviceSupport {
 
     public static @NonNull BluetoothStack.SupportLevel getDeviceSupportLevel() {
         String manufacturerPattern = getManufacturerSupportedPattern(Build.MANUFACTURER);
-        if (isModelSupported(manufacturerPattern, Build.MODEL)) {
+        if (isModelSupported(Build.MODEL) || isModelSupported(manufacturerPattern, Build.MODEL)) {
             return BluetoothStack.SupportLevel.TESTED;
         } else {
             return BluetoothStack.SupportLevel.UNTESTED;
