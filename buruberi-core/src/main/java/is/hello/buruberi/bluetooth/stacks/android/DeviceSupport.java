@@ -34,6 +34,53 @@ public final class DeviceSupport {
                       .matches();
     }
 
+    static boolean isModelSupported(@NonNull String model){
+        switch(model){
+            case "Nexus 5X":
+            case "Nexus 6P":
+            case "HTC6525LVW":
+            case "SM-G800F":
+            case "SM-N9005":
+            case "GT-I9195":
+            case "D5503":
+            case "LG-D855":
+            case "D6603":
+            case "C6903":
+            case "E5823":
+            case "VS986":
+            case "LG-D802":
+            case "ASUS_Z00AD":
+            case "D6503":
+            case "E6653":
+            case "LG-H815":
+            case "ONE A2003":
+            case "831C":
+            case "LG-D851":
+            case "D5833":
+            case "MotoG3":
+            case "HTC6500LVW":
+            case "SCH-I435":
+            case "D6616":
+            case "LG-D850":
+            case "LG-H811":
+            case "LGLS990":
+            case "VS980 4G":
+            case "E6533":
+            case "LG-D852":
+            case "HTC6535LVW":
+            case "Pixel C":
+            case "ONE A2005":
+            case "D6708":
+            case "LG-D405":
+            case "ONE E1003":
+            case "LG-D800":
+            case "One X":
+            case "HTC One M8s":
+                return true;
+        }
+        return false;
+    }
+
     static String getManufacturerSupportedPattern(@NonNull String manufacturer) {
         switch (manufacturer.toLowerCase()) {
             case MANUFACTURER_SAMSUNG: {
@@ -56,7 +103,7 @@ public final class DeviceSupport {
 
     public static @NonNull BluetoothStack.SupportLevel getDeviceSupportLevel() {
         String manufacturerPattern = getManufacturerSupportedPattern(Build.MANUFACTURER);
-        if (isModelSupported(manufacturerPattern, Build.MODEL)) {
+        if (isModelSupported(Build.MODEL) || isModelSupported(manufacturerPattern, Build.MODEL)) {
             return BluetoothStack.SupportLevel.TESTED;
         } else {
             return BluetoothStack.SupportLevel.UNTESTED;
