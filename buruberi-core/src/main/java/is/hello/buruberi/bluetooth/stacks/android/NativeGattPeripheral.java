@@ -19,9 +19,6 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -34,7 +31,6 @@ import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +54,6 @@ import rx.Subscriber;
 import rx.Subscription;
 import rx.functions.Action0;
 import rx.functions.Action2;
-import rx.functions.Action3;
 import rx.functions.Func1;
 
 public class NativeGattPeripheral implements GattPeripheral {
@@ -104,7 +99,9 @@ public class NativeGattPeripheral implements GattPeripheral {
 
     @NonNull
     @Override
-    public OperationTimeout createOperationTimeout(@NonNull String name, long duration, @NonNull TimeUnit timeUnit) {
+    public OperationTimeout createOperationTimeout(@NonNull String name,
+                                                   long duration,
+                                                   @NonNull TimeUnit timeUnit) {
         return new SchedulerOperationTimeout(name, duration, timeUnit, logger);
     }
 
@@ -714,10 +711,6 @@ public class NativeGattPeripheral implements GattPeripheral {
 
     //region Characteristics
 
-    private @NonNull BluetoothGattService getGattService(@NonNull GattService onGattService) {
-        return ((NativeGattService) onGattService).wrappedService;
-    }
-
     @NonNull
     @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
@@ -725,66 +718,13 @@ public class NativeGattPeripheral implements GattPeripheral {
                                                final @NonNull UUID characteristicIdentifier,
                                                final @NonNull UUID descriptorIdentifier,
                                                final @NonNull OperationTimeout timeout) {
-        return createObservable(new Observable.OnSubscribe<UUID>() {
-            @Override
-            public void call(final Subscriber<? super UUID> subscriber) {
-                if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
-                    subscriber.onError(new ConnectionStateException());
-                    return;
-                }
-
-                logger.info(GattPeripheral.LOG_TAG, "Subscribing to " + characteristicIdentifier);
-
-                final BluetoothGattService service = getGattService(onGattService);
-                final BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicIdentifier);
-                if (gatt.setCharacteristicNotification(characteristic, true)) {
-                    final Action0 onDisconnect =
-                            gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
-                    setupTimeout(OperationTimeoutException.Operation.ENABLE_NOTIFICATION,
-                                 timeout, subscriber, onDisconnect);
-
-                    gattDispatcher.onDescriptorWrite = new Action3<BluetoothGatt, BluetoothGattDescriptor, Integer>() {
-                        @Override
-                        public void call(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, Integer status) {
-                            if (!Arrays.equals(descriptor.getValue(),
-                                               BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)) {
-                                return;
-                            }
-
-                            timeout.unschedule();
-
-                            if (status == BluetoothGatt.GATT_SUCCESS) {
-                                subscriber.onNext(characteristicIdentifier);
-                                subscriber.onCompleted();
-                            } else {
-                                logger.error(LOG_TAG, "Could not subscribe to characteristic. " +
-                                        GattException.statusToString(status), null);
-                                subscriber.onError(new GattException(status,
-                                                                     GattException.Operation.ENABLE_NOTIFICATION));
-                            }
-
-                            gattDispatcher.onDescriptorWrite = null;
-                            gattDispatcher.removeDisconnectListener(onDisconnect);
-                        }
-                    };
-
-                    final BluetoothGattDescriptor descriptorToWrite = characteristic.getDescriptor(descriptorIdentifier);
-                    descriptorToWrite.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    if (gatt.writeDescriptor(descriptorToWrite)) {
-                        timeout.schedule();
-                    } else {
-                        gattDispatcher.onDescriptorWrite = null;
-                        gattDispatcher.removeDisconnectListener(onDisconnect);
-
-                        subscriber.onError(new GattException(BluetoothGatt.GATT_FAILURE,
-                                                             GattException.Operation.ENABLE_NOTIFICATION));
-                    }
-                } else {
-                    subscriber.onError(new GattException(BluetoothGatt.GATT_WRITE_NOT_PERMITTED,
-                                                         GattException.Operation.ENABLE_NOTIFICATION));
-                }
-            }
-        });
+        final GattCharacteristic characteristic =
+                onGattService.getCharacteristic(characteristicIdentifier);
+        if (characteristic != null) {
+            return characteristic.enableNotification(descriptorIdentifier, timeout);
+        } else {
+            return Observable.error(new IllegalArgumentException("Unknown characteristic " + characteristicIdentifier));
+        }
     }
 
     @NonNull
@@ -794,61 +734,13 @@ public class NativeGattPeripheral implements GattPeripheral {
                                                 final @NonNull UUID characteristicIdentifier,
                                                 final @NonNull UUID descriptorIdentifier,
                                                 final @NonNull OperationTimeout timeout) {
-        return createObservable(new Observable.OnSubscribe<UUID>() {
-            @Override
-            public void call(final Subscriber<? super UUID> subscriber) {
-                if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
-                    subscriber.onError(new ConnectionStateException());
-                    return;
-                }
-
-                logger.info(GattPeripheral.LOG_TAG, "Unsubscribing from " + characteristicIdentifier);
-
-                final BluetoothGattService service = getGattService(onGattService);
-                final BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicIdentifier);
-
-                final Action0 onDisconnect = gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
-                setupTimeout(OperationTimeoutException.Operation.ENABLE_NOTIFICATION, timeout, subscriber, onDisconnect);
-
-                gattDispatcher.onDescriptorWrite = new Action3<BluetoothGatt, BluetoothGattDescriptor, Integer>() {
-                    @Override
-                    public void call(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, Integer status) {
-                        if (!Arrays.equals(descriptor.getValue(), BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
-                            return;
-                        }
-
-                        timeout.unschedule();
-
-                        if (status == BluetoothGatt.GATT_SUCCESS) {
-                            if (gatt.setCharacteristicNotification(characteristic, false)) {
-                                subscriber.onNext(characteristicIdentifier);
-                                subscriber.onCompleted();
-                            } else {
-                                logger.error(LOG_TAG, "Could not unsubscribe from characteristic. " + GattException.statusToString(status), null);
-                                subscriber.onError(new GattException(BluetoothGatt.GATT_FAILURE, GattException.Operation.DISABLE_NOTIFICATION));
-                            }
-                        } else {
-                            subscriber.onError(new GattException(status, GattException.Operation.DISABLE_NOTIFICATION));
-                        }
-
-                        gattDispatcher.removeDisconnectListener(onDisconnect);
-                        gattDispatcher.onDescriptorWrite = null;
-                    }
-                };
-
-                final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(descriptorIdentifier);
-                descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-                if (gatt.writeDescriptor(descriptor)) {
-                    timeout.schedule();
-                } else {
-                    gattDispatcher.removeDisconnectListener(onDisconnect);
-                    gattDispatcher.onDescriptorWrite = null;
-
-                    subscriber.onError(new GattException(BluetoothGatt.GATT_WRITE_NOT_PERMITTED,
-                                                         GattException.Operation.DISABLE_NOTIFICATION));
-                }
-            }
-        });
+        final GattCharacteristic characteristic =
+                onGattService.getCharacteristic(characteristicIdentifier);
+        if (characteristic != null) {
+            return characteristic.disableNotification(descriptorIdentifier, timeout);
+        } else {
+            return Observable.error(new IllegalArgumentException("Unknown characteristic " + characteristicIdentifier));
+        }
     }
 
     @NonNull
