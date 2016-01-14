@@ -142,8 +142,8 @@ notify.subscribe(descriptorId -> {
 
 ```groovy
 dependencies {
-    compile 'is.hello:buruberi-core:0.9.0'
-    testCompile 'is.hello:buruberi-testing:0.9.0'
+    compile 'is.hello:buruberi-core:*'
+    testCompile 'is.hello:buruberi-testing:*'
 }
 ```
 
