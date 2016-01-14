@@ -62,22 +62,21 @@ class GattDispatcher extends BluetoothGattCallback {
         connectionStateListeners.remove(changeHandler);
     }
 
-    Action0 addDisconnectListener(@NonNull Action0 disconnectListener) {
-        disconnectListeners.add(disconnectListener);
-        return disconnectListener;
-    }
-
-    <T> Action0 addTimeoutDisconnectListener(final @NonNull Subscriber<T> subscriber, final @NonNull OperationTimeout timeout) {
-        return addDisconnectListener(new Action0() {
+    <T> Action0 addTimeoutDisconnectListener(final @NonNull Subscriber<T> subscriber,
+                                             final @NonNull OperationTimeout timeout) {
+        final Action0 onDisconnect = new Action0() {
             @Override
             public void call() {
-                logger.info(GattPeripheral.LOG_TAG, "onDisconnectListener(" + subscriber.hashCode() + ")");
+                logger.info(GattPeripheral.LOG_TAG,
+                            "onDisconnectListener(" + subscriber.hashCode() + ")");
 
                 timeout.unschedule();
 
                 subscriber.onError(new LostConnectionException());
             }
-        });
+        };
+        disconnectListeners.add(onDisconnect);
+        return onDisconnect;
     }
 
     void removeDisconnectListener(@NonNull Action0 disconnectListener) {
@@ -94,7 +93,7 @@ class GattDispatcher extends BluetoothGattCallback {
                 GattDispatcher.this.onCharacteristicWrite = null;
                 GattDispatcher.this.onDescriptorWrite = null;
 
-                for (Action0 onDisconnect : disconnectListeners) {
+                for (final Action0 onDisconnect : disconnectListeners) {
                     onDisconnect.call();
                 }
                 disconnectListeners.clear();
@@ -109,7 +108,8 @@ class GattDispatcher extends BluetoothGattCallback {
     @Override
     public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
         super.onConnectionStateChange(gatt, status, newState);
-        logger.info(GattPeripheral.LOG_TAG, "onConnectionStateChange('" + gatt + "', " + status + ", " + newState + ")");
+        logger.info(GattPeripheral.LOG_TAG, "onConnectionStateChange('" + gatt + "', " +
+                status + ", " + newState + ")");
 
         dispatcher.post(new Runnable() {
             @Override
@@ -147,10 +147,11 @@ class GattDispatcher extends BluetoothGattCallback {
     }
 
     @Override
-    public void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
-        super.onCharacteristicRead(gatt, characteristic, status);
-
-        logger.info(GattPeripheral.LOG_TAG, "onCharacteristicRead('" + gatt + "', " + characteristic + ", " + status + ")");
+    public void onCharacteristicRead(final BluetoothGatt gatt,
+                                     final BluetoothGattCharacteristic characteristic,
+                                     final int status) {
+        logger.info(GattPeripheral.LOG_TAG, "onCharacteristicRead('" + gatt + "', " +
+                characteristic + ", " + status + ")");
 
         dispatcher.post(new Runnable() {
             @Override
@@ -164,10 +165,11 @@ class GattDispatcher extends BluetoothGattCallback {
     }
 
     @Override
-    public void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
-        super.onCharacteristicWrite(gatt, characteristic, status);
-
-        logger.info(GattPeripheral.LOG_TAG, "onCharacteristicWrite('" + gatt + "', " + characteristic + ", " + status + ")");
+    public void onCharacteristicWrite(final BluetoothGatt gatt,
+                                      final BluetoothGattCharacteristic characteristic,
+                                      final int status) {
+        logger.info(GattPeripheral.LOG_TAG, "onCharacteristicWrite('" + gatt + "', " +
+                characteristic + ", " + status + ")");
 
         dispatcher.post(new Runnable() {
             @Override
@@ -182,10 +184,10 @@ class GattDispatcher extends BluetoothGattCallback {
     }
 
     @Override
-    public void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-        super.onCharacteristicChanged(gatt, characteristic);
-
-        logger.info(GattPeripheral.LOG_TAG, "onCharacteristicChanged('" + gatt + "', " + characteristic + ", " + ")");
+    public void onCharacteristicChanged(final BluetoothGatt gatt,
+                                        final BluetoothGattCharacteristic characteristic) {
+        logger.info(GattPeripheral.LOG_TAG, "onCharacteristicChanged('" + gatt + "', " +
+                characteristic + ", " + ")");
 
         dispatcher.post(new Runnable() {
             @Override
@@ -199,9 +201,9 @@ class GattDispatcher extends BluetoothGattCallback {
     }
 
     @Override
-    public void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
-        super.onDescriptorWrite(gatt, descriptor, status);
-
+    public void onDescriptorWrite(final BluetoothGatt gatt,
+                                  final BluetoothGattDescriptor descriptor,
+                                  final int status) {
         logger.info(GattPeripheral.LOG_TAG, "onDescriptorWrite('" + gatt + "', " + descriptor + ", " + ")");
 
         dispatcher.post(new Runnable() {

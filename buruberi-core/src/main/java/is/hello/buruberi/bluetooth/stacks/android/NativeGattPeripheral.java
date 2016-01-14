@@ -29,7 +29,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import java.util.Map;
 import java.util.UUID;
@@ -67,14 +66,16 @@ public class NativeGattPeripheral implements GattPeripheral {
 
     private final @NonNull NativeBluetoothStack stack;
     private final @NonNull LoggerFacade logger;
+    private final SerialQueue serialQueue;
+
     @VisibleForTesting final @NonNull BluetoothDevice bluetoothDevice;
     private final int scannedRssi;
     private final @NonNull AdvertisingData advertisingData;
-    @VisibleForTesting final GattDispatcher gattDispatcher;
-    private final DisconnectForwarder disconnectForwarder;
-    @VisibleForTesting final SerialQueue serialQueue;
 
-    @VisibleForTesting @Nullable BluetoothGatt gatt;
+    /*package*/ final GattDispatcher gattDispatcher;
+    private final DisconnectForwarder disconnectForwarder;
+
+    /*package*/ @Nullable BluetoothGatt gatt;
     private @Nullable BroadcastReceiver bluetoothStateReceiver;
 
     NativeGattPeripheral(final @NonNull NativeBluetoothStack stack,
@@ -83,6 +84,8 @@ public class NativeGattPeripheral implements GattPeripheral {
                          @NonNull AdvertisingData advertisingData) {
         this.stack = stack;
         this.logger = stack.getLogger();
+        this.serialQueue = new SerialQueue();
+
         this.bluetoothDevice = bluetoothDevice;
         this.scannedRssi = scannedRssi;
         this.advertisingData = advertisingData;
@@ -90,8 +93,6 @@ public class NativeGattPeripheral implements GattPeripheral {
         this.gattDispatcher = new GattDispatcher(logger);
         this.disconnectForwarder = new DisconnectForwarder();
         gattDispatcher.addConnectionListener(disconnectForwarder);
-        
-        this.serialQueue = new SerialQueue();
     }
 
 
@@ -139,7 +140,7 @@ public class NativeGattPeripheral implements GattPeripheral {
 
     void closeGatt(@Nullable BluetoothGatt gatt) {
         if (gatt != null) {
-            Log.i(LOG_TAG, "Closing gatt layer");
+            logger.info(LOG_TAG, "Closing gatt layer");
 
             gatt.close();
             if (gatt == this.gatt) {
@@ -389,14 +390,14 @@ public class NativeGattPeripheral implements GattPeripheral {
 
     //region Internal
 
-    <T> Observable<T> createObservable(@NonNull Observable.OnSubscribe<T> onSubscribe) {
+    /*package*/ <T> Observable<T> createObservable(@NonNull Observable.OnSubscribe<T> onSubscribe) {
         return Rx.serialize(stack.newConfiguredObservable(onSubscribe), serialQueue);
     }
-    
-    <T> void setupTimeout(@NonNull final OperationTimeoutException.Operation operation,
-                                  @NonNull final OperationTimeout timeout,
-                                  @NonNull final Subscriber<T> subscriber,
-                                  @Nullable final Action0 disconnectListener) {
+
+    /*package*/ <T> void setupTimeout(@NonNull final OperationTimeoutException.Operation operation,
+                                      @NonNull final OperationTimeout timeout,
+                                      @NonNull final Subscriber<T> subscriber,
+                                      @Nullable final Action0 disconnectListener) {
         timeout.setTimeoutAction(new Action0() {
             @Override
             public void call() {
@@ -451,16 +452,16 @@ public class NativeGattPeripheral implements GattPeripheral {
     private Observable<Intent> createBondReceiver() {
         return Rx.fromBroadcast(stack.applicationContext,
                                 new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED))
-                .subscribeOn(stack.scheduler)
-                .filter(new Func1<Intent, Boolean>() {
-                    @Override
-                    public Boolean call(Intent intent) {
-                        final BluetoothDevice bondedDevice =
-                                intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                        return (bondedDevice != null &&
-                                bondedDevice.getAddress().equals(bluetoothDevice.getAddress()));
-                    }
-                });
+                 .subscribeOn(stack.scheduler)
+                 .filter(new Func1<Intent, Boolean>() {
+                     @Override
+                     public Boolean call(Intent intent) {
+                         final BluetoothDevice bondedDevice =
+                                 intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                         return (bondedDevice != null &&
+                                 bondedDevice.getAddress().equals(bluetoothDevice.getAddress()));
+                     }
+                 });
     }
 
     @NonNull
@@ -473,7 +474,7 @@ public class NativeGattPeripheral implements GattPeripheral {
         return createObservable(new Observable.OnSubscribe<GattPeripheral>() {
             @Override
             public void call(final Subscriber<? super GattPeripheral> subscriber) {
-                if (NativeGattPeripheral.this.getBondStatus() == BOND_BONDED) {
+                if (getBondStatus() == BOND_BONDED) {
                     logger.info(GattPeripheral.LOG_TAG, "Device already bonded, skipping.");
 
                     subscriber.onNext(NativeGattPeripheral.this);
@@ -509,7 +510,8 @@ public class NativeGattPeripheral implements GattPeripheral {
                             subscriber.onCompleted();
 
                             unsubscribe();
-                        } else if (state == BluetoothDevice.ERROR || state == BOND_NONE && previousState == BOND_CHANGING) {
+                        } else if (state == BluetoothDevice.ERROR || state == BOND_NONE &&
+                                previousState == BOND_CHANGING) {
                             final int reason = intent.getIntExtra(BondException.EXTRA_REASON,
                                                                   BondException.REASON_UNKNOWN_FAILURE);
                             logger.error(LOG_TAG, "Bonding failed for reason " +
@@ -539,7 +541,7 @@ public class NativeGattPeripheral implements GattPeripheral {
         return createObservable(new Observable.OnSubscribe<GattPeripheral>() {
             @Override
             public void call(final Subscriber<? super GattPeripheral> subscriber) {
-                if (NativeGattPeripheral.this.getBondStatus() != BOND_BONDED) {
+                if (getBondStatus() != BOND_BONDED) {
                     logger.info(GattPeripheral.LOG_TAG, "Device not bonded, skipping.");
 
                     subscriber.onNext(NativeGattPeripheral.this);
@@ -598,7 +600,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                         subscription.unsubscribe();
 
                         // This can happen in Lollipop
-                        if (NativeGattPeripheral.this.getBondStatus() == BOND_NONE) {
+                        if (getBondStatus() == BOND_NONE) {
                             subscriber.onNext(NativeGattPeripheral.this);
                             subscriber.onCompleted();
                         } else {
@@ -787,12 +789,12 @@ public class NativeGattPeripheral implements GattPeripheral {
         }
 
         private void broadcast() {
-            NativeGattPeripheral.this.closeGatt(gatt);
+            closeGatt(gatt);
 
             if (enabled) {
                 final Intent disconnect = new Intent(ACTION_DISCONNECTED);
-                disconnect.putExtra(EXTRA_NAME, NativeGattPeripheral.this.getName());
-                disconnect.putExtra(EXTRA_ADDRESS, NativeGattPeripheral.this.getAddress());
+                disconnect.putExtra(EXTRA_NAME, getName());
+                disconnect.putExtra(EXTRA_ADDRESS, getAddress());
                 LocalBroadcastManager.getInstance(stack.applicationContext)
                                      .sendBroadcast(disconnect);
             }

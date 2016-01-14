@@ -29,7 +29,7 @@ import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattService;
 
 public final class NativeGattService implements GattService {
-    final BluetoothGattService wrappedService;
+    /*package*/ final BluetoothGattService wrappedService;
     private final NativeGattPeripheral peripheral;
     private final Map<UUID, NativeGattCharacteristic> characteristics = new HashMap<>();
 
