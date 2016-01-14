@@ -45,6 +45,7 @@ import is.hello.buruberi.bluetooth.errors.GattException;
 import is.hello.buruberi.bluetooth.errors.OperationTimeoutException;
 import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
+import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
@@ -391,11 +392,11 @@ public class NativeGattPeripheral implements GattPeripheral {
 
     //region Internal
 
-    private <T> Observable<T> createObservable(@NonNull Observable.OnSubscribe<T> onSubscribe) {
+    <T> Observable<T> createObservable(@NonNull Observable.OnSubscribe<T> onSubscribe) {
         return Rx.serialize(stack.newConfiguredObservable(onSubscribe), serialQueue);
     }
     
-    private <T> void setupTimeout(@NonNull final OperationTimeoutException.Operation operation,
+    <T> void setupTimeout(@NonNull final OperationTimeoutException.Operation operation,
                                   @NonNull final OperationTimeout timeout,
                                   @NonNull final Subscriber<T> subscriber,
                                   @Nullable final Action0 disconnectListener) {
@@ -714,7 +715,7 @@ public class NativeGattPeripheral implements GattPeripheral {
     //region Characteristics
 
     private @NonNull BluetoothGattService getGattService(@NonNull GattService onGattService) {
-        return ((NativeGattService) onGattService).service;
+        return ((NativeGattService) onGattService).wrappedService;
     }
 
     @NonNull
@@ -858,59 +859,12 @@ public class NativeGattPeripheral implements GattPeripheral {
                                          final @NonNull WriteType writeType,
                                          final @NonNull byte[] payload,
                                          final @NonNull OperationTimeout timeout) {
-        if (payload.length > PacketHandler.PACKET_LENGTH) {
-            return Observable.error(new IllegalArgumentException("Payload length " + payload.length +
-                    " greater than " + PacketHandler.PACKET_LENGTH));
+        final GattCharacteristic characteristic = onGattService.getCharacteristic(identifier);
+        if (characteristic != null) {
+            return characteristic.write(writeType, payload, timeout);
+        } else {
+            return Observable.error(new IllegalArgumentException("Unknown characteristic " + identifier));
         }
-
-        return createObservable(new Observable.OnSubscribe<Void>() {
-            @Override
-            public void call(final Subscriber<? super Void> subscriber) {
-                if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
-                    subscriber.onError(new ConnectionStateException());
-                    return;
-                }
-
-                final Action0 onDisconnect = gattDispatcher.addTimeoutDisconnectListener(subscriber, timeout);
-                setupTimeout(OperationTimeoutException.Operation.ENABLE_NOTIFICATION, timeout, subscriber, onDisconnect);
-
-                gattDispatcher.onCharacteristicWrite = new Action3<BluetoothGatt, BluetoothGattCharacteristic, Integer>() {
-                    @Override
-                    public void call(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, Integer status) {
-                        timeout.unschedule();
-
-                        if (status != BluetoothGatt.GATT_SUCCESS) {
-                            logger.error(LOG_TAG, "Could not write command " + identifier +
-                                    ", " + GattException.statusToString(status), null);
-                            subscriber.onError(new GattException(status,
-                                                                 GattException.Operation.WRITE_COMMAND));
-                        } else {
-                            subscriber.onNext(null);
-                            subscriber.onCompleted();
-                        }
-
-                        gattDispatcher.removeDisconnectListener(onDisconnect);
-                        gattDispatcher.onCharacteristicWrite = null;
-                    }
-                };
-
-                final BluetoothGattService service = getGattService(onGattService);
-                final BluetoothGattCharacteristic characteristic = service.getCharacteristic(identifier);
-                // Looks like write type might need to be specified for some phones. See
-                // <http://stackoverflow.com/questions/25888817/android-bluetooth-status-133-in-oncharacteristicwrite>
-                characteristic.setWriteType(writeType.value);
-                characteristic.setValue(payload);
-                if (gatt.writeCharacteristic(characteristic)) {
-                    timeout.schedule();
-                } else {
-                    gattDispatcher.removeDisconnectListener(onDisconnect);
-                    gattDispatcher.onCharacteristicWrite = null;
-
-                    subscriber.onError(new GattException(BluetoothGatt.GATT_WRITE_NOT_PERMITTED,
-                                                         GattException.Operation.WRITE_COMMAND));
-                }
-            }
-        });
     }
 
     @Override

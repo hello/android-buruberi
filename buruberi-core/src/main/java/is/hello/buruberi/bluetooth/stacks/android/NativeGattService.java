@@ -29,7 +29,7 @@ import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattService;
 
 public final class NativeGattService implements GattService {
-    final BluetoothGattService service;
+    final BluetoothGattService wrappedService;
     private final NativeGattPeripheral peripheral;
     private final Map<UUID, NativeGattCharacteristic> characteristics = new HashMap<>();
 
@@ -46,29 +46,29 @@ public final class NativeGattService implements GattService {
         return peripheralServices;
     }
 
-    NativeGattService(@NonNull BluetoothGattService service,
+    NativeGattService(@NonNull BluetoothGattService wrappedService,
                       @NonNull NativeGattPeripheral peripheral) {
-        this.service = service;
+        this.wrappedService = wrappedService;
         this.peripheral = peripheral;
     }
 
 
     @Override
     public UUID getUuid() {
-        return service.getUuid();
+        return wrappedService.getUuid();
     }
 
     @Override
     @Type
     public int getType() {
-        final @Type int type = service.getType();
+        final @Type int type = wrappedService.getType();
         return type;
     }
 
     @Override
     public List<UUID> getCharacteristics() {
         final List<UUID> identifiers = new ArrayList<>();
-        for (final BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
+        for (final BluetoothGattCharacteristic characteristic : wrappedService.getCharacteristics()) {
             identifiers.add(characteristic.getUuid());
         }
         return identifiers;
@@ -78,7 +78,7 @@ public final class NativeGattService implements GattService {
     public GattCharacteristic getCharacteristic(@NonNull UUID identifier) {
         NativeGattCharacteristic nativeCharacteristic = characteristics.get(identifier);
         if (nativeCharacteristic == null) {
-            final BluetoothGattCharacteristic characteristic = service.getCharacteristic(identifier);
+            final BluetoothGattCharacteristic characteristic = wrappedService.getCharacteristic(identifier);
             if (characteristic != null) {
                 nativeCharacteristic = new NativeGattCharacteristic(characteristic, this, peripheral);
                 characteristics.put(identifier, nativeCharacteristic);
@@ -94,19 +94,19 @@ public final class NativeGattService implements GattService {
         if (o == null || getClass() != o.getClass()) return false;
 
         final NativeGattService that = (NativeGattService) o;
-        return service.equals(that.service);
+        return wrappedService.equals(that.wrappedService);
     }
 
     @Override
     public int hashCode() {
-        return service.hashCode();
+        return wrappedService.hashCode();
     }
 
 
     @Override
     public String toString() {
         return "AndroidPeripheralService{" +
-                "service=" + service +
+                "service=" + wrappedService +
                 '}';
     }
 }
