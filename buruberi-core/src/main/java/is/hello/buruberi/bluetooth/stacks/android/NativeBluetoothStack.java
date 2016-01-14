@@ -31,10 +31,7 @@ import android.support.annotation.VisibleForTesting;
 
 import java.util.List;
 
-import is.hello.buruberi.bluetooth.errors.BondException;
 import is.hello.buruberi.bluetooth.errors.ChangePowerStateException;
-import is.hello.buruberi.bluetooth.errors.GattException;
-import is.hello.buruberi.bluetooth.errors.OperationTimeoutException;
 import is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
@@ -48,13 +45,13 @@ import rx.functions.Func1;
 import rx.subjects.ReplaySubject;
 
 public class NativeBluetoothStack implements BluetoothStack {
-    final @NonNull Context applicationContext;
-    final @NonNull ErrorListener errorListener;
-    final @NonNull LoggerFacade logger;
+    /*package*/ final @NonNull Context applicationContext;
+    private final @NonNull ErrorListener errorListener;
+    private final @NonNull LoggerFacade logger;
 
-    final @NonNull Scheduler scheduler = Rx.mainThreadScheduler();
-    final @NonNull BluetoothManager bluetoothManager;
-    final @Nullable BluetoothAdapter adapter;
+    private final @NonNull Scheduler scheduler = Rx.mainThreadScheduler();
+    /*package*/ final @NonNull BluetoothManager bluetoothManager;
+    private final @Nullable BluetoothAdapter adapter;
 
     private final @NonNull ReplaySubject<Boolean> enabled = ReplaySubject.createWithSize(1);
 
@@ -69,18 +66,21 @@ public class NativeBluetoothStack implements BluetoothStack {
         this.bluetoothManager = (BluetoothManager) applicationContext.getSystemService(Context.BLUETOOTH_SERVICE);
         this.adapter = bluetoothManager.getAdapter();
         if (adapter != null) {
-            BroadcastReceiver receiver = new BroadcastReceiver() {
+            final BroadcastReceiver receiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    int newState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                    final int newState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                                                            BluetoothAdapter.ERROR);
                     if (newState == BluetoothAdapter.STATE_ON) {
                         enabled.onNext(true);
-                    } else if (newState == BluetoothAdapter.STATE_OFF || newState == BluetoothAdapter.ERROR) {
+                    } else if (newState == BluetoothAdapter.STATE_OFF ||
+                            newState == BluetoothAdapter.ERROR) {
                         enabled.onNext(false);
                     }
                 }
             };
-            applicationContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+            applicationContext.registerReceiver(receiver,
+                                                new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
             enabled.onNext(adapter.isEnabled());
         } else {
             logger.warn(LOG_TAG, "Host device has no bluetooth hardware!");
@@ -116,7 +116,8 @@ public class NativeBluetoothStack implements BluetoothStack {
     public Observable<List<GattPeripheral>> discoverPeripherals(final @NonNull PeripheralCriteria peripheralCriteria) {
         if (adapter != null && adapter.isEnabled()) {
             if (peripheralCriteria.wantsHighPowerPreScan) {
-                Observable<List<BluetoothDevice>> devices = newConfiguredObservable(new HighPowerPeripheralScanner(this, false));
+                final Observable<List<BluetoothDevice>> devices =
+                        newConfiguredObservable(new HighPowerPeripheralScanner(this, false));
                 return devices.flatMap(new Func1<List<BluetoothDevice>, Observable<? extends List<GattPeripheral>>>() {
                     @Override
                     public Observable<? extends List<GattPeripheral>> call(List<BluetoothDevice> ignoredDevices) {
@@ -171,11 +172,15 @@ public class NativeBluetoothStack implements BluetoothStack {
         final BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int oldState = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE, BluetoothAdapter.ERROR);
-                int newState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                if (oldState == BluetoothAdapter.STATE_OFF && newState == BluetoothAdapter.STATE_TURNING_ON) {
+                final int oldState = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE,
+                                                        BluetoothAdapter.ERROR);
+                final int newState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                                                        BluetoothAdapter.ERROR);
+                if (oldState == BluetoothAdapter.STATE_OFF &&
+                        newState == BluetoothAdapter.STATE_TURNING_ON) {
                     logger.info(LOG_TAG, "Bluetooth turning on");
-                } else if (oldState == BluetoothAdapter.STATE_TURNING_ON && newState == BluetoothAdapter.STATE_ON) {
+                } else if (oldState == BluetoothAdapter.STATE_TURNING_ON &&
+                        newState == BluetoothAdapter.STATE_ON) {
                     logger.info(LOG_TAG, "Bluetooth turned on");
 
                     applicationContext.unregisterReceiver(this);
@@ -191,7 +196,8 @@ public class NativeBluetoothStack implements BluetoothStack {
                 }
             }
         };
-        applicationContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+        applicationContext.registerReceiver(receiver,
+                                            new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         if (!adapter.enable()) {
             applicationContext.unregisterReceiver(receiver);
             return Observable.error(new ChangePowerStateException());
@@ -214,11 +220,15 @@ public class NativeBluetoothStack implements BluetoothStack {
         final BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int oldState = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE, BluetoothAdapter.ERROR);
-                int newState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                if (oldState == BluetoothAdapter.STATE_ON && newState == BluetoothAdapter.STATE_TURNING_OFF) {
+                final int oldState = intent.getIntExtra(BluetoothAdapter.EXTRA_PREVIOUS_STATE,
+                                                        BluetoothAdapter.ERROR);
+                final int newState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                                                        BluetoothAdapter.ERROR);
+                if (oldState == BluetoothAdapter.STATE_ON &&
+                        newState == BluetoothAdapter.STATE_TURNING_OFF) {
                     logger.info(LOG_TAG, "Bluetooth turning off");
-                } else if (oldState == BluetoothAdapter.STATE_TURNING_OFF && newState == BluetoothAdapter.STATE_OFF) {
+                } else if (oldState == BluetoothAdapter.STATE_TURNING_OFF &&
+                        newState == BluetoothAdapter.STATE_OFF) {
                     logger.info(LOG_TAG, "Bluetooth turned off");
 
                     applicationContext.unregisterReceiver(this);
@@ -234,20 +244,14 @@ public class NativeBluetoothStack implements BluetoothStack {
                 }
             }
         };
-        applicationContext.registerReceiver(receiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+        applicationContext.registerReceiver(receiver,
+                                            new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         if (!adapter.disable()) {
             applicationContext.unregisterReceiver(receiver);
             return Observable.error(new ChangePowerStateException());
         }
 
         return turnOnMirror;
-    }
-
-    @Override
-    public boolean errorRequiresReconnect(@Nullable Throwable e) {
-        return (e != null && (e instanceof OperationTimeoutException ||
-                e instanceof GattException ||
-                e instanceof BondException));
     }
 
 
@@ -258,6 +262,7 @@ public class NativeBluetoothStack implements BluetoothStack {
     }
 
     @Override
+    @Deprecated
     public SupportLevel getDeviceSupportLevel() {
         return DeviceSupport.getDeviceSupportLevel();
     }

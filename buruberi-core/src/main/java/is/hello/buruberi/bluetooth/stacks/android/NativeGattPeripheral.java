@@ -284,7 +284,7 @@ public class NativeGattPeripheral implements GattPeripheral {
                         disconnectForwarder.setEnabled(true);
                         subscriber.onError(new OperationTimeoutException(OperationTimeoutException.Operation.CONNECT));
                     }
-                }, stack.scheduler);
+                }, stack.getScheduler());
 
                 logger.info(LOG_TAG, "Connecting " + NativeGattPeripheral.this.toString());
 
@@ -440,7 +440,7 @@ public class NativeGattPeripheral implements GattPeripheral {
 
                 timeout.unschedule();
             }
-        }, stack.scheduler);
+        }, stack.getScheduler());
     }
 
     //endregion
@@ -452,7 +452,7 @@ public class NativeGattPeripheral implements GattPeripheral {
     private Observable<Intent> createBondReceiver() {
         return Rx.fromBroadcast(stack.applicationContext,
                                 new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED))
-                 .subscribeOn(stack.scheduler)
+                 .subscribeOn(stack.getScheduler())
                  .filter(new Func1<Intent, Boolean>() {
                      @Override
                      public Boolean call(Intent intent) {
