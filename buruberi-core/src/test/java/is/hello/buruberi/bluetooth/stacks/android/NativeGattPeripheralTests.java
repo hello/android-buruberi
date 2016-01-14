@@ -65,6 +65,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -812,7 +813,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
         gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_CHAR,
                               Matchers.any(BluetoothGattCharacteristic.class));
-        verify(nativeService).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        verify(nativeService, atLeastOnce()).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
         verify(timeout).schedule();
 
@@ -846,7 +847,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
         gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_CHAR,
                               Matchers.any(BluetoothGattCharacteristic.class));
-        verify(nativeService).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        verify(nativeService, atLeastOnce()).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
         verify(timeout).schedule();
 
@@ -881,7 +882,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
         gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_CHAR,
                               Matchers.any(BluetoothGattCharacteristic.class));
-        verify(nativeService).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        verify(nativeService, atLeastOnce()).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
         verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
         verify(timeout).schedule();
 

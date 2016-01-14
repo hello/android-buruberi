@@ -61,7 +61,7 @@ class HighPowerPeripheralScanner extends BroadcastReceiver implements Observable
     HighPowerPeripheralScanner(@NonNull NativeBluetoothStack stack, boolean saveResults) {
         this.context = stack.applicationContext;
         this.adapter = stack.getAdapter();
-        this.worker = stack.scheduler.createWorker();
+        this.worker = stack.getScheduler().createWorker();
         this.logger = stack.getLogger();
 
         if (saveResults) {

@@ -18,7 +18,6 @@ package is.hello.buruberi.bluetooth.stacks.noop;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -86,11 +85,6 @@ public class NoOpBluetoothStack implements BluetoothStack {
     @Override
     public Observable<Void> turnOff() {
         return Observable.error(new ChangePowerStateException());
-    }
-
-    @Override
-    public boolean errorRequiresReconnect(@Nullable Throwable e) {
-        return false;
     }
 
     @NonNull
