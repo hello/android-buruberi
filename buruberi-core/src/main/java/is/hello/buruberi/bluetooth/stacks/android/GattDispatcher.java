@@ -19,6 +19,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothProfile;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -39,7 +40,7 @@ import rx.functions.Action3;
 
 class GattDispatcher extends BluetoothGattCallback {
     private final LoggerFacade logger;
-    private final List<ConnectionStateListener> connectionStateListeners = new ArrayList<>();
+    private final List<ConnectionListener> connectionStateListeners = new ArrayList<>();
     private final List<Action0> disconnectListeners = new ArrayList<>();
     private final Handler dispatcher = new Handler(Looper.getMainLooper());
 
@@ -53,11 +54,11 @@ class GattDispatcher extends BluetoothGattCallback {
         this.logger = logger;
     }
 
-    void addConnectionStateListener(@NonNull ConnectionStateListener changeHandler) {
+    void addConnectionListener(@NonNull ConnectionListener changeHandler) {
         connectionStateListeners.add(changeHandler);
     }
 
-    void removeConnectionStateListener(@NonNull ConnectionStateListener changeHandler) {
+    void removeConnectionListener(@NonNull ConnectionListener changeHandler) {
         connectionStateListeners.remove(changeHandler);
     }
 
@@ -116,16 +117,12 @@ class GattDispatcher extends BluetoothGattCallback {
                 if (connectionStateListeners.isEmpty()) {
                     logger.warn(GattPeripheral.LOG_TAG, "unhandled call to onConnectionStateChange");
                 } else {
-                    final Iterator<ConnectionStateListener> iterator = connectionStateListeners.iterator();
-                    Action0 removeListener = new Action0() {
-                        @Override
-                        public void call() {
+                    final Iterator<ConnectionListener> iterator = connectionStateListeners.iterator();
+                    while (iterator.hasNext()) {
+                        final ConnectionListener listener = iterator.next();
+                        if (!listener.dispatch(gatt, status, newState)) {
                             iterator.remove();
                         }
-                    };
-                    while (iterator.hasNext()) {
-                        ConnectionStateListener listener = iterator.next();
-                        listener.onConnectionStateChanged(gatt, status, newState, removeListener);
                     }
                 }
             }
@@ -220,10 +217,50 @@ class GattDispatcher extends BluetoothGattCallback {
     }
 
 
-    interface ConnectionStateListener {
-        void onConnectionStateChanged(@NonNull BluetoothGatt gatt,
-                                      int status,
-                                      int newState,
-                                      @NonNull Action0 removeListener);
+    @SuppressWarnings("UnusedParameters")
+    static abstract class ConnectionListener {
+        boolean onConnected(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing.
+            return false;
+        }
+
+        boolean onConnecting(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing.
+            return true;
+        }
+
+        boolean onDisconnecting(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing.
+            return true;
+        }
+
+        boolean onDisconnected(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing.
+            return false;
+        }
+
+        boolean onError(@NonNull BluetoothGatt gatt, int status, int state) {
+            // Do nothing.
+            return false;
+        }
+
+        final boolean dispatch(@NonNull BluetoothGatt gatt, int status, int state) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                switch (state) {
+                    case BluetoothProfile.STATE_CONNECTED:
+                        return onConnected(gatt, status);
+                    case BluetoothProfile.STATE_CONNECTING:
+                        return onConnecting(gatt, status);
+                    case BluetoothProfile.STATE_DISCONNECTING:
+                        return onDisconnecting(gatt, status);
+                    case BluetoothProfile.STATE_DISCONNECTED:
+                        return onDisconnected(gatt, status);
+                    default:
+                        throw new IllegalArgumentException("Unknown connection state " + state);
+                }
+            } else {
+                return onError(gatt, status, state);
+            }
+        }
     }
 }

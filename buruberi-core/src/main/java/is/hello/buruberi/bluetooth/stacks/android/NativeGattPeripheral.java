@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import is.hello.buruberi.bluetooth.errors.BondException;
 import is.hello.buruberi.bluetooth.errors.ConnectionStateException;
@@ -91,21 +90,31 @@ public class NativeGattPeripheral implements GattPeripheral {
         this.advertisingData = advertisingData;
 
         this.gattDispatcher = new GattDispatcher(logger);
-        gattDispatcher.addConnectionStateListener(new GattDispatcher.ConnectionStateListener() {
-            @Override
-            public void onConnectionStateChanged(@NonNull BluetoothGatt gatt, int gattStatus,
-                                                 int newState, @NonNull Action0 removeThisListener) {
-                if (newState == STATUS_DISCONNECTED) {
-                    NativeGattPeripheral.this.closeGatt(gatt);
+        gattDispatcher.addConnectionListener(new GattDispatcher.ConnectionListener() {
+            void broadcast() {
+                NativeGattPeripheral.this.closeGatt(gatt);
 
-                    if (!suspendDisconnectBroadcasts) {
-                        final Intent disconnect = new Intent(ACTION_DISCONNECTED);
-                        disconnect.putExtra(EXTRA_NAME, NativeGattPeripheral.this.getName());
-                        disconnect.putExtra(EXTRA_ADDRESS, NativeGattPeripheral.this.getAddress());
-                        LocalBroadcastManager.getInstance(stack.applicationContext)
-                                             .sendBroadcast(disconnect);
-                    }
+                if (!suspendDisconnectBroadcasts) {
+                    final Intent disconnect = new Intent(ACTION_DISCONNECTED);
+                    disconnect.putExtra(EXTRA_NAME, NativeGattPeripheral.this.getName());
+                    disconnect.putExtra(EXTRA_ADDRESS, NativeGattPeripheral.this.getAddress());
+                    LocalBroadcastManager.getInstance(stack.applicationContext)
+                                         .sendBroadcast(disconnect);
                 }
+            }
+
+            @Override
+            boolean onDisconnected(@NonNull BluetoothGatt gatt, int status) {
+                broadcast();
+                return true;
+            }
+
+            @Override
+            boolean onError(@NonNull BluetoothGatt gatt, int status, int state) {
+                if (state == STATUS_DISCONNECTED) {
+                    broadcast();
+                }
+                return true;
             }
         });
         
@@ -206,18 +215,55 @@ public class NativeGattPeripheral implements GattPeripheral {
                 final boolean autoConnect = ((flags & CONNECT_FLAG_WAIT_AVAILABLE) == CONNECT_FLAG_WAIT_AVAILABLE);
                 final int transport = getTransportFromConnectFlags(flags);
 
-                final AtomicBoolean hasRetried = new AtomicBoolean(false);
-                final GattDispatcher.ConnectionStateListener listener = new GattDispatcher.ConnectionStateListener() {
+                final GattDispatcher.ConnectionListener listener = new GattDispatcher.ConnectionListener() {
+                    boolean hasRetried = false;
+
                     @Override
-                    public void onConnectionStateChanged(final @NonNull BluetoothGatt gatt, int gattStatus, int newState, @NonNull Action0 removeThisListener) {
+                    boolean onConnected(@NonNull final BluetoothGatt gatt, int status) {
+                        timeout.unschedule();
+
+                        logger.info(LOG_TAG, "Connected " + NativeGattPeripheral.this.toString());
+
+                        final Observable<Intent> bluetoothStateObserver =
+                                Rx.fromBroadcast(stack.applicationContext,
+                                                 new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+                        NativeGattPeripheral.this.bluetoothStateSubscription = bluetoothStateObserver.subscribe(new Subscriber<Intent>() {
+                            @Override
+                            public void onCompleted() {
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                logger.error(LOG_TAG, "Bluetooth state observation error", e);
+                            }
+
+                            @Override
+                            public void onNext(Intent intent) {
+                                logger.info(LOG_TAG, "User disabled bluetooth radio, abandoning connection");
+
+                                if (!stack.getAdapter().isEnabled()) {
+                                    gatt.disconnect();
+                                }
+                            }
+                        });
+
+                        NativeGattPeripheral.this.suspendDisconnectBroadcasts = false;
+                        subscriber.onNext(NativeGattPeripheral.this);
+                        subscriber.onCompleted();
+
+                        return false;
+                    }
+
+                    @Override
+                    boolean onError(@NonNull BluetoothGatt gatt, int status, int state) {
                         // The first connection attempt made after a user has power cycled their radio,
                         // or the connection to a device is unexpectedly lost, will seemingly fail 100%
                         // of the time. The error code varies by manufacturer. Retrying silently resolves
                         // the issue.
-                        if (GattException.isRecoverableConnectError(gattStatus) && !hasRetried.get()) {
+                        if (GattException.isRecoverableConnectError(status) && !hasRetried) {
                             logger.warn(LOG_TAG, "First connection attempt failed due to stack error, retrying.");
 
-                            hasRetried.set(true);
+                            this.hasRetried = true;
                             gatt.close();
                             NativeGattPeripheral.this.gatt =
                                     BluetoothDeviceCompat.connectGatt(bluetoothDevice,
@@ -233,58 +279,27 @@ public class NativeGattPeripheral implements GattPeripheral {
                                 NativeGattPeripheral.this.suspendDisconnectBroadcasts = false;
                                 subscriber.onError(new GattException(GattException.GATT_INTERNAL_ERROR, GattException.Operation.CONNECT));
                             }
-                        } else if (gattStatus != BluetoothGatt.GATT_SUCCESS) {
+
+                            return true;
+                        } else {
                             timeout.unschedule();
 
-                            logger.error(LOG_TAG, "Could not connect. " + GattException.statusToString(gattStatus), null);
+                            logger.error(LOG_TAG, "Could not connect. " + GattException.statusToString(status), null);
                             NativeGattPeripheral.this.suspendDisconnectBroadcasts = false;
-                            subscriber.onError(new GattException(gattStatus, GattException.Operation.CONNECT));
+                            subscriber.onError(new GattException(status, GattException.Operation.CONNECT));
 
-                            removeThisListener.call();
-                        } else if (newState == STATUS_CONNECTED) {
-                            timeout.unschedule();
-
-                            logger.info(LOG_TAG, "Connected " + NativeGattPeripheral.this.toString());
-
-                            final Observable<Intent> bluetoothStateObserver =
-                                    Rx.fromBroadcast(stack.applicationContext,
-                                                     new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-                            NativeGattPeripheral.this.bluetoothStateSubscription = bluetoothStateObserver.subscribe(new Subscriber<Intent>() {
-                                @Override
-                                public void onCompleted() {
-                                }
-
-                                @Override
-                                public void onError(Throwable e) {
-                                    logger.error(LOG_TAG, "Bluetooth state observation error", e);
-                                }
-
-                                @Override
-                                public void onNext(Intent intent) {
-                                    logger.info(LOG_TAG, "User disabled bluetooth radio, abandoning connection");
-
-                                    if (!stack.getAdapter().isEnabled()) {
-                                        gatt.disconnect();
-                                    }
-                                }
-                            });
-
-                            NativeGattPeripheral.this.suspendDisconnectBroadcasts = false;
-                            subscriber.onNext(NativeGattPeripheral.this);
-                            subscriber.onCompleted();
-
-                            removeThisListener.call();
+                            return false;
                         }
                     }
                 };
-                gattDispatcher.addConnectionStateListener(listener);
+                gattDispatcher.addConnectionListener(listener);
 
                 timeout.setTimeoutAction(new Action0() {
                     @Override
                     public void call() {
                         timeout.unschedule();
 
-                        gattDispatcher.removeConnectionStateListener(listener);
+                        gattDispatcher.removeConnectionListener(listener);
                         if (bluetoothStateSubscription != null) {
                             bluetoothStateSubscription.unsubscribe();
                             NativeGattPeripheral.this.bluetoothStateSubscription = null;
@@ -348,28 +363,29 @@ public class NativeGattPeripheral implements GattPeripheral {
                     return;
                 }
 
-                final GattDispatcher.ConnectionStateListener listener = new GattDispatcher.ConnectionStateListener() {
+                final GattDispatcher.ConnectionListener listener = new GattDispatcher.ConnectionListener() {
                     @Override
-                    public void onConnectionStateChanged(@NonNull BluetoothGatt gatt, int gattStatus, int newState, @NonNull Action0 removeThisListener) {
-                        if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                            if (gattStatus != BluetoothGatt.GATT_SUCCESS) {
-                                logger.info(LOG_TAG, "Could not disconnect " +
-                                        NativeGattPeripheral.this.toString() + "; " +
-                                        GattException.statusToString(gattStatus));
+                    boolean onDisconnected(@NonNull BluetoothGatt gatt, int status) {
+                        logger.info(LOG_TAG, "Disconnected " + NativeGattPeripheral.this.toString());
 
-                                subscriber.onError(new GattException(gattStatus, GattException.Operation.DISCONNECT));
-                            } else {
-                                logger.info(LOG_TAG, "Disconnected " + NativeGattPeripheral.this.toString());
+                        subscriber.onNext(NativeGattPeripheral.this);
+                        subscriber.onCompleted();
 
-                                subscriber.onNext(NativeGattPeripheral.this);
-                                subscriber.onCompleted();
-                            }
+                        return false;
+                    }
 
-                            removeThisListener.call();
-                        }
+                    @Override
+                    boolean onError(@NonNull BluetoothGatt gatt, int status, int state) {
+                        logger.info(LOG_TAG, "Could not disconnect " +
+                                NativeGattPeripheral.this.toString() + "; " +
+                                GattException.statusToString(status));
+
+                        subscriber.onError(new GattException(status, GattException.Operation.DISCONNECT));
+
+                        return false;
                     }
                 };
-                gattDispatcher.addConnectionStateListener(listener);
+                gattDispatcher.addConnectionListener(listener);
 
                 logger.info(LOG_TAG, "Disconnecting " + NativeGattPeripheral.this.toString());
 
