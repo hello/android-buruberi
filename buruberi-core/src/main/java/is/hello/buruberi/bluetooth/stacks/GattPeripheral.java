@@ -21,7 +21,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import java.lang.annotation.Documented;
@@ -407,7 +406,7 @@ public interface GattPeripheral {
      * if the peripheral is not connected when this method is called.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<Map<UUID, GattService>> discoverServices(@NonNull OperationTimeout timeout);
+    @NonNull Observable<Map<UUID, ? extends GattService>> discoverServices(@NonNull OperationTimeout timeout);
 
     /**
      * Performs service discovery on the peripheral,
@@ -424,22 +423,6 @@ public interface GattPeripheral {
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @NonNull Observable<GattService> discoverService(@NonNull UUID serviceIdentifier,
                                                      @NonNull OperationTimeout timeout);
-
-    //endregion
-
-
-    //region Characteristics
-
-    /**
-     * Associates a given packet handler with the {@code GattPeripheral}.
-     * <p>
-     * Characteristic read and change data will be sent to the
-     * packet handler for processing, and outward propagation.
-     * <p>
-     * While it is not required that you provide a packet handler,
-     * it is strongly recommended.
-     */
-    void setPacketHandler(@Nullable PacketHandler dataHandler);
 
     //endregion
 
@@ -471,30 +454,5 @@ public interface GattPeripheral {
         WriteType(int value) {
             this.value = value;
         }
-    }
-
-
-    /**
-     * Responsible for encoding and decoding packets for the Bluetooth stack.
-     */
-    interface PacketHandler {
-        /**
-         * The maximum length of a Bluetooth Low Energy packet.
-         */
-        int PACKET_LENGTH = 20;
-
-        /**
-         * Attempt to process an incoming packet from a characteristic.
-         *
-         * @param characteristicIdentifier The identifier of the characteristic which received data.
-         * @param payload The data which was received.
-         */
-        void processIncomingPacket(@NonNull UUID characteristicIdentifier,
-                                   @NonNull byte[] payload);
-
-        /**
-         * Informs the packet handler that the {@code GattPeripheral} has disconnected.
-         */
-        void peripheralDisconnected();
     }
 }

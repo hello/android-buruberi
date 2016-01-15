@@ -36,6 +36,12 @@ import rx.Observable;
  * Represents a gatt characteristic from a {@link GattService}.
  */
 public interface GattCharacteristic {
+    /**
+     * The maximum length of a Bluetooth Low Energy packet.
+     */
+    int PACKET_LENGTH = 20;
+
+
     //region Properties
 
     /**
@@ -77,6 +83,7 @@ public interface GattCharacteristic {
      * Characteristic has extended properties
      */
     int PROPERTY_EXTENDED_PROPS = BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS;
+
 
     /**
      * Marks an {@code int} as containing one of the
@@ -217,10 +224,24 @@ public interface GattCharacteristic {
      */
     @Permissions int getDescriptorPermissions(@NonNull UUID descriptor);
 
+    /**
+     * Sets the packet listener for the characteristic.
+     * @param packetListener    The listener.
+     */
+    void setPacketListener(@NonNull PacketListener packetListener);
+
     //endregion
 
 
     //region Operations
+
+    /**
+     * Reads the characteristic's value from the remote peripheral.
+     *
+     * @param timeout   The timeout to apply to the operation.
+     * @return The operation, waiting to be subscribed to.
+     */
+    @NonNull Observable<byte[]> read(@NonNull OperationTimeout timeout);
 
     /**
      * Enable notification events for a given descriptor.
@@ -268,4 +289,22 @@ public interface GattCharacteristic {
                                     @NonNull OperationTimeout timeout);
 
     //endregion
+
+
+    /**
+     * Allows client code to act on incoming characteristic reads and  notifications.
+     */
+    interface PacketListener {
+        /**
+         * Notifies the listener that a characteristic has been notified.
+         * @param characteristic    The characteristic affected.
+         * @param payload           The bytes received.
+         */
+        void onCharacteristicNotify(@NonNull UUID characteristic, @NonNull byte[] payload);
+
+        /**
+         * Informs the listener that the underlying peripheral connection was lost.
+         */
+        void onPeripheralDisconnected();
+    }
 }

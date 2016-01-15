@@ -18,6 +18,7 @@ package is.hello.buruberi.bluetooth.stacks.android;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -31,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -54,6 +56,7 @@ import rx.functions.Action0;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -107,8 +110,14 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
     @SuppressWarnings("ConstantConditions")
     @Test
-    public void unexpectedDisconnectBroadcast() throws Exception {
+    public void disconnectSideEffects() throws Exception {
         final NativeGattPeripheral peripheral = createConnectedPeripheral();
+
+        final NativeGattService fakeService = spy(new NativeGattService(Testing.createMockGattService(),
+                                                                        peripheral));
+        final Map<UUID, NativeGattService> services = new HashMap<>();
+        services.put(fakeService.getUuid(), fakeService);
+        peripheral.services = services;
 
         try (TestReceiver receiver = new TestReceiver(new IntentFilter(GattPeripheral.ACTION_DISCONNECTED))) {
             final BluetoothGatt gatt = peripheral.gatt;
@@ -118,6 +127,9 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
                                                                  BluetoothGatt.STATE_DISCONNECTED);
 
             assertThat(receiver.wasInvoked, is(true));
+            assertThat(peripheral.gatt, is(nullValue()));
+            assertThat(peripheral.services.isEmpty(), is(true));
+            verify(fakeService).dispatchDisconnect();
         }
     }
 
@@ -460,7 +472,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final NativeGattPeripheral peripheral = createConnectedPeripheral();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
 
-        final Testing.Result<Map<UUID, GattService>> result = new Testing.Result<>();
+        final Testing.Result<Map<UUID, ? extends GattService>> result = new Testing.Result<>();
         peripheral.discoverServices(timeout).subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
@@ -473,7 +485,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         shadowGatt.getGattCallback().onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
         assertThat(result.isCompleted(), is(true));
 
-        final Map<UUID, GattService> services = result.getValues().get(0);
+        final Map<UUID, ? extends GattService> services = result.getValues().get(0);
         assertThat(services.keySet(), hasItem(Testing.SERVICE_PRIMARY));
     }
 
@@ -486,7 +498,7 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         final NativeGattPeripheral peripheral = createConnectedPeripheral();
         final OperationTimeout timeout = Testing.createMockOperationTimeout();
 
-        final Testing.Result<Map<UUID, GattService>> result = new Testing.Result<>();
+        final Testing.Result<Map<UUID, ? extends GattService>> result = new Testing.Result<>();
         peripheral.discoverServices(timeout).subscribe(result);
 
         final BluetoothGatt gatt = peripheral.gatt;
@@ -569,6 +581,32 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         shadowGatt.getGattCallback().onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
         assertThat(result.isCompleted(), is(false));
         assertThat(result.getError(), is(instanceOf(ServiceDiscoveryException.class)));
+    }
+
+    //endregion
+
+
+    //region Packet Dispatching
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    public void onCharacteristicChanged() {
+        final NativeGattPeripheral peripheral = createConnectedPeripheral();
+
+        final NativeGattService fakeService = spy(new NativeGattService(Testing.createMockGattService(),
+                                                                        peripheral));
+        final Map<UUID, NativeGattService> services = new HashMap<>();
+        services.put(fakeService.getUuid(), fakeService);
+        peripheral.services = services;
+
+        final BluetoothGattCharacteristic characteristic =
+                fakeService.wrappedService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        characteristic.setValue(new byte[] {0x0, 0x1, 0x2, 0x3});
+        peripheral.onCharacteristicChanged(peripheral.gatt,
+                                           characteristic);
+
+        verify(fakeService).dispatchNotify(Testing.WRITE_CHARACTERISTIC,
+                                           new byte[]{0x0, 0x1, 0x2, 0x3});
     }
 
     //endregion

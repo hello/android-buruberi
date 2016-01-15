@@ -20,12 +20,10 @@ import android.bluetooth.BluetoothGatt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.UUID;
-
-import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.util.NonGuaranteed;
+import is.hello.buruberi.util.Operation;
 
 /**
  * Indicates low level gatt errors from the Android SDK.
@@ -222,7 +220,8 @@ public class GattException extends BuruberiException {
     /**
      * The operation where the gatt exception was encountered, if applicable.
      */
-    public final @Nullable Operation operation;
+    public final @Nullable
+    Operation operation;
 
     public GattException(int statusCode, @Nullable Operation operation) {
         super(statusToString(statusCode));
@@ -239,42 +238,5 @@ public class GattException extends BuruberiException {
     @Override
     public boolean isInstabilityLikely() {
         return (statusCode == GattException.GATT_STACK_ERROR);
-    }
-
-
-    /**
-     * The operation on which the gatt layer encountered an error. Corresponds
-     * rough to all of the operations possible on a {@link GattPeripheral} object.
-     */
-    public enum Operation {
-        /**
-         * Corresponds to {@link GattPeripheral#connect(OperationTimeout)}.
-         */
-        CONNECT,
-
-        /**
-         * Corresponds to {@link GattPeripheral#disconnect()}.
-         */
-        DISCONNECT,
-
-        /**
-         * Corresponds to {@link GattPeripheral#discoverServices(OperationTimeout)}.
-         */
-        DISCOVER_SERVICES,
-
-        /**
-         * Corresponds to {@link GattCharacteristic##enableNotification(UUID, OperationTimeout)}.
-         */
-        ENABLE_NOTIFICATION,
-
-        /**
-         * Corresponds to {@link GattCharacteristic#disableNotification(UUID, OperationTimeout)}.
-         */
-        DISABLE_NOTIFICATION,
-
-        /**
-         * Corresponds to {@link GattCharacteristic#write(GattPeripheral.WriteType, byte[], OperationTimeout)}.
-         */
-        WRITE_COMMAND,
     }
 }

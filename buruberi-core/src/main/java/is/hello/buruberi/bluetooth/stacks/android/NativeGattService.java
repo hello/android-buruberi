@@ -26,17 +26,18 @@ import java.util.Map;
 import java.util.UUID;
 
 import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
+import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.GattService;
 
-public final class NativeGattService implements GattService {
+public class NativeGattService implements GattService {
     /*package*/ final BluetoothGattService wrappedService;
     private final NativeGattPeripheral peripheral;
     private final Map<UUID, NativeGattCharacteristic> characteristics = new HashMap<>();
 
 
-    static @NonNull Map<UUID, GattService> wrap(@NonNull List<BluetoothGattService> services,
-                                                @NonNull NativeGattPeripheral peripheral) {
-        final Map<UUID, GattService> peripheralServices = new HashMap<>();
+    static @NonNull Map<UUID, NativeGattService> wrap(@NonNull List<BluetoothGattService> services,
+                                                      @NonNull NativeGattPeripheral peripheral) {
+        final Map<UUID, NativeGattService> peripheralServices = new HashMap<>();
 
         for (final BluetoothGattService nativeService : services) {
             peripheralServices.put(nativeService.getUuid(),
@@ -75,7 +76,7 @@ public final class NativeGattService implements GattService {
     }
 
     @Override
-    public GattCharacteristic getCharacteristic(@NonNull UUID identifier) {
+    public NativeGattCharacteristic getCharacteristic(@NonNull UUID identifier) {
         NativeGattCharacteristic nativeCharacteristic = characteristics.get(identifier);
         if (nativeCharacteristic == null) {
             final BluetoothGattCharacteristic characteristic = wrappedService.getCharacteristic(identifier);
@@ -85,6 +86,30 @@ public final class NativeGattService implements GattService {
             }
         }
         return nativeCharacteristic;
+    }
+
+    /*package*/ void dispatchNotify(@NonNull UUID characteristic,
+                                    @NonNull byte[] payload) {
+        final NativeGattCharacteristic gattCharacteristic = getCharacteristic(characteristic);
+        final GattCharacteristic.PacketListener listener = gattCharacteristic.packetListener;
+        if (listener != null) {
+            listener.onCharacteristicNotify(characteristic, payload);
+        } else {
+            peripheral.getStack()
+                      .getLogger()
+                      .warn(GattPeripheral.LOG_TAG,
+                            "No packet handler for characteristic " + characteristic +
+                                    " from service " + getUuid());
+        }
+    }
+
+    /*package*/ void dispatchDisconnect() {
+        for (final NativeGattCharacteristic characteristic : characteristics.values()) {
+            final GattCharacteristic.PacketListener listener = characteristic.packetListener;
+            if (listener != null) {
+                listener.onPeripheralDisconnected();
+            }
+        }
     }
 
 

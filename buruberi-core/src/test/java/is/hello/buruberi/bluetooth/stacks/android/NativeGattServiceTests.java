@@ -16,6 +16,7 @@
 package is.hello.buruberi.bluetooth.stacks.android;
 
 import android.bluetooth.BluetoothGattService;
+import android.support.annotation.NonNull;
 
 import org.junit.Test;
 
@@ -23,9 +24,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
+import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.testing.BuruberiTestCase;
+import is.hello.buruberi.testing.Testing;
+import is.hello.buruberi.util.Defaults;
 
 import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_PRIMARY;
 import static android.bluetooth.BluetoothGattService.SERVICE_TYPE_SECONDARY;
@@ -34,10 +40,22 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 public class NativeGattServiceTests extends BuruberiTestCase {
     private final NativeGattPeripheral peripheral = mock(NativeGattPeripheral.class);
+
+    public NativeGattServiceTests() {
+        final BluetoothStack stackMock = mock(BluetoothStack.class);
+        doReturn(Defaults.createLogcatFacade())
+                .when(stackMock)
+                .getLogger();
+
+        doReturn(stackMock)
+                .when(peripheral)
+                .getStack();
+    }
 
     @Test
     public void wrapGattServices() {
@@ -47,7 +65,7 @@ public class NativeGattServiceTests extends BuruberiTestCase {
         final List<BluetoothGattService> services =
                 Arrays.asList(new BluetoothGattService(first, SERVICE_TYPE_PRIMARY),
                               new BluetoothGattService(second, SERVICE_TYPE_SECONDARY));
-        final Map<UUID, GattService> wrappedServices =
+        final Map<UUID, ? extends GattService> wrappedServices =
                 NativeGattService.wrap(services, peripheral);
         assertThat(wrappedServices, is(notNullValue()));
         assertThat(wrappedServices.size(), is(equalTo(2)));
@@ -81,5 +99,58 @@ public class NativeGattServiceTests extends BuruberiTestCase {
 
         assertThat(peripheralService1, is(equalTo(peripheralService2)));
         assertThat(peripheralService1.hashCode(), is(equalTo(peripheralService2.hashCode())));
+    }
+
+    @Test
+    public void dispatchNotify() {
+        final BluetoothGattService nativeService = Testing.createMockGattService();
+        final NativeGattService service = new NativeGattService(nativeService, peripheral);
+
+        final NativeGattCharacteristic characteristic =
+                service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final AtomicBoolean notifyCalled = new AtomicBoolean(false);
+        characteristic.setPacketListener(new GattCharacteristic.PacketListener() {
+            @Override
+            public void onCharacteristicNotify(@NonNull UUID characteristic,
+                                               @NonNull byte[] payload) {
+                notifyCalled.set(true);
+
+                assertThat(characteristic, is(equalTo(Testing.WRITE_CHARACTERISTIC)));
+                assertThat(payload, is(equalTo(new byte[] {0x0, 0x1})));
+            }
+
+            @Override
+            public void onPeripheralDisconnected() {
+            }
+        });
+
+        service.dispatchNotify(characteristic.getUuid(), new byte[]{0x0, 0x1});
+
+        assertThat(notifyCalled.get(), is(true));
+    }
+
+    @Test
+    public void dispatchDisconnect() {
+        final BluetoothGattService nativeService = Testing.createMockGattService();
+        final NativeGattService service = new NativeGattService(nativeService, peripheral);
+
+        final NativeGattCharacteristic characteristic =
+                service.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
+        final AtomicBoolean disconnectCalled = new AtomicBoolean(false);
+        characteristic.setPacketListener(new GattCharacteristic.PacketListener() {
+            @Override
+            public void onCharacteristicNotify(@NonNull UUID characteristic,
+                                               @NonNull byte[] payload) {
+            }
+
+            @Override
+            public void onPeripheralDisconnected() {
+                disconnectCalled.set(true);
+            }
+        });
+
+        service.dispatchDisconnect();
+
+        assertThat(disconnectCalled.get(), is(true));
     }
 }
