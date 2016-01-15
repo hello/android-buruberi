@@ -37,11 +37,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import is.hello.buruberi.bluetooth.errors.BondException;
+import is.hello.buruberi.bluetooth.errors.ConnectionStateException;
 import is.hello.buruberi.bluetooth.errors.GattException;
 import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
+import is.hello.buruberi.bluetooth.stacks.android.NativeGattPeripheral.ConnectedOnSubscribe;
 import is.hello.buruberi.bluetooth.stacks.util.ErrorListener;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.testing.BuruberiShadows;
@@ -52,16 +54,19 @@ import is.hello.buruberi.testing.ShadowBluetoothManager;
 import is.hello.buruberi.testing.Testing;
 import is.hello.buruberi.util.Defaults;
 import rx.Scheduler;
+import rx.Subscriber;
 import rx.functions.Action0;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -607,6 +612,80 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
 
         verify(fakeService).dispatchNotify(Testing.WRITE_CHARACTERISTIC,
                                            new byte[]{0x0, 0x1, 0x2, 0x3});
+    }
+
+    //endregion
+
+    //region ConnectedOnSubscribeTests
+
+    @Test
+    public void connectedConnectedOnSubscribe() {
+        final NativeGattPeripheral peripheral = createConnectedPeripheral();
+
+        final ConnectedOnSubscribe<Boolean> onSubscribe = new ConnectedOnSubscribe<Boolean>(peripheral) {
+            @Override
+            public void onSubscribe(@NonNull BluetoothGatt gatt,
+                                    @NonNull Subscriber<? super Boolean> subscriber) {
+                assertThat(gatt, is(notNullValue()));
+
+                subscriber.onNext(true);
+                subscriber.onCompleted();
+            }
+        };
+
+        @SuppressWarnings("unchecked")
+        final Subscriber<Boolean> fakeSubscriber = mock(Subscriber.class);
+        onSubscribe.call(fakeSubscriber);
+
+        verify(fakeSubscriber).onNext(true);
+        verify(fakeSubscriber).onCompleted();
+    }
+
+    @Test
+    public void notConnectedConnectedOnSubscribe() {
+        final NativeGattPeripheral peripheral = createConnectedPeripheral();
+        getShadowBluetoothManager().setConnectionState(peripheral.bluetoothDevice,
+                                                       BluetoothProfile.STATE_DISCONNECTED);
+
+        final ConnectedOnSubscribe<Boolean> onSubscribe = new ConnectedOnSubscribe<Boolean>(peripheral) {
+            @Override
+            public void onSubscribe(@NonNull BluetoothGatt gatt,
+                                    @NonNull Subscriber<? super Boolean> subscriber) {
+                assertThat(gatt, is(notNullValue()));
+
+                subscriber.onNext(true);
+                subscriber.onCompleted();
+            }
+        };
+
+        @SuppressWarnings("unchecked")
+        final Subscriber<Boolean> fakeSubscriber = mock(Subscriber.class);
+        onSubscribe.call(fakeSubscriber);
+
+        verify(fakeSubscriber).onError(any(ConnectionStateException.class));
+    }
+
+    @Test
+    public void noGattConnectedOnSubscribe() {
+        final NativeGattPeripheral peripheral = createConnectedPeripheral();
+        peripheral.gatt = null;
+
+        final ConnectedOnSubscribe<Boolean> onSubscribe = new ConnectedOnSubscribe<Boolean>(peripheral) {
+            @Override
+            public void onSubscribe(@NonNull BluetoothGatt gatt,
+                                    @NonNull Subscriber<? super Boolean> subscriber) {
+                assertThat(gatt, is(notNullValue()));
+
+                subscriber.onNext(true);
+                subscriber.onCompleted();
+            }
+        };
+
+        @SuppressWarnings("unchecked")
+        final Subscriber<Boolean> fakeSubscriber = mock(Subscriber.class);
+        onSubscribe.call(fakeSubscriber);
+
+        verify(fakeSubscriber).onError(any(ConnectionStateException.class));
     }
 
     //endregion

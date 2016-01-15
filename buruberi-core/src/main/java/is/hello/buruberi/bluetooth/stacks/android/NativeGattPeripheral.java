@@ -678,15 +678,11 @@ public class NativeGattPeripheral implements GattPeripheral,
     @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     public Observable<Map<UUID, ? extends GattService>> discoverServices(final @NonNull OperationTimeout timeout) {
-        final Observable.OnSubscribe<Map<UUID, ? extends GattService>> onSubscribe =
-                new Observable.OnSubscribe<Map<UUID, ? extends GattService>>() {
+        final ConnectedOnSubscribe<Map<UUID, ? extends GattService>> onSubscribe =
+                new ConnectedOnSubscribe<Map<UUID, ? extends GattService>>(this) {
             @Override
-            public void call(final Subscriber<? super Map<UUID, ? extends GattService>> subscriber) {
-                if (getConnectionStatus() != STATUS_CONNECTED || gatt == null) {
-                    subscriber.onError(new ConnectionStateException());
-                    return;
-                }
-
+            public void onSubscribe(@NonNull BluetoothGatt gatt,
+                                    @NonNull final Subscriber<? super Map<UUID, ? extends GattService>> subscriber) {
                 final Runnable onDisconnect = addTimeoutDisconnectListener(subscriber, timeout);
                 setupTimeout(Operation.DISCOVER_SERVICES,
                              timeout, subscriber, onDisconnect);
@@ -729,7 +725,6 @@ public class NativeGattPeripheral implements GattPeripheral,
                 }
             }
         };
-
 
         // See <https://code.google.com/p/android/issues/detail?id=58381>
         return createObservable(onSubscribe).delay(SERVICES_DELAY_S,
@@ -786,10 +781,10 @@ public class NativeGattPeripheral implements GattPeripheral,
     }
 
 
-    class DisconnectForwarder extends GattDispatcher.ConnectionListener {
+    private class DisconnectForwarder extends GattDispatcher.ConnectionListener {
         private boolean enabled = true;
 
-        void setEnabled(boolean enabled) {
+        /*package*/ void setEnabled(boolean enabled) {
             this.enabled = enabled;
         }
 
@@ -806,17 +801,37 @@ public class NativeGattPeripheral implements GattPeripheral,
         }
 
         @Override
-        boolean onDisconnected(@NonNull BluetoothGatt gatt, int status) {
+        /*package*/ boolean onDisconnected(@NonNull BluetoothGatt gatt, int status) {
             broadcast();
             return true;
         }
 
         @Override
-        boolean onError(@NonNull BluetoothGatt gatt, int status, int state) {
+        /*package*/ boolean onError(@NonNull BluetoothGatt gatt, int status, int state) {
             if (state == STATUS_DISCONNECTED) {
                 broadcast();
             }
             return true;
         }
+    }
+
+    /*package*/ static abstract class ConnectedOnSubscribe<T> implements Observable.OnSubscribe<T> {
+        private final NativeGattPeripheral peripheral;
+
+        /*package*/ ConnectedOnSubscribe(@NonNull NativeGattPeripheral peripheral) {
+            this.peripheral = peripheral;
+        }
+
+        @Override
+        public final void call(@NonNull Subscriber<? super T> subscriber) {
+            if (peripheral.getConnectionStatus() != STATUS_CONNECTED || peripheral.gatt == null) {
+                subscriber.onError(new ConnectionStateException());
+            } else {
+                onSubscribe(peripheral.gatt, subscriber);
+            }
+        }
+
+        public abstract void onSubscribe(@NonNull BluetoothGatt gatt,
+                                         @NonNull Subscriber<? super T> subscriber);
     }
 }

@@ -35,8 +35,8 @@ public class NativeGattService implements GattService {
     private final Map<UUID, NativeGattCharacteristic> characteristics = new HashMap<>();
 
 
-    static @NonNull Map<UUID, NativeGattService> wrap(@NonNull List<BluetoothGattService> services,
-                                                      @NonNull NativeGattPeripheral peripheral) {
+    /*package*/ static @NonNull Map<UUID, NativeGattService> wrap(@NonNull List<BluetoothGattService> services,
+                                                                  @NonNull NativeGattPeripheral peripheral) {
         final Map<UUID, NativeGattService> peripheralServices = new HashMap<>();
 
         for (final BluetoothGattService nativeService : services) {
@@ -47,8 +47,8 @@ public class NativeGattService implements GattService {
         return peripheralServices;
     }
 
-    NativeGattService(@NonNull BluetoothGattService wrappedService,
-                      @NonNull NativeGattPeripheral peripheral) {
+    /*package*/ NativeGattService(@NonNull BluetoothGattService wrappedService,
+                                  @NonNull NativeGattPeripheral peripheral) {
         this.wrappedService = wrappedService;
         this.peripheral = peripheral;
     }
