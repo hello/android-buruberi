@@ -109,7 +109,7 @@ class LegacyLePeripheralScanner implements LePeripheralScanner, BluetoothAdapter
             return;
         }
 
-        results.put(address, new ScannedPeripheral(device, rssi, advertisingData));
+        results.put(address, new ScannedPeripheral(device, advertisingData, rssi));
 
         if (results.size() >= peripheralCriteria.limit) {
             logger.info(BluetoothStack.LOG_TAG, "Discovery limit reached, concluding scan");

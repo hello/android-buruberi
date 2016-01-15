@@ -39,6 +39,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -127,6 +128,7 @@ public class NativeGattServiceTests extends BuruberiTestCase {
         service.dispatchNotify(characteristic.getUuid(), new byte[]{0x0, 0x1});
 
         assertThat(notifyCalled.get(), is(true));
+        assertThat(characteristic.packetListener, is(notNullValue()));
     }
 
     @Test
@@ -152,5 +154,6 @@ public class NativeGattServiceTests extends BuruberiTestCase {
         service.dispatchDisconnect();
 
         assertThat(disconnectCalled.get(), is(true));
+        assertThat(characteristic.packetListener, is(nullValue()));
     }
 }

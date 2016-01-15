@@ -108,6 +108,7 @@ public class NativeGattService implements GattService {
             final GattCharacteristic.PacketListener listener = characteristic.packetListener;
             if (listener != null) {
                 listener.onPeripheralDisconnected();
+                characteristic.packetListener = null;
             }
         }
     }
