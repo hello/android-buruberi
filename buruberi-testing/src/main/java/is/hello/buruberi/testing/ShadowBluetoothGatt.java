@@ -105,6 +105,12 @@ public class ShadowBluetoothGatt {
     }
 
     @Implementation
+    public boolean readCharacteristic(BluetoothGattCharacteristic characteristic) {
+        trackCall(Call.READ_CHAR, characteristic);
+        return true;
+    }
+
+    @Implementation
     public boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
                                                  boolean enable) {
         trackCall(Call.SET_CHAR_NOTIFICATION, characteristic, enable);
@@ -174,6 +180,7 @@ public class ShadowBluetoothGatt {
         SET_CHAR_NOTIFICATION,
         WRITE_DESCRIPTOR,
         WRITE_CHAR,
+        READ_CHAR,
     }
 
     //endregion
