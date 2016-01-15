@@ -63,7 +63,7 @@ public interface GattService {
     /**
      * Returns the identifier of the service.
      */
-    UUID getUuid();
+    @NonNull UUID getUuid();
 
     /**
      * Returns the type of the service.
@@ -73,7 +73,7 @@ public interface GattService {
     /**
      * Returns the identifiers of the characteristics contained in the service.
      */
-    List<UUID> getCharacteristics();
+    @NonNull List<UUID> getCharacteristics();
 
     /**
      * Returns the characteristic associated with a given identifier.

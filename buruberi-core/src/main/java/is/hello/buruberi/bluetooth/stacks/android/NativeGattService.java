@@ -54,6 +54,7 @@ public class NativeGattService implements GattService {
     }
 
 
+    @NonNull
     @Override
     public UUID getUuid() {
         return wrappedService.getUuid();
@@ -66,6 +67,7 @@ public class NativeGattService implements GattService {
         return type;
     }
 
+    @NonNull
     @Override
     public List<UUID> getCharacteristics() {
         final List<UUID> identifiers = new ArrayList<>();

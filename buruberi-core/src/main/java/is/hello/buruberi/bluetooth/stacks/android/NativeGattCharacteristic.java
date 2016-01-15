@@ -48,6 +48,7 @@ class NativeGattCharacteristic implements GattCharacteristic {
         this.gattDispatcher = peripheral.gattDispatcher;
     }
 
+    @NonNull
     @Override
     public UUID getUuid() {
         return wrappedCharacteristic.getUuid();

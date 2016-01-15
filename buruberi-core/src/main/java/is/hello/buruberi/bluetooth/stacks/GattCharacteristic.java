@@ -18,6 +18,7 @@ package is.hello.buruberi.bluetooth.stacks;
 
 import android.Manifest;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresPermission;
@@ -195,7 +196,7 @@ public interface GattCharacteristic {
     /**
      * Returns the identifier of the characteristic.
      */
-    UUID getUuid();
+    @NonNull UUID getUuid();
 
     /**
      * Returns the properties of this characteristic.
@@ -241,6 +242,7 @@ public interface GattCharacteristic {
      * @param timeout   The timeout to apply to the operation.
      * @return The operation, waiting to be subscribed to.
      */
+    @CheckResult
     @NonNull Observable<byte[]> read(@NonNull OperationTimeout timeout);
 
     /**
@@ -251,6 +253,7 @@ public interface GattCharacteristic {
      * @return The operation, waiting to be subscribed to.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<UUID> enableNotification(@NonNull UUID descriptor,
                                                  @NonNull OperationTimeout timeout);
 
@@ -262,6 +265,7 @@ public interface GattCharacteristic {
      * @return The operation, waiting to be subscribed to.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<UUID> disableNotification(@NonNull UUID descriptor,
                                                   @NonNull OperationTimeout timeout);
 
@@ -284,6 +288,7 @@ public interface GattCharacteristic {
      * @return An observable that will emit a single null value, then complete upon success.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<Void> write(@NonNull GattPeripheral.WriteType writeType,
                                     @NonNull byte[] payload,
                                     @NonNull OperationTimeout timeout);

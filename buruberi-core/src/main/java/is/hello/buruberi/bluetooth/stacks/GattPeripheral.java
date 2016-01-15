@@ -19,6 +19,7 @@ import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
+import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresPermission;
@@ -266,7 +267,8 @@ public interface GattPeripheral {
      * <p>
      * @see BluetoothStack#newConfiguredObservable(Observable.OnSubscribe)
      */
-    BluetoothStack getStack();
+    @CheckResult
+    @NonNull BluetoothStack getStack();
 
     //endregion
 
@@ -281,6 +283,7 @@ public interface GattPeripheral {
      * @param timeUnit The time unit of the {@code duration}.
      * @return A new {@link OperationTimeout}
      */
+    @CheckResult
     @NonNull OperationTimeout createOperationTimeout(@NonNull String name,
                                                      long duration,
                                                      @NonNull TimeUnit timeUnit);
@@ -289,16 +292,6 @@ public interface GattPeripheral {
 
 
     //region Connectivity
-
-    /**
-     * Legacy connect method that is equivalent to calling {@link #connect(int, OperationTimeout)}
-     * with {@link #CONNECT_FLAG_DEFAULTS}. New code should not use this method.
-     *
-     * @deprecated Prefer {@link #connect(int, OperationTimeout)} for all new code.
-     */
-    @Deprecated
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<GattPeripheral> connect(@NonNull OperationTimeout timeout);
 
     /**
      * Attempts to create a gatt connection to the peripheral.
@@ -316,6 +309,7 @@ public interface GattPeripheral {
      * @return An observable that represents the connect operation.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<GattPeripheral> connect(@ConnectFlags int flags,
                                                 @NonNull OperationTimeout timeout);
 
@@ -328,6 +322,7 @@ public interface GattPeripheral {
      * if the peripheral is currently connecting.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<GattPeripheral> disconnect();
 
     /**
@@ -339,6 +334,7 @@ public interface GattPeripheral {
      * @see GattPeripheral#STATUS_DISCONNECTING
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @ConnectivityStatus int getConnectionStatus();
 
     //endregion
@@ -357,12 +353,13 @@ public interface GattPeripheral {
      * <p>
      * However, starting in API level 21 (Lollipop), this method will <em>fail</em>
      * if you call it when the device is connected. If you need a bond, you should
-     * call this method before you call {@link #connect(OperationTimeout)}.
+     * call this method before you call {@link #connect(int, OperationTimeout)}.
      */
     @RequiresPermission(allOf = {
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
     })
+    @CheckResult
     @NonNull Observable<GattPeripheral> createBond();
 
     /**
@@ -382,6 +379,7 @@ public interface GattPeripheral {
             Manifest.permission.BLUETOOTH_ADMIN,
     })
     @NonGuaranteed
+    @CheckResult
     @NonNull Observable<GattPeripheral> removeBond(@NonNull OperationTimeout timeout);
 
     /**
@@ -392,6 +390,7 @@ public interface GattPeripheral {
      * @see GattPeripheral#BOND_BONDED
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @BondStatus int getBondStatus();
 
     //endregion
@@ -406,6 +405,7 @@ public interface GattPeripheral {
      * if the peripheral is not connected when this method is called.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<Map<UUID, ? extends GattService>> discoverServices(@NonNull OperationTimeout timeout);
 
     /**
@@ -421,6 +421,7 @@ public interface GattPeripheral {
      * @see #discoverServices(OperationTimeout)
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<GattService> discoverService(@NonNull UUID serviceIdentifier,
                                                      @NonNull OperationTimeout timeout);
 

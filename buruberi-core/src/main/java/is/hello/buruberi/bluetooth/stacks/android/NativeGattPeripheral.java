@@ -360,13 +360,6 @@ public class NativeGattPeripheral implements GattPeripheral,
 
     @NonNull
     @Override
-    @Deprecated
-    public Observable<GattPeripheral> connect(@NonNull OperationTimeout timeout) {
-        return connect(CONNECT_FLAG_DEFAULTS, timeout);
-    }
-
-    @NonNull
-    @Override
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     public Observable<GattPeripheral> disconnect() {
         return createObservable(new Observable.OnSubscribe<GattPeripheral>() {
