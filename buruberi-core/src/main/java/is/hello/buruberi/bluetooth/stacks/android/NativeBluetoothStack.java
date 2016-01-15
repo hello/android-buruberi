@@ -261,12 +261,6 @@ public class NativeBluetoothStack implements BluetoothStack {
         return logger;
     }
 
-    @Override
-    @Deprecated
-    public SupportLevel getDeviceSupportLevel() {
-        return DeviceSupport.getDeviceSupportLevel();
-    }
-
 
     @Override
     public String toString() {

@@ -114,15 +114,6 @@ public interface BluetoothStack {
 
 
     /**
-     * Returns the level of support the stack has for the current device.
-     *
-     * @deprecated Device support depends on factors outside of the scope of the Buruberi library,
-     *             as such, this method is deprecated with no replacement.
-     */
-    @Deprecated
-    SupportLevel getDeviceSupportLevel();
-
-    /**
      * Describes the level of support the current device has in the implementation.
      */
     @Deprecated

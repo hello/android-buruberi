@@ -93,8 +93,4 @@ public class NoOpBluetoothStack implements BluetoothStack {
         return logger;
     }
 
-    @Override
-    public SupportLevel getDeviceSupportLevel() {
-        return SupportLevel.UNSUPPORTED;
-    }
 }
