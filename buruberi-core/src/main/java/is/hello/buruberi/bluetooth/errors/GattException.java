@@ -125,7 +125,7 @@ public class GattException extends BuruberiException {
      * @param statusCode  The error code.
      * @return {@code true} if the error is likely recoverable; {@code false} otherwise.
      *
-     * @see GattPeripheral#connect(OperationTimeout)
+     * @see GattPeripheral#connect(int, OperationTimeout)
      */
     public static boolean isRecoverableConnectError(int statusCode) {
         return (statusCode == GATT_CONN_TERMINATE_LOCAL_HOST || // Nexus devices
