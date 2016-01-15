@@ -431,58 +431,6 @@ public interface GattPeripheral {
     //region Characteristics
 
     /**
-     * @deprecated Prefer {@link GattCharacteristic#enableNotification(UUID, OperationTimeout)}
-     *             for all new code.
-     */
-    @Deprecated
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<UUID> enableNotification(@NonNull GattService onGattService,
-                                                 @NonNull UUID characteristicIdentifier,
-                                                 @NonNull UUID descriptorIdentifier,
-                                                 @NonNull OperationTimeout timeout);
-
-    /**
-     * @deprecated Prefer {@link GattCharacteristic#disableNotification(UUID, OperationTimeout)}
-     *             for all new code.
-     */
-    @Deprecated
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<UUID> disableNotification(@NonNull GattService onGattService,
-                                                  @NonNull UUID characteristicIdentifier,
-                                                  @NonNull UUID descriptorIdentifier,
-                                                  @NonNull OperationTimeout timeout);
-
-    /**
-     * Writes a given payload to a characteristic belonging to a service on the peripheral.
-     * <p>
-     * <em>Important:</em> it appears on some devices that writes are asynchronous on multiple
-     * levels. Although the stack may report the write was successful, it doesn't mean the
-     * write has actually completed. If you're going to disconnect after a write operation,
-     * it's a good idea to add a delay of a few seconds.
-     * <p>
-     * The value of {@literal writeType} is supposed to be automatically inferred during service
-     * discovery, but some devices do not consistently populate the value (Verizon Note 4).
-     * As such, this value must be provided for every write command call.
-     *
-     * @param service           The service to write to.
-     * @param characteristic    The characteristic to write to.
-     * @param writeType         The type of write to perform.
-     * @param payload           The payload to write. Must be 20 <code>bytes</code> or less.
-     * @param timeout           The timeout to wrap the operation within.
-     * @return An observable that will emit a single null value, then complete upon success.
-     *
-     * @deprecated Prefer {@link GattCharacteristic#write(WriteType, byte[], OperationTimeout)}
-     *             for all new code.
-     */
-    @Deprecated
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<Void> writeCommand(@NonNull GattService service,
-                                           @NonNull UUID characteristic,
-                                           @NonNull WriteType writeType,
-                                           @NonNull byte[] payload,
-                                           @NonNull OperationTimeout timeout);
-
-    /**
      * Associates a given packet handler with the {@code GattPeripheral}.
      * <p>
      * Characteristic read and change data will be sent to the

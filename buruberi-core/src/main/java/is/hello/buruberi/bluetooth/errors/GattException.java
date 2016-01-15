@@ -22,8 +22,8 @@ import android.support.annotation.Nullable;
 
 import java.util.UUID;
 
+import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
-import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.util.NonGuaranteed;
 
@@ -263,17 +263,17 @@ public class GattException extends BuruberiException {
         DISCOVER_SERVICES,
 
         /**
-         * Corresponds to {@link GattPeripheral#enableNotification(GattService, UUID, UUID, OperationTimeout)}.
+         * Corresponds to {@link GattCharacteristic##enableNotification(UUID, OperationTimeout)}.
          */
         ENABLE_NOTIFICATION,
 
         /**
-         * Corresponds to {@link GattPeripheral#disableNotification(GattService, UUID, UUID, OperationTimeout)}.
+         * Corresponds to {@link GattCharacteristic#disableNotification(UUID, OperationTimeout)}.
          */
         DISABLE_NOTIFICATION,
 
         /**
-         * Corresponds to {@link GattPeripheral#writeCommand(GattService, UUID, GattPeripheral.WriteType, byte[], OperationTimeout)}.
+         * Corresponds to {@link GattCharacteristic#write(GattPeripheral.WriteType, byte[], OperationTimeout)}.
          */
         WRITE_COMMAND,
     }

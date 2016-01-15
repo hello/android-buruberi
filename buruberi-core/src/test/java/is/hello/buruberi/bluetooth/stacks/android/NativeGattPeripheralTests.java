@@ -18,9 +18,6 @@ package is.hello.buruberi.bluetooth.stacks.android;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -30,10 +27,8 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.Map;
@@ -41,7 +36,6 @@ import java.util.UUID;
 
 import is.hello.buruberi.bluetooth.errors.BondException;
 import is.hello.buruberi.bluetooth.errors.GattException;
-import is.hello.buruberi.bluetooth.errors.LostConnectionException;
 import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.GattService;
@@ -55,7 +49,6 @@ import is.hello.buruberi.testing.ShadowBluetoothGatt;
 import is.hello.buruberi.testing.ShadowBluetoothManager;
 import is.hello.buruberi.testing.Testing;
 import is.hello.buruberi.util.Defaults;
-import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action0;
 
@@ -65,15 +58,12 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 @TargetApi(Build.VERSION_CODES.KITKAT)
 public class NativeGattPeripheralTests extends BuruberiTestCase {
-    private static final byte[] WRITE_PAYLOAD = {0xC, 0xA, 0xF, 0xE};
-
     private final ErrorListener errorListener = Defaults.createEmptyErrorListener();
     private final LoggerFacade loggerFacade = Defaults.createLogcatFacade();
     private NativeBluetoothStack stack;
@@ -579,323 +569,6 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         shadowGatt.getGattCallback().onServicesDiscovered(gatt, BluetoothGatt.GATT_SUCCESS);
         assertThat(result.isCompleted(), is(false));
         assertThat(result.getError(), is(instanceOf(ServiceDiscoveryException.class)));
-    }
-
-    //endregion
-
-
-    //region Commands
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void enableNotificationSuccess() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> enable = peripheral.enableNotification(new NativeGattService(nativeService, peripheral),
-                                                                      Testing.WRITE_CHARACTERISTIC,
-                                                                      Testing.NOTIFY_DESCRIPTOR,
-                                                                      timeout);
-
-        final Testing.Result<UUID> result = new Testing.Result<>();
-        enable.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.SET_CHAR_NOTIFICATION,
-                              Matchers.any(BluetoothGattCharacteristic.class),
-                              Matchers.equalTo(true));
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_DESCRIPTOR,
-                              Matchers.any(BluetoothGattDescriptor.class));
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(Testing.NOTIFY_DESCRIPTOR);
-        verify(descriptor).setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-
-        gattShadow.getGattCallback().onDescriptorWrite(gatt, descriptor, BluetoothGatt.GATT_SUCCESS);
-        assertThat(result.getValues().size(), is(equalTo(1)));
-        assertThat(result.isCompleted(), is(true));
-        verify(timeout).unschedule();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void enableNotificationFailure() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> enable = peripheral.enableNotification(new NativeGattService(nativeService, peripheral),
-                                                                      Testing.WRITE_CHARACTERISTIC,
-                                                                      Testing.NOTIFY_DESCRIPTOR,
-                                                                      timeout);
-
-        final Testing.Result<UUID> result = new Testing.Result<>();
-        enable.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.SET_CHAR_NOTIFICATION,
-                              Matchers.any(BluetoothGattCharacteristic.class),
-                              Matchers.equalTo(true));
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_DESCRIPTOR,
-                              Matchers.any(BluetoothGattDescriptor.class));
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(Testing.NOTIFY_DESCRIPTOR);
-        verify(descriptor).setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-
-        gattShadow.getGattCallback().onDescriptorWrite(gatt, descriptor, BluetoothGatt.GATT_WRITE_NOT_PERMITTED);
-        assertThat(result.getValues().size(), is(equalTo(0)));
-        assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(GattException.class)));
-        verify(timeout).unschedule();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void enableNotificationDisconnect() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> enable = peripheral.enableNotification(new NativeGattService(nativeService, peripheral),
-                                                                      Testing.WRITE_CHARACTERISTIC,
-                                                                      Testing.NOTIFY_DESCRIPTOR,
-                                                                      timeout);
-
-        final Testing.Result<UUID> result = new Testing.Result<>();
-        enable.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.SET_CHAR_NOTIFICATION,
-                              Matchers.any(BluetoothGattCharacteristic.class),
-                              Matchers.equalTo(true));
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_DESCRIPTOR,
-                              Matchers.any(BluetoothGattDescriptor.class));
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(Testing.NOTIFY_DESCRIPTOR);
-        verify(descriptor).setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-
-        gattShadow.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
-        assertThat(result.getValues().size(), is(equalTo(0)));
-        assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(LostConnectionException.class)));
-        verify(timeout).unschedule();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void disableNotificationSuccess() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> disable = peripheral.disableNotification(new NativeGattService(nativeService, peripheral),
-                                                                        Testing.WRITE_CHARACTERISTIC,
-                                                                        Testing.NOTIFY_DESCRIPTOR,
-                                                                        timeout);
-
-        final Testing.Result<UUID> result = new Testing.Result<>();
-        disable.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.SET_CHAR_NOTIFICATION,
-                              Matchers.any(BluetoothGattCharacteristic.class),
-                              Matchers.equalTo(false));
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_DESCRIPTOR,
-                              Matchers.any(BluetoothGattDescriptor.class));
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(Testing.NOTIFY_DESCRIPTOR);
-        verify(descriptor).setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-
-        gattShadow.getGattCallback().onDescriptorWrite(gatt, descriptor, BluetoothGatt.GATT_SUCCESS);
-        assertThat(result.getValues().size(), is(equalTo(1)));
-        assertThat(result.isCompleted(), is(true));
-        verify(timeout).unschedule();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void disableNotificationFailure() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> disable = peripheral.disableNotification(new NativeGattService(nativeService, peripheral),
-                                                                        Testing.WRITE_CHARACTERISTIC,
-                                                                        Testing.NOTIFY_DESCRIPTOR,
-                                                                        timeout);
-
-        final Testing.Result<UUID> result = new Testing.Result<>();
-        disable.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.SET_CHAR_NOTIFICATION,
-                              Matchers.any(BluetoothGattCharacteristic.class),
-                              Matchers.equalTo(false));
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_DESCRIPTOR,
-                              Matchers.any(BluetoothGattDescriptor.class));
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(Testing.NOTIFY_DESCRIPTOR);
-        verify(descriptor).setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-
-        gattShadow.getGattCallback().onDescriptorWrite(gatt, descriptor, BluetoothGatt.GATT_WRITE_NOT_PERMITTED);
-        assertThat(result.getValues().size(), is(equalTo(0)));
-        assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(GattException.class)));
-        verify(timeout).unschedule();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void disableNotificationDisconnect() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<UUID> disable = peripheral.disableNotification(new NativeGattService(nativeService, peripheral),
-                                                                        Testing.WRITE_CHARACTERISTIC,
-                                                                        Testing.NOTIFY_DESCRIPTOR,
-                                                                        timeout);
-
-        final Testing.Result<UUID> result = new Testing.Result<>();
-        disable.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.SET_CHAR_NOTIFICATION,
-                              Matchers.any(BluetoothGattCharacteristic.class),
-                              Matchers.equalTo(false));
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_DESCRIPTOR,
-                              Matchers.any(BluetoothGattDescriptor.class));
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(Testing.NOTIFY_DESCRIPTOR);
-        verify(descriptor).setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-
-        gattShadow.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
-        assertThat(result.getValues().size(), is(equalTo(0)));
-        assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(LostConnectionException.class)));
-        verify(timeout).unschedule();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void writeCommandSuccess() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<Void> write = peripheral.writeCommand(new NativeGattService(nativeService, peripheral),
-                                                               Testing.WRITE_CHARACTERISTIC,
-                                                               GattPeripheral.WriteType.DEFAULT,
-                                                               WRITE_PAYLOAD,
-                                                               timeout);
-
-        final Testing.Result<Void> result = new Testing.Result<>();
-        write.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_CHAR,
-                              Matchers.any(BluetoothGattCharacteristic.class));
-        verify(nativeService, atLeastOnce()).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        verify(characteristic).setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-        verify(characteristic).setValue(WRITE_PAYLOAD);
-
-        gattShadow.getGattCallback().onCharacteristicWrite(gatt, characteristic, BluetoothGatt.GATT_SUCCESS);
-        assertThat(result.getValues().size(), is(equalTo(1)));
-        assertThat(result.isCompleted(), is(true));
-        verify(timeout).unschedule();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void writeCommandFailure() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<Void> write = peripheral.writeCommand(new NativeGattService(nativeService, peripheral),
-                                                               Testing.WRITE_CHARACTERISTIC,
-                                                               GattPeripheral.WriteType.DEFAULT,
-                                                               WRITE_PAYLOAD,
-                                                               timeout);
-
-        final Testing.Result<Void> result = new Testing.Result<>();
-        write.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_CHAR,
-                              Matchers.any(BluetoothGattCharacteristic.class));
-        verify(nativeService, atLeastOnce()).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        verify(characteristic).setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-        verify(characteristic).setValue(WRITE_PAYLOAD);
-
-        gattShadow.getGattCallback().onCharacteristicWrite(gatt, characteristic, BluetoothGatt.GATT_WRITE_NOT_PERMITTED);
-        assertThat(result.getValues().size(), is(equalTo(0)));
-        assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(GattException.class)));
-        verify(timeout).unschedule();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void writeCommandDisconnect() {
-        final NativeGattPeripheral peripheral = createConnectedPeripheral();
-        final BluetoothGattService nativeService = Testing.createMockGattService();
-        final OperationTimeout timeout = Testing.createMockOperationTimeout();
-        final Observable<Void> write = peripheral.writeCommand(new NativeGattService(nativeService, peripheral),
-                                                               Testing.WRITE_CHARACTERISTIC,
-                                                               GattPeripheral.WriteType.DEFAULT,
-                                                               WRITE_PAYLOAD,
-                                                               timeout);
-
-        final Testing.Result<Void> result = new Testing.Result<>();
-        write.subscribe(result);
-
-        final BluetoothGatt gatt = peripheral.gatt;
-        final ShadowBluetoothGatt gattShadow = BuruberiShadows.shadowOf(gatt);
-        gattShadow.verifyCall(ShadowBluetoothGatt.Call.WRITE_CHAR,
-                              Matchers.any(BluetoothGattCharacteristic.class));
-        verify(nativeService, atLeastOnce()).getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        verify(timeout).setTimeoutAction(Mockito.any(Action0.class), Mockito.any(Scheduler.class));
-        verify(timeout).schedule();
-
-
-        final BluetoothGattCharacteristic characteristic = nativeService.getCharacteristic(Testing.WRITE_CHARACTERISTIC);
-        verify(characteristic).setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-        verify(characteristic).setValue(WRITE_PAYLOAD);
-
-        gattShadow.getGattCallback().onConnectionStateChange(gatt, BluetoothGatt.GATT_SUCCESS, BluetoothGatt.STATE_DISCONNECTED);
-        assertThat(result.getValues().size(), is(equalTo(0)));
-        assertThat(result.isCompleted(), is(false));
-        assertThat(result.getError(), is(instanceOf(LostConnectionException.class)));
-        verify(timeout).unschedule();
     }
 
     //endregion

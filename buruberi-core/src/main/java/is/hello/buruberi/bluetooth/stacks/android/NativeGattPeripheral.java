@@ -40,7 +40,6 @@ import is.hello.buruberi.bluetooth.errors.GattException;
 import is.hello.buruberi.bluetooth.errors.OperationTimeoutException;
 import is.hello.buruberi.bluetooth.errors.ServiceDiscoveryException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
-import is.hello.buruberi.bluetooth.stacks.GattCharacteristic;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
@@ -712,54 +711,6 @@ public class NativeGattPeripheral implements GattPeripheral {
 
 
     //region Characteristics
-
-    @NonNull
-    @Override
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<UUID> enableNotification(final @NonNull GattService onGattService,
-                                               final @NonNull UUID characteristicIdentifier,
-                                               final @NonNull UUID descriptorIdentifier,
-                                               final @NonNull OperationTimeout timeout) {
-        final GattCharacteristic characteristic =
-                onGattService.getCharacteristic(characteristicIdentifier);
-        if (characteristic != null) {
-            return characteristic.enableNotification(descriptorIdentifier, timeout);
-        } else {
-            return Observable.error(new IllegalArgumentException("Unknown characteristic " + characteristicIdentifier));
-        }
-    }
-
-    @NonNull
-    @Override
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<UUID> disableNotification(final @NonNull GattService onGattService,
-                                                final @NonNull UUID characteristicIdentifier,
-                                                final @NonNull UUID descriptorIdentifier,
-                                                final @NonNull OperationTimeout timeout) {
-        final GattCharacteristic characteristic =
-                onGattService.getCharacteristic(characteristicIdentifier);
-        if (characteristic != null) {
-            return characteristic.disableNotification(descriptorIdentifier, timeout);
-        } else {
-            return Observable.error(new IllegalArgumentException("Unknown characteristic " + characteristicIdentifier));
-        }
-    }
-
-    @NonNull
-    @Override
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    public Observable<Void> writeCommand(final @NonNull GattService onGattService,
-                                         final @NonNull UUID identifier,
-                                         final @NonNull WriteType writeType,
-                                         final @NonNull byte[] payload,
-                                         final @NonNull OperationTimeout timeout) {
-        final GattCharacteristic characteristic = onGattService.getCharacteristic(identifier);
-        if (characteristic != null) {
-            return characteristic.write(writeType, payload, timeout);
-        } else {
-            return Observable.error(new IllegalArgumentException("Unknown characteristic " + identifier));
-        }
-    }
 
     @Override
     public void setPacketHandler(@Nullable PacketHandler dataHandler) {
