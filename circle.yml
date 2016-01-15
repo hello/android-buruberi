@@ -7,7 +7,7 @@ general:
       - /no\-test\-.*/
 dependencies:
   override:
-    - echo y | android update sdk -u -a -t extra-android-m2repository,android-23,build-tools-23.0.0
+    - echo y | android update sdk -u -a -t extra-android-m2repository,android-23,build-tools-23.0.1
     - ./gradlew dependencies
 test:
   override:
