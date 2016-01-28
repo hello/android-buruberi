@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +34,7 @@ class NativeGattCharacteristic implements GattCharacteristic {
     private final LoggerFacade logger;
     private final GattDispatcher gattDispatcher;
 
-    @VisibleForTesting @Nullable PacketListener packetListener;
+    /*package*/ @Nullable PacketListener packetListener;
 
     /*package*/ NativeGattCharacteristic(@NonNull BluetoothGattCharacteristic characteristic,
                                          @NonNull NativeGattService service,

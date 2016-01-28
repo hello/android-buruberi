@@ -399,10 +399,17 @@ public interface GattPeripheral {
     //region Discovering Services
 
     /**
-     * Performs service discovery on the peripheral.
+     * Performs remote service discovery on the peripheral.
      * <p>
-     * Yields a {@link ConnectionStateException}
-     * if the peripheral is not connected when this method is called.
+     * Each call to this method will result in separate discovery operation
+     * on the remote peripheral, it is not idempotent. The result of
+     * the {@code Observable} this method returns should be saved
+     * for the duration of your current peripheral connection.
+     * <p>
+     * Yields a {@link ConnectionStateException} if the
+     * peripheral is not connected when this method is called.
+     *
+     * @see #discoverService(UUID, OperationTimeout) if you need a specific service.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @CheckResult
@@ -412,13 +419,19 @@ public interface GattPeripheral {
      * Performs service discovery on the peripheral,
      * yielding the service matching a given identifier.
      * <p>
+     * Each call to this method will result in separate discovery operation
+     * on the remote peripheral, it is not idempotent. Client code should not
+     * use this method if it needs multiple services from the peripheral. The
+     * result of the {@code Observable} this method returns should be saved
+     * for the duration of your current peripheral connection.
+     * <p>
      * If the service cannot be found, this method will yield
      * a {@link ServiceDiscoveryException}.
      * <p>
      * Yields a {@link ConnectionStateException}
      * if the peripheral is not connected when this method is called.
      *
-     * @see #discoverServices(OperationTimeout)
+     * @see #discoverServices(OperationTimeout) if you need multiple services.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
     @CheckResult

@@ -30,6 +30,12 @@ import java.util.UUID;
 
 /**
  * Represents a gatt service associated with a {@link GattPeripheral}.
+ * <p>
+ * An instance of the {@code GattService} class is only valid for the duration of
+ * one connection to a remote peripheral. When client code detects that a peripheral
+ * connection has ended, it should clear any references it has to {@code GattService}s.
+ * <p>
+ * {@code GattService} currently does not support included services.
  */
 public interface GattService {
     /**
@@ -77,6 +83,9 @@ public interface GattService {
 
     /**
      * Returns the characteristic associated with a given identifier.
+     * <p>
+     * Guaranteed to return the same object for the duration
+     * of a connection to a remote peripheral.
      */
     GattCharacteristic getCharacteristic(@NonNull UUID identifier);
 }

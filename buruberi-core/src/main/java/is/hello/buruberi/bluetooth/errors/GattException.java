@@ -220,8 +220,7 @@ public class GattException extends BuruberiException {
     /**
      * The operation where the gatt exception was encountered, if applicable.
      */
-    public final @Nullable
-    Operation operation;
+    public final @Nullable Operation operation;
 
     public GattException(int statusCode, @Nullable Operation operation) {
         super(statusToString(statusCode));

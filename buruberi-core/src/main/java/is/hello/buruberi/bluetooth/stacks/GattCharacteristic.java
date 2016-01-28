@@ -35,6 +35,10 @@ import rx.Observable;
 
 /**
  * Represents a gatt characteristic from a {@link GattService}.
+ * <p>
+ * An instance of the {@code GattCharacteristic} class is only valid for the duration
+ * of one connection to a remote peripheral. When client code detects that a peripheral
+ * connection has ended, it should clear any references it has to {@code GattCharacteristic}s.
  */
 public interface GattCharacteristic {
     /**
@@ -227,6 +231,12 @@ public interface GattCharacteristic {
 
     /**
      * Sets the packet listener for the characteristic.
+     * <p>
+     * The packet listener of the characteristic will be cleared if
+     * the peripheral the characteristic is tied to disconnects.
+     * Clients should set the packet listener after every connect
+     * attempt and service discovery run on your peripherals.
+     *
      * @param packetListener    The listener.
      */
     void setPacketListener(@NonNull PacketListener packetListener);
