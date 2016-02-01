@@ -29,85 +29,44 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import is.hello.buruberi.bluetooth.errors.LostConnectionException;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
-import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
-import rx.Subscriber;
-import rx.functions.Action0;
-import rx.functions.Action2;
-import rx.functions.Action3;
 
 class GattDispatcher extends BluetoothGattCallback {
     private final LoggerFacade logger;
-    private final List<ConnectionListener> connectionStateListeners = new ArrayList<>();
-    private final List<Action0> disconnectListeners = new ArrayList<>();
+    private final CharacteristicChangeListener characteristicChangeListener;
     private final Handler dispatcher = new Handler(Looper.getMainLooper());
 
-    @Nullable GattPeripheral.PacketHandler packetHandler;
-    @Nullable Action2<BluetoothGatt, Integer> onServicesDiscovered;
-    @Nullable Action3<BluetoothGatt, BluetoothGattCharacteristic, Integer> onCharacteristicWrite;
-    @Nullable Action3<BluetoothGatt, BluetoothGattDescriptor, Integer> onDescriptorWrite;
+    private final List<ConnectionListener> connectionStateListeners = new ArrayList<>();
+    /*package*/ @Nullable CharacteristicReadListener characteristicRead;
+    /*package*/ @Nullable ServicesDiscoveredListener servicesDiscovered;
+    /*package*/ @Nullable CharacteristicWriteListener characteristicWrite;
+    /*package*/ @Nullable DescriptorWriteListener descriptorWrite;
 
 
-    GattDispatcher(@NonNull LoggerFacade logger) {
+    /*package*/ GattDispatcher(@NonNull LoggerFacade logger,
+                               @NonNull CharacteristicChangeListener characteristicChangeListener) {
         this.logger = logger;
+        this.characteristicChangeListener = characteristicChangeListener;
     }
 
-    void addConnectionListener(@NonNull ConnectionListener changeHandler) {
+    /*package*/ void addConnectionListener(@NonNull ConnectionListener changeHandler) {
         connectionStateListeners.add(changeHandler);
     }
 
-    void removeConnectionListener(@NonNull ConnectionListener changeHandler) {
+    /*package*/ void removeConnectionListener(@NonNull ConnectionListener changeHandler) {
         connectionStateListeners.remove(changeHandler);
     }
 
-    <T> Action0 addTimeoutDisconnectListener(final @NonNull Subscriber<T> subscriber,
-                                             final @NonNull OperationTimeout timeout) {
-        final Action0 onDisconnect = new Action0() {
-            @Override
-            public void call() {
-                logger.info(GattPeripheral.LOG_TAG,
-                            "onDisconnectListener(" + subscriber.hashCode() + ")");
-
-                timeout.unschedule();
-
-                subscriber.onError(new LostConnectionException());
-            }
-        };
-        disconnectListeners.add(onDisconnect);
-        return onDisconnect;
-    }
-
-    void removeDisconnectListener(@NonNull Action0 disconnectListener) {
-        disconnectListeners.remove(disconnectListener);
-    }
-
-    void dispatchDisconnect() {
-        dispatcher.post(new Runnable() {
-            @Override
-            public void run() {
-                logger.info(GattPeripheral.LOG_TAG, "dispatchDisconnect()");
-
-                GattDispatcher.this.onServicesDiscovered = null;
-                GattDispatcher.this.onCharacteristicWrite = null;
-                GattDispatcher.this.onDescriptorWrite = null;
-
-                for (final Action0 onDisconnect : disconnectListeners) {
-                    onDisconnect.call();
-                }
-                disconnectListeners.clear();
-
-                if (packetHandler != null) {
-                    packetHandler.peripheralDisconnected();
-                }
-            }
-        });
+    /*package*/ void clearListeners() {
+        this.characteristicRead = null;
+        this.servicesDiscovered = null;
+        this.characteristicWrite = null;
+        this.descriptorWrite = null;
     }
 
     @Override
     public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
-        super.onConnectionStateChange(gatt, status, newState);
         logger.info(GattPeripheral.LOG_TAG, "onConnectionStateChange('" + gatt + "', " +
                 status + ", " + newState + ")");
 
@@ -131,14 +90,13 @@ class GattDispatcher extends BluetoothGattCallback {
 
     @Override
     public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
-        super.onServicesDiscovered(gatt, status);
         logger.info(GattPeripheral.LOG_TAG, "onServicesDiscovered('" + gatt + "', " + status + ")");
 
         dispatcher.post(new Runnable() {
             @Override
             public void run() {
-                if (onServicesDiscovered != null) {
-                    onServicesDiscovered.call(gatt, status);
+                if (servicesDiscovered != null) {
+                    servicesDiscovered.onServicesDiscovered(gatt, status);
                 } else {
                     logger.warn(GattPeripheral.LOG_TAG, "unhandled call to onServicesDiscovered");
                 }
@@ -156,9 +114,10 @@ class GattDispatcher extends BluetoothGattCallback {
         dispatcher.post(new Runnable() {
             @Override
             public void run() {
-                if (packetHandler != null) {
-                    packetHandler.processIncomingPacket(characteristic.getUuid(),
-                                                        characteristic.getValue());
+                if (characteristicRead != null) {
+                    characteristicRead.onCharacteristicRead(gatt, characteristic, status);
+                } else {
+                    logger.warn(GattPeripheral.LOG_TAG, "unhandled call to onCharacteristicRead");
                 }
             }
         });
@@ -174,8 +133,8 @@ class GattDispatcher extends BluetoothGattCallback {
         dispatcher.post(new Runnable() {
             @Override
             public void run() {
-                if (onCharacteristicWrite != null) {
-                    onCharacteristicWrite.call(gatt, characteristic, status);
+                if (characteristicWrite != null) {
+                    characteristicWrite.onCharacteristicWrite(gatt, characteristic, status);
                 } else {
                     logger.warn(GattPeripheral.LOG_TAG, "unhandled call to onCharacteristicWrite");
                 }
@@ -192,10 +151,7 @@ class GattDispatcher extends BluetoothGattCallback {
         dispatcher.post(new Runnable() {
             @Override
             public void run() {
-                if (packetHandler != null) {
-                    packetHandler.processIncomingPacket(characteristic.getUuid(),
-                                                        characteristic.getValue());
-                }
+                characteristicChangeListener.onCharacteristicChanged(gatt, characteristic);
             }
         });
     }
@@ -209,8 +165,8 @@ class GattDispatcher extends BluetoothGattCallback {
         dispatcher.post(new Runnable() {
             @Override
             public void run() {
-                if (onDescriptorWrite != null) {
-                    onDescriptorWrite.call(gatt, descriptor, status);
+                if (descriptorWrite != null) {
+                    descriptorWrite.onDescriptorWrite(gatt, descriptor, status);
                 } else {
                     logger.warn(GattPeripheral.LOG_TAG, "unhandled call to onDescriptorWrite");
                 }
@@ -219,34 +175,60 @@ class GattDispatcher extends BluetoothGattCallback {
     }
 
 
+    interface CharacteristicChangeListener {
+        void onCharacteristicChanged(@NonNull BluetoothGatt gatt,
+                                     @NonNull BluetoothGattCharacteristic characteristic);
+    }
+
+    interface CharacteristicReadListener {
+        void onCharacteristicRead(@NonNull BluetoothGatt gatt,
+                                  @NonNull BluetoothGattCharacteristic characteristic,
+                                  int status);
+    }
+
+    interface ServicesDiscoveredListener {
+        void onServicesDiscovered(@NonNull BluetoothGatt gatt, int status);
+    }
+
+    interface CharacteristicWriteListener {
+        void onCharacteristicWrite(@NonNull BluetoothGatt gatt,
+                                   @NonNull BluetoothGattCharacteristic characteristic,
+                                   int status);
+    }
+    interface DescriptorWriteListener {
+        void onDescriptorWrite(@NonNull BluetoothGatt gatt,
+                               @NonNull BluetoothGattDescriptor descriptor,
+                               int status);
+    }
+
     @SuppressWarnings("UnusedParameters")
     static abstract class ConnectionListener {
-        boolean onConnected(@NonNull BluetoothGatt gatt, int status) {
+        /*package*/ boolean onConnected(@NonNull BluetoothGatt gatt, int status) {
             // Do nothing.
             return false;
         }
 
-        boolean onConnecting(@NonNull BluetoothGatt gatt, int status) {
+        /*package*/ boolean onConnecting(@NonNull BluetoothGatt gatt, int status) {
             // Do nothing.
             return true;
         }
 
-        boolean onDisconnecting(@NonNull BluetoothGatt gatt, int status) {
+        /*package*/ boolean onDisconnecting(@NonNull BluetoothGatt gatt, int status) {
             // Do nothing.
             return true;
         }
 
-        boolean onDisconnected(@NonNull BluetoothGatt gatt, int status) {
+        /*package*/ boolean onDisconnected(@NonNull BluetoothGatt gatt, int status) {
             // Do nothing.
             return false;
         }
 
-        boolean onError(@NonNull BluetoothGatt gatt, int status, int state) {
+        /*package*/ boolean onError(@NonNull BluetoothGatt gatt, int status, int state) {
             // Do nothing.
             return false;
         }
 
-        final boolean dispatch(@NonNull BluetoothGatt gatt, int status, int state) {
+        /*package*/ final boolean dispatch(@NonNull BluetoothGatt gatt, int status, int state) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 switch (state) {
                     case BluetoothProfile.STATE_CONNECTED:

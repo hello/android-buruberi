@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
-import is.hello.buruberi.bluetooth.stacks.android.DeviceSupport;
 import rx.functions.Func1;
 
 /**
@@ -66,10 +65,8 @@ public final class PeripheralCriteria {
     /**
      * Whether or not to perform a high power scan before performing a low energy scan.
      * Required for some devices to be able to detect advertising data.
-     *
-     * @see is.hello.buruberi.bluetooth.stacks.android.DeviceSupport#isHighPowerPreScanNeeded()
      */
-    public boolean wantsHighPowerPreScan = DeviceSupport.isHighPowerPreScanNeeded();
+    public boolean wantsHighPowerPreScan = false;
 
     /**
      * Returns a configured criteria that will search for one instance of a given address.
@@ -181,8 +178,6 @@ public final class PeripheralCriteria {
      * detect BLE advertising data. However, high power scans
      * are both slow and power intensive, so they should not
      * be used without the user requesting it.
-     *
-     * @see is.hello.buruberi.bluetooth.stacks.android.DeviceSupport#isHighPowerPreScanNeeded()
      */
     public PeripheralCriteria setWantsHighPowerPreScan(boolean wantsHighPowerPreScan) {
         this.wantsHighPowerPreScan = wantsHighPowerPreScan;

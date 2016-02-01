@@ -15,6 +15,7 @@
 */
 package is.hello.buruberi.testing;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -22,6 +23,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.os.Build;
+import android.support.annotation.RequiresPermission;
 
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
@@ -43,6 +45,7 @@ public class ShadowBluetoothLeScanner {
     }
 
     @Implementation
+    @RequiresPermission(Manifest.permission.BLUETOOTH)
     public void startScan(List<ScanFilter> filters,
                           ScanSettings settings,
                           ScanCallback callback) {
@@ -54,11 +57,13 @@ public class ShadowBluetoothLeScanner {
     }
 
     @Implementation
+    @RequiresPermission(Manifest.permission.BLUETOOTH)
     public void startScan(final ScanCallback callback) {
         startScan(null, new ScanSettings.Builder().build(), callback);
     }
 
     @Implementation
+    @RequiresPermission(Manifest.permission.BLUETOOTH)
     public void stopScan(ScanCallback callback) {
         if (adapter.getState() != BluetoothAdapter.STATE_ON) {
             throw new IllegalStateException("BT Adapter is not turned ON");

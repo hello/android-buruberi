@@ -18,6 +18,7 @@ package is.hello.buruberi.bluetooth.stacks;
 
 import android.Manifest;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresPermission;
@@ -34,8 +35,18 @@ import rx.Observable;
 
 /**
  * Represents a gatt characteristic from a {@link GattService}.
+ * <p>
+ * An instance of the {@code GattCharacteristic} class is only valid for the duration
+ * of one connection to a remote peripheral. When client code detects that a peripheral
+ * connection has ended, it should clear any references it has to {@code GattCharacteristic}s.
  */
 public interface GattCharacteristic {
+    /**
+     * The maximum length of a Bluetooth Low Energy packet.
+     */
+    int PACKET_LENGTH = 20;
+
+
     //region Properties
 
     /**
@@ -77,6 +88,7 @@ public interface GattCharacteristic {
      * Characteristic has extended properties
      */
     int PROPERTY_EXTENDED_PROPS = BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS;
+
 
     /**
      * Marks an {@code int} as containing one of the
@@ -188,7 +200,7 @@ public interface GattCharacteristic {
     /**
      * Returns the identifier of the characteristic.
      */
-    UUID getUuid();
+    @NonNull UUID getUuid();
 
     /**
      * Returns the properties of this characteristic.
@@ -217,10 +229,31 @@ public interface GattCharacteristic {
      */
     @Permissions int getDescriptorPermissions(@NonNull UUID descriptor);
 
+    /**
+     * Sets the packet listener for the characteristic.
+     * <p>
+     * The packet listener of the characteristic will be cleared if
+     * the peripheral the characteristic is tied to disconnects.
+     * Clients should set the packet listener after every connect
+     * attempt and service discovery run on your peripherals.
+     *
+     * @param packetListener    The listener.
+     */
+    void setPacketListener(@NonNull PacketListener packetListener);
+
     //endregion
 
 
     //region Operations
+
+    /**
+     * Reads the characteristic's value from the remote peripheral.
+     *
+     * @param timeout   The timeout to apply to the operation.
+     * @return The operation, waiting to be subscribed to.
+     */
+    @CheckResult
+    @NonNull Observable<byte[]> read(@NonNull OperationTimeout timeout);
 
     /**
      * Enable notification events for a given descriptor.
@@ -230,6 +263,7 @@ public interface GattCharacteristic {
      * @return The operation, waiting to be subscribed to.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<UUID> enableNotification(@NonNull UUID descriptor,
                                                  @NonNull OperationTimeout timeout);
 
@@ -241,6 +275,7 @@ public interface GattCharacteristic {
      * @return The operation, waiting to be subscribed to.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<UUID> disableNotification(@NonNull UUID descriptor,
                                                   @NonNull OperationTimeout timeout);
 
@@ -263,9 +298,28 @@ public interface GattCharacteristic {
      * @return An observable that will emit a single null value, then complete upon success.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<Void> write(@NonNull GattPeripheral.WriteType writeType,
                                     @NonNull byte[] payload,
                                     @NonNull OperationTimeout timeout);
 
     //endregion
+
+
+    /**
+     * Allows client code to act on incoming characteristic reads and  notifications.
+     */
+    interface PacketListener {
+        /**
+         * Notifies the listener that a characteristic has been notified.
+         * @param characteristic    The characteristic affected.
+         * @param payload           The bytes received.
+         */
+        void onCharacteristicNotify(@NonNull UUID characteristic, @NonNull byte[] payload);
+
+        /**
+         * Informs the listener that the underlying peripheral connection was lost.
+         */
+        void onPeripheralDisconnected();
+    }
 }

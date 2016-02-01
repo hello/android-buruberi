@@ -20,21 +20,21 @@ import android.support.annotation.NonNull;
 
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 
-class ScannedPeripheral {
-    final BluetoothDevice device;
-    final AdvertisingData advertisingData;
-    int rssi;
+/*package*/ class ScannedPeripheral {
+    /*package*/ final BluetoothDevice device;
+    /*package*/ final AdvertisingData advertisingData;
+    /*package*/ int rssi;
 
-    ScannedPeripheral(@NonNull BluetoothDevice device,
-                      int rssi,
-                      @NonNull AdvertisingData advertisingData) {
+    /*package*/ ScannedPeripheral(@NonNull BluetoothDevice device,
+                                  @NonNull AdvertisingData advertisingData,
+                                  int rssi) {
         this.device = device;
-        this.rssi = rssi;
         this.advertisingData = advertisingData;
+        this.rssi = rssi;
     }
 
 
-    NativeGattPeripheral createPeripheral(@NonNull NativeBluetoothStack stack) {
+    /*package*/ NativeGattPeripheral createPeripheral(@NonNull NativeBluetoothStack stack) {
         return new NativeGattPeripheral(stack, device, rssi, advertisingData);
     }
 
@@ -44,7 +44,7 @@ class ScannedPeripheral {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ScannedPeripheral that = (ScannedPeripheral) o;
+        final ScannedPeripheral that = (ScannedPeripheral) o;
 
         return (rssi == that.rssi &&
                 advertisingData.equals(that.advertisingData) &&

@@ -19,9 +19,9 @@ import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
+import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import java.lang.annotation.Documented;
@@ -267,7 +267,8 @@ public interface GattPeripheral {
      * <p>
      * @see BluetoothStack#newConfiguredObservable(Observable.OnSubscribe)
      */
-    BluetoothStack getStack();
+    @CheckResult
+    @NonNull BluetoothStack getStack();
 
     //endregion
 
@@ -282,6 +283,7 @@ public interface GattPeripheral {
      * @param timeUnit The time unit of the {@code duration}.
      * @return A new {@link OperationTimeout}
      */
+    @CheckResult
     @NonNull OperationTimeout createOperationTimeout(@NonNull String name,
                                                      long duration,
                                                      @NonNull TimeUnit timeUnit);
@@ -290,16 +292,6 @@ public interface GattPeripheral {
 
 
     //region Connectivity
-
-    /**
-     * Legacy connect method that is equivalent to calling {@link #connect(int, OperationTimeout)}
-     * with {@link #CONNECT_FLAG_DEFAULTS}. New code should not use this method.
-     *
-     * @deprecated Prefer {@link #connect(int, OperationTimeout)} for all new code.
-     */
-    @Deprecated
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<GattPeripheral> connect(@NonNull OperationTimeout timeout);
 
     /**
      * Attempts to create a gatt connection to the peripheral.
@@ -317,6 +309,7 @@ public interface GattPeripheral {
      * @return An observable that represents the connect operation.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<GattPeripheral> connect(@ConnectFlags int flags,
                                                 @NonNull OperationTimeout timeout);
 
@@ -329,6 +322,7 @@ public interface GattPeripheral {
      * if the peripheral is currently connecting.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<GattPeripheral> disconnect();
 
     /**
@@ -340,6 +334,7 @@ public interface GattPeripheral {
      * @see GattPeripheral#STATUS_DISCONNECTING
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @ConnectivityStatus int getConnectionStatus();
 
     //endregion
@@ -358,12 +353,13 @@ public interface GattPeripheral {
      * <p>
      * However, starting in API level 21 (Lollipop), this method will <em>fail</em>
      * if you call it when the device is connected. If you need a bond, you should
-     * call this method before you call {@link #connect(OperationTimeout)}.
+     * call this method before you call {@link #connect(int, OperationTimeout)}.
      */
     @RequiresPermission(allOf = {
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
     })
+    @CheckResult
     @NonNull Observable<GattPeripheral> createBond();
 
     /**
@@ -383,6 +379,7 @@ public interface GattPeripheral {
             Manifest.permission.BLUETOOTH_ADMIN,
     })
     @NonGuaranteed
+    @CheckResult
     @NonNull Observable<GattPeripheral> removeBond(@NonNull OperationTimeout timeout);
 
     /**
@@ -393,6 +390,7 @@ public interface GattPeripheral {
      * @see GattPeripheral#BOND_BONDED
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @BondStatus int getBondStatus();
 
     //endregion
@@ -401,17 +399,31 @@ public interface GattPeripheral {
     //region Discovering Services
 
     /**
-     * Performs service discovery on the peripheral.
+     * Performs remote service discovery on the peripheral.
      * <p>
-     * Yields a {@link ConnectionStateException}
-     * if the peripheral is not connected when this method is called.
+     * Each call to this method will result in separate discovery operation
+     * on the remote peripheral, it is not idempotent. The result of
+     * the {@code Observable} this method returns should be saved
+     * for the duration of your current peripheral connection.
+     * <p>
+     * Yields a {@link ConnectionStateException} if the
+     * peripheral is not connected when this method is called.
+     *
+     * @see #discoverService(UUID, OperationTimeout) if you need a specific service.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<Map<UUID, GattService>> discoverServices(@NonNull OperationTimeout timeout);
+    @CheckResult
+    @NonNull Observable<Map<UUID, ? extends GattService>> discoverServices(@NonNull OperationTimeout timeout);
 
     /**
      * Performs service discovery on the peripheral,
      * yielding the service matching a given identifier.
+     * <p>
+     * Each call to this method will result in separate discovery operation
+     * on the remote peripheral, it is not idempotent. Client code should not
+     * use this method if it needs multiple services from the peripheral. The
+     * result of the {@code Observable} this method returns should be saved
+     * for the duration of your current peripheral connection.
      * <p>
      * If the service cannot be found, this method will yield
      * a {@link ServiceDiscoveryException}.
@@ -419,79 +431,12 @@ public interface GattPeripheral {
      * Yields a {@link ConnectionStateException}
      * if the peripheral is not connected when this method is called.
      *
-     * @see #discoverServices(OperationTimeout)
+     * @see #discoverServices(OperationTimeout) if you need multiple services.
      */
     @RequiresPermission(Manifest.permission.BLUETOOTH)
+    @CheckResult
     @NonNull Observable<GattService> discoverService(@NonNull UUID serviceIdentifier,
                                                      @NonNull OperationTimeout timeout);
-
-    //endregion
-
-
-    //region Characteristics
-
-    /**
-     * @deprecated Prefer {@link GattCharacteristic#enableNotification(UUID, OperationTimeout)}
-     *             for all new code.
-     */
-    @Deprecated
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<UUID> enableNotification(@NonNull GattService onGattService,
-                                                 @NonNull UUID characteristicIdentifier,
-                                                 @NonNull UUID descriptorIdentifier,
-                                                 @NonNull OperationTimeout timeout);
-
-    /**
-     * @deprecated Prefer {@link GattCharacteristic#disableNotification(UUID, OperationTimeout)}
-     *             for all new code.
-     */
-    @Deprecated
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<UUID> disableNotification(@NonNull GattService onGattService,
-                                                  @NonNull UUID characteristicIdentifier,
-                                                  @NonNull UUID descriptorIdentifier,
-                                                  @NonNull OperationTimeout timeout);
-
-    /**
-     * Writes a given payload to a characteristic belonging to a service on the peripheral.
-     * <p>
-     * <em>Important:</em> it appears on some devices that writes are asynchronous on multiple
-     * levels. Although the stack may report the write was successful, it doesn't mean the
-     * write has actually completed. If you're going to disconnect after a write operation,
-     * it's a good idea to add a delay of a few seconds.
-     * <p>
-     * The value of {@literal writeType} is supposed to be automatically inferred during service
-     * discovery, but some devices do not consistently populate the value (Verizon Note 4).
-     * As such, this value must be provided for every write command call.
-     *
-     * @param service           The service to write to.
-     * @param characteristic    The characteristic to write to.
-     * @param writeType         The type of write to perform.
-     * @param payload           The payload to write. Must be 20 <code>bytes</code> or less.
-     * @param timeout           The timeout to wrap the operation within.
-     * @return An observable that will emit a single null value, then complete upon success.
-     *
-     * @deprecated Prefer {@link GattCharacteristic#write(WriteType, byte[], OperationTimeout)}
-     *             for all new code.
-     */
-    @Deprecated
-    @RequiresPermission(Manifest.permission.BLUETOOTH)
-    @NonNull Observable<Void> writeCommand(@NonNull GattService service,
-                                           @NonNull UUID characteristic,
-                                           @NonNull WriteType writeType,
-                                           @NonNull byte[] payload,
-                                           @NonNull OperationTimeout timeout);
-
-    /**
-     * Associates a given packet handler with the {@code GattPeripheral}.
-     * <p>
-     * Characteristic read and change data will be sent to the
-     * packet handler for processing, and outward propagation.
-     * <p>
-     * While it is not required that you provide a packet handler,
-     * it is strongly recommended.
-     */
-    void setPacketHandler(@Nullable PacketHandler dataHandler);
 
     //endregion
 
@@ -523,30 +468,5 @@ public interface GattPeripheral {
         WriteType(int value) {
             this.value = value;
         }
-    }
-
-
-    /**
-     * Responsible for encoding and decoding packets for the Bluetooth stack.
-     */
-    interface PacketHandler {
-        /**
-         * The maximum length of a Bluetooth Low Energy packet.
-         */
-        int PACKET_LENGTH = 20;
-
-        /**
-         * Attempt to process an incoming packet from a characteristic.
-         *
-         * @param characteristicIdentifier The identifier of the characteristic which received data.
-         * @param payload The data which was received.
-         */
-        void processIncomingPacket(@NonNull UUID characteristicIdentifier,
-                                   @NonNull byte[] payload);
-
-        /**
-         * Informs the packet handler that the {@code GattPeripheral} has disconnected.
-         */
-        void peripheralDisconnected();
     }
 }

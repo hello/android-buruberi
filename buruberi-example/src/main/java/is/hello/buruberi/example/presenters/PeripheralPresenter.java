@@ -104,7 +104,7 @@ import rx.subjects.ReplaySubject;
         final OperationTimeout timeout =
                 peripheral.createOperationTimeout("Connect", 30L, TimeUnit.SECONDS);
         final Observable<GattPeripheral> connect =
-                peripheral.connect(timeout)
+                peripheral.connect(GattPeripheral.CONNECT_FLAG_DEFAULTS, timeout)
                           .doOnTerminate(new Action0() {
                               @Override
                               public void call() {

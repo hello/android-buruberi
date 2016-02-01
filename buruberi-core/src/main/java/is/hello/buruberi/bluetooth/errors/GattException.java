@@ -20,12 +20,10 @@ import android.bluetooth.BluetoothGatt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.UUID;
-
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
-import is.hello.buruberi.bluetooth.stacks.GattService;
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.util.NonGuaranteed;
+import is.hello.buruberi.util.Operation;
 
 /**
  * Indicates low level gatt errors from the Android SDK.
@@ -127,7 +125,7 @@ public class GattException extends BuruberiException {
      * @param statusCode  The error code.
      * @return {@code true} if the error is likely recoverable; {@code false} otherwise.
      *
-     * @see GattPeripheral#connect(OperationTimeout)
+     * @see GattPeripheral#connect(int, OperationTimeout)
      */
     public static boolean isRecoverableConnectError(int statusCode) {
         return (statusCode == GATT_CONN_TERMINATE_LOCAL_HOST || // Nexus devices
@@ -239,42 +237,5 @@ public class GattException extends BuruberiException {
     @Override
     public boolean isInstabilityLikely() {
         return (statusCode == GattException.GATT_STACK_ERROR);
-    }
-
-
-    /**
-     * The operation on which the gatt layer encountered an error. Corresponds
-     * rough to all of the operations possible on a {@link GattPeripheral} object.
-     */
-    public enum Operation {
-        /**
-         * Corresponds to {@link GattPeripheral#connect(OperationTimeout)}.
-         */
-        CONNECT,
-
-        /**
-         * Corresponds to {@link GattPeripheral#disconnect()}.
-         */
-        DISCONNECT,
-
-        /**
-         * Corresponds to {@link GattPeripheral#discoverServices(OperationTimeout)}.
-         */
-        DISCOVER_SERVICES,
-
-        /**
-         * Corresponds to {@link GattPeripheral#enableNotification(GattService, UUID, UUID, OperationTimeout)}.
-         */
-        ENABLE_NOTIFICATION,
-
-        /**
-         * Corresponds to {@link GattPeripheral#disableNotification(GattService, UUID, UUID, OperationTimeout)}.
-         */
-        DISABLE_NOTIFICATION,
-
-        /**
-         * Corresponds to {@link GattPeripheral#writeCommand(GattService, UUID, GattPeripheral.WriteType, byte[], OperationTimeout)}.
-         */
-        WRITE_COMMAND,
     }
 }
