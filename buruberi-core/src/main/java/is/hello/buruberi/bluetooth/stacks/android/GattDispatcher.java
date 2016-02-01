@@ -40,7 +40,7 @@ class GattDispatcher extends BluetoothGattCallback {
     private final List<ConnectionListener> connectionStateListeners = new ArrayList<>();
     /*package*/ @Nullable CharacteristicReadListener characteristicRead;
     /*package*/ @Nullable ServicesDiscoveredListener servicesDiscovered;
-    /*package*/ @Nullable CharacteristicWriteListener oharacteristicWrite;
+    /*package*/ @Nullable CharacteristicWriteListener characteristicWrite;
     /*package*/ @Nullable DescriptorWriteListener descriptorWrite;
 
 
@@ -61,7 +61,7 @@ class GattDispatcher extends BluetoothGattCallback {
     /*package*/ void clearListeners() {
         this.characteristicRead = null;
         this.servicesDiscovered = null;
-        this.oharacteristicWrite = null;
+        this.characteristicWrite = null;
         this.descriptorWrite = null;
     }
 
@@ -133,8 +133,8 @@ class GattDispatcher extends BluetoothGattCallback {
         dispatcher.post(new Runnable() {
             @Override
             public void run() {
-                if (oharacteristicWrite != null) {
-                    oharacteristicWrite.onCharacteristicWrite(gatt, characteristic, status);
+                if (characteristicWrite != null) {
+                    characteristicWrite.onCharacteristicWrite(gatt, characteristic, status);
                 } else {
                     logger.warn(GattPeripheral.LOG_TAG, "unhandled call to onCharacteristicWrite");
                 }

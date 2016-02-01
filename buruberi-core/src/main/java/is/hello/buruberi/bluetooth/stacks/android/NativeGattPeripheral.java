@@ -451,7 +451,7 @@ public class NativeGattPeripheral implements GattPeripheral,
                         break;
 
                     case WRITE_COMMAND:
-                        gattDispatcher.oharacteristicWrite = null;
+                        gattDispatcher.characteristicWrite = null;
                         break;
                 }
                 if (disconnectListener != null) {

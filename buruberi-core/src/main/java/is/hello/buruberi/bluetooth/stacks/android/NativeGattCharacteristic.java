@@ -301,7 +301,7 @@ class NativeGattCharacteristic implements GattCharacteristic {
                 peripheral.setupTimeout(Operation.ENABLE_NOTIFICATION,
                                         timeout, subscriber, onDisconnect);
 
-                gattDispatcher.oharacteristicWrite = new CharacteristicWriteListener() {
+                gattDispatcher.characteristicWrite = new CharacteristicWriteListener() {
                     @Override
                     public void onCharacteristicWrite(@NonNull BluetoothGatt gatt,
                                                       @NonNull BluetoothGattCharacteristic characteristic,
@@ -319,7 +319,7 @@ class NativeGattCharacteristic implements GattCharacteristic {
                         }
 
                         peripheral.removeDisconnectListener(onDisconnect);
-                        gattDispatcher.oharacteristicWrite = null;
+                        gattDispatcher.characteristicWrite = null;
                     }
                 };
 
@@ -333,7 +333,7 @@ class NativeGattCharacteristic implements GattCharacteristic {
                     timeout.schedule();
                 } else {
                     peripheral.removeDisconnectListener(onDisconnect);
-                    gattDispatcher.oharacteristicWrite = null;
+                    gattDispatcher.characteristicWrite = null;
 
                     subscriber.onError(new GattException(BluetoothGatt.GATT_WRITE_NOT_PERMITTED,
                                                          Operation.WRITE_COMMAND));
