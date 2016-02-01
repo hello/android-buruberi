@@ -141,6 +141,8 @@ class NativeGattCharacteristic implements GattCharacteristic {
                     timeout.schedule();
                 } else {
                     gattDispatcher.characteristicRead = null;
+                    peripheral.removeDisconnectListener(onDisconnect);
+
                     subscriber.onError(new GattException(BluetoothGatt.GATT_FAILURE,
                                                          Operation.READ));
                 }
