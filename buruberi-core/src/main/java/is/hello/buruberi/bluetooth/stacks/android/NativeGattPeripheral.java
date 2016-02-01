@@ -336,6 +336,8 @@ public class NativeGattPeripheral implements GattPeripheral,
                         disconnectForwarder.setEnabled(false);
                         timeout.schedule();
                     } else {
+                        gattDispatcher.removeConnectionListener(listener);
+
                         subscriber.onError(new GattException(GattException.GATT_INTERNAL_ERROR,
                                                              Operation.CONNECT));
                     }
@@ -350,6 +352,8 @@ public class NativeGattPeripheral implements GattPeripheral,
                         disconnectForwarder.setEnabled(false);
                         timeout.schedule();
                     } else {
+                        gattDispatcher.removeConnectionListener(listener);
+
                         subscriber.onError(new GattException(GattException.GATT_INTERNAL_ERROR,
                                                              Operation.CONNECT));
                     }
@@ -713,6 +717,7 @@ public class NativeGattPeripheral implements GattPeripheral,
                     timeout.schedule();
                 } else {
                     gattDispatcher.servicesDiscovered = null;
+                    removeDisconnectListener(onDisconnect);
 
                     subscriber.onError(new ServiceDiscoveryException());
                 }
