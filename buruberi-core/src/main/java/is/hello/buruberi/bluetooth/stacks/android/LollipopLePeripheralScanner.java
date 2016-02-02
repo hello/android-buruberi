@@ -80,9 +80,20 @@ class LollipopLePeripheralScanner extends ScanCallback implements LePeripheralSc
 
         if (scanner != null) {
             this.scanning = true;
-            ScanSettings.Builder builder = new ScanSettings.Builder();
-            builder.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
-            scanner.startScan(null, builder.build(), this);
+
+            // Guards against the checking the power state of the BluetoothAdapter,
+            // then the power state changing between that check and the following
+            // call to startScan.
+            try {
+                final ScanSettings.Builder builder = new ScanSettings.Builder();
+                builder.setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY);
+                scanner.startScan(null, builder.build(), this);
+            } catch (IllegalStateException e) {
+                this.scanning = false;
+                subscriber.onError(new UserDisabledBuruberiException(e));
+
+                return;
+            }
 
             this.timeout = stack.getScheduler()
                                 .createWorker()
