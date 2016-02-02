@@ -27,17 +27,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
+import is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.bluetooth.stacks.util.ErrorListener;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
-import is.hello.buruberi.testing.BuruberiTestCase;
-import is.hello.buruberi.testing.Testing;
 import is.hello.buruberi.testing.BuruberiShadows;
+import is.hello.buruberi.testing.BuruberiTestCase;
 import is.hello.buruberi.testing.ShadowBluetoothAdapterExt;
 import is.hello.buruberi.testing.ShadowBluetoothLeScanner;
+import is.hello.buruberi.testing.Testing;
 import is.hello.buruberi.util.AdvertisingDataBuilder;
 import is.hello.buruberi.util.Defaults;
 import rx.Subscriber;
@@ -46,6 +48,7 @@ import rx.observers.Subscribers;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
@@ -202,6 +205,34 @@ public class LollipopLePeripheralScannerTests extends BuruberiTestCase {
         scanner.onConcludeScan();
 
         assertThat(shadowScanner.getScanCallbacks(), not(hasItem(scanner)));
+    }
+
+    @Test
+    public void handlesAdapterOffRaceConditionOnStart() {
+        // Test for fix to <https://github.com/hello/android-buruberi/issues/11>
+        final ShadowBluetoothAdapterExt shadowAdapter = getShadowBluetoothAdapter();
+        final PeripheralCriteria criteria = new PeripheralCriteria();
+        final LollipopLePeripheralScanner scanner = new LollipopLePeripheralScanner(stack, criteria);
+
+        shadowAdapter.setState(BluetoothAdapter.STATE_OFF);
+        final AtomicReference<Throwable> expectedFailure = new AtomicReference<>();
+        scanner.call(new Subscriber<List<GattPeripheral>>() {
+            @Override
+            public void onCompleted() {
+                fail("Scanner should not complete");
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                expectedFailure.set(e);
+            }
+
+            @Override
+            public void onNext(List<GattPeripheral> gattPeripherals) {
+                fail("Scanner should not scan peripherals");
+            }
+        });
+        assertThat(expectedFailure.get(), is(instanceOf(UserDisabledBuruberiException.class)));
     }
 
     @Test

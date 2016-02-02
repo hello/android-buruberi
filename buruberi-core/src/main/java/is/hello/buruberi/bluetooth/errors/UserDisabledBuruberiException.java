@@ -20,6 +20,10 @@ package is.hello.buruberi.bluetooth.errors;
  */
 public class UserDisabledBuruberiException extends BuruberiException {
     public UserDisabledBuruberiException() {
-        super("Bluetooth was disabled during an operation");
+        this(null);
+    }
+
+    public UserDisabledBuruberiException(Throwable cause) {
+        super("Bluetooth was disabled during an operation", cause);
     }
 }

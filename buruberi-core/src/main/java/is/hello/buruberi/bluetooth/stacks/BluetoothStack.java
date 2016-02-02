@@ -111,26 +111,4 @@ public interface BluetoothStack {
      * Returns the logger facade associated with the {@code BluetoothStack}.
      */
     @NonNull LoggerFacade getLogger();
-
-
-    /**
-     * Describes the level of support the current device has in the implementation.
-     */
-    @Deprecated
-    enum SupportLevel {
-        /**
-         * The device is unsupported, one or more core operations are known to fail.
-         */
-        UNSUPPORTED,
-
-        /**
-         * The device has not been tested, so one or more core operations may not work.
-         */
-        UNTESTED,
-
-        /**
-         * The device is tested and known to work.
-         */
-        TESTED
-    }
 }
