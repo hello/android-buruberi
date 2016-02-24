@@ -26,20 +26,23 @@ import is.hello.buruberi.testing.AssertExtensions;
 import is.hello.buruberi.testing.BuruberiTestCase;
 
 import static is.hello.buruberi.testing.AssertExtensions.assertThrows;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public class SerialQueueTests extends BuruberiTestCase {
     @Test
     public void simpleExecution() throws Exception {
-        final SerialQueue executor = new SerialQueue();
-        final AtomicInteger executed = new AtomicInteger(0);
-        executor.execute(new SerialQueue.Task() {
+        final SerialQueue queue = new SerialQueue();
+        final AtomicInteger runCount = new AtomicInteger(0);
+        queue.execute(new SerialQueue.Task() {
             @Override
             public void run() {
-                executed.incrementAndGet();
-                executor.taskDone();
+                runCount.incrementAndGet();
+                queue.taskDone();
             }
 
             @Override
@@ -47,11 +50,11 @@ public class SerialQueueTests extends BuruberiTestCase {
                 fail();
             }
         });
-        executor.execute(new SerialQueue.Task() {
+        queue.execute(new SerialQueue.Task() {
             @Override
             public void run() {
-                executed.incrementAndGet();
-                executor.taskDone();
+                runCount.incrementAndGet();
+                queue.taskDone();
             }
 
             @Override
@@ -59,17 +62,17 @@ public class SerialQueueTests extends BuruberiTestCase {
                 fail();
             }
         });
-        assertEquals(executed.get(), 2);
+        assertThat(runCount.get(), is(equalTo(2)));
     }
 
     @Test
     public void queuing() throws Exception {
-        final SerialQueue executor = new SerialQueue();
-        final AtomicInteger executed = new AtomicInteger(0);
-        executor.execute(new SerialQueue.Task() {
+        final SerialQueue queue = new SerialQueue();
+        final AtomicInteger runCount = new AtomicInteger(0);
+        queue.execute(new SerialQueue.Task() {
             @Override
             public void run() {
-                executed.incrementAndGet();
+                runCount.incrementAndGet();
             }
 
             @Override
@@ -77,11 +80,11 @@ public class SerialQueueTests extends BuruberiTestCase {
                 fail();
             }
         });
-        executor.execute(new SerialQueue.Task() {
+        queue.execute(new SerialQueue.Task() {
             @Override
             public void run() {
-                executed.incrementAndGet();
-                executor.taskDone();
+                runCount.incrementAndGet();
+                queue.taskDone();
             }
 
             @Override
@@ -89,11 +92,11 @@ public class SerialQueueTests extends BuruberiTestCase {
                 fail();
             }
         });
-        executor.execute(new SerialQueue.Task() {
+        queue.execute(new SerialQueue.Task() {
             @Override
             public void run() {
-                executed.incrementAndGet();
-                executor.taskDone();
+                runCount.incrementAndGet();
+                queue.taskDone();
             }
 
             @Override
@@ -101,17 +104,17 @@ public class SerialQueueTests extends BuruberiTestCase {
                 fail();
             }
         });
-        assertEquals(executed.get(), 1);
-        executor.taskDone();
-        assertEquals(executed.get(), 3);
+        assertThat(runCount.get(), is(equalTo(1)));
+        queue.taskDone();
+        assertThat(runCount.get(), is(equalTo(3)));
     }
 
     @Test
     public void exceptions() throws Exception {
-        final SerialQueue executor = new SerialQueue();
+        final SerialQueue queue = new SerialQueue();
 
         // Have to force the queue into the intended state
-        executor.queue.offer(new SerialQueue.Task() {
+        queue.queue.offer(new SerialQueue.Task() {
             @Override
             public void run() {
                 throw new RuntimeException(">_<");
@@ -123,11 +126,11 @@ public class SerialQueueTests extends BuruberiTestCase {
             }
         });
         final AtomicBoolean cancelCalled = new AtomicBoolean();
-        executor.queue.offer(new SerialQueue.Task() {
+        queue.queue.offer(new SerialQueue.Task() {
             @Override
             public void cancel(@Nullable Throwable cause) {
                 cancelCalled.set(true);
-                assertTrue(cause instanceof RuntimeException);
+                assertThat(cause, is(instanceOf(RuntimeException.class)));
             }
 
             @Override
@@ -135,21 +138,21 @@ public class SerialQueueTests extends BuruberiTestCase {
                 fail();
             }
         });
-        executor.busy = true;
+        queue.busy = true;
 
         assertThrows(new AssertExtensions.ThrowingRunnable() {
             @Override
             public void run() throws Exception {
-                executor.pollTask();
+                queue.pollTask();
             }
         });
 
         final AtomicBoolean fineAfterException = new AtomicBoolean();
-        executor.execute(new SerialQueue.Task() {
+        queue.execute(new SerialQueue.Task() {
             @Override
             public void run() {
                 fineAfterException.set(true);
-                executor.taskDone();
+                queue.taskDone();
             }
 
             @Override
@@ -158,6 +161,42 @@ public class SerialQueueTests extends BuruberiTestCase {
             }
         });
 
-        assertTrue(fineAfterException.get());
+        assertThat(fineAfterException.get(), is(true));
+    }
+
+    @Test
+    public void cancelPending() {
+        final SerialQueue queue = new SerialQueue();
+
+        // Have to force the queue into the intended state
+        final AtomicInteger cancelCount = new AtomicInteger(0);
+        queue.queue.offer(new SerialQueue.Task() {
+            @Override
+            public void run() {
+                fail();
+            }
+
+            @Override
+            public void cancel(@Nullable Throwable cause) {
+                cancelCount.incrementAndGet();
+                assertThat(cause, is(nullValue()));
+            }
+        });
+        queue.queue.offer(new SerialQueue.Task() {
+            @Override
+            public void run() {
+                fail();
+            }
+
+            @Override
+            public void cancel(@Nullable Throwable cause) {
+                cancelCount.incrementAndGet();
+                assertThat(cause, is(nullValue()));
+            }
+        });
+        queue.busy = true;
+
+        queue.cancelPending();
+        assertThat(cancelCount.get(), is(equalTo(2)));
     }
 }
