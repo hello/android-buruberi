@@ -31,8 +31,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -65,6 +67,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -96,6 +99,32 @@ public class NativeGattPeripheralTests extends BuruberiTestCase {
         peripheral.gatt = device.connectGatt(getContext(), false, peripheral.gattDispatcher);
         return peripheral;
     }
+
+
+    //region Ordering
+
+    @Test
+    public void compareTo() {
+        final NativeGattPeripheral peripheral1 = mock(NativeGattPeripheral.class, CALLS_REAL_METHODS);
+        doReturn(-90).when(peripheral1).getScanTimeRssi();
+
+        final NativeGattPeripheral peripheral2 = mock(NativeGattPeripheral.class, CALLS_REAL_METHODS);
+        doReturn(0).when(peripheral2).getScanTimeRssi();
+
+        final NativeGattPeripheral peripheral3 = mock(NativeGattPeripheral.class, CALLS_REAL_METHODS);
+        doReturn(-120).when(peripheral3).getScanTimeRssi();
+
+        final List<NativeGattPeripheral> peripherals = Arrays.asList(peripheral1,
+                                                                     peripheral2,
+                                                                     peripheral3);
+        Collections.sort(peripherals);
+
+        assertThat(peripherals.get(0), is(equalTo(peripheral3)));
+        assertThat(peripherals.get(1), is(equalTo(peripheral1)));
+        assertThat(peripherals.get(2), is(equalTo(peripheral2)));
+    }
+
+    //endregion
 
 
     //region Connectivity

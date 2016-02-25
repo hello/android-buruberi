@@ -141,6 +141,13 @@ public class NativeGattPeripheral implements GattPeripheral,
         return stack;
     }
 
+    @Override
+    public int compareTo(@NonNull GattPeripheral other) {
+        final int myRssi = getScanTimeRssi();
+        final int otherRssi = other.getScanTimeRssi();
+        return (myRssi < otherRssi) ? -1 : ((myRssi > otherRssi) ? 1 : 0);
+    }
+
     //endregion
 
 

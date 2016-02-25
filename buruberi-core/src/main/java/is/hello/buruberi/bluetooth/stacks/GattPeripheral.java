@@ -46,8 +46,11 @@ import rx.Observable;
  * All Observable objects returned by a GattPeripheral must be subscribed
  * to before they will perform their work. No guarantees are made about
  * what scheduler the Observables will do, and yield their work on.
+ * <p>
+ * {@code GattPeripheral} objects are ordered based on the strength of their RSSI at scan time.
+ * The {@code GattPeripheral} with the strongest signal in a collection will be placed last.
  */
-public interface GattPeripheral {
+public interface GattPeripheral extends Comparable<GattPeripheral> {
     /**
      * The log tag used by implementations of the GattPeripheral interface.
      */
