@@ -806,6 +806,24 @@ public class NativeGattPeripheral implements GattPeripheral,
         }
 
         @Override
+        /*package*/ boolean onConnected(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing, prevent this listener from being removed.
+            return true;
+        }
+
+        @Override
+        /*package*/ boolean onConnecting(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing, prevent this listener from being removed.
+            return true;
+        }
+
+        @Override
+        /*package*/ boolean onDisconnecting(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing, prevent this listener from being removed.
+            return true;
+        }
+
+        @Override
         /*package*/ boolean onDisconnected(@NonNull BluetoothGatt gatt, int status) {
             broadcast();
             return true;
