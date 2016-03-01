@@ -24,6 +24,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
@@ -36,6 +38,7 @@ import is.hello.buruberi.bluetooth.errors.ChangePowerStateException;
 import is.hello.buruberi.bluetooth.errors.UserDisabledBuruberiException;
 import is.hello.buruberi.bluetooth.stacks.BluetoothStack;
 import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.bluetooth.stacks.util.ErrorListener;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
@@ -46,6 +49,10 @@ import rx.functions.Func1;
 import rx.subjects.ReplaySubject;
 
 public class NativeBluetoothStack implements BluetoothStack {
+    private static final String SAVED_DEVICE = NativeBluetoothStack.class.getName() + "#SAVED_DEVICE";
+    private static final String SAVED_RSSI = NativeBluetoothStack.class.getName() + "#SAVED_RSSI";
+    private static final String SAVED_ADVERTISING_DATA = NativeBluetoothStack.class.getName() + "#SAVED_ADVERTISING_DATA";
+
     /*package*/ final @NonNull Context applicationContext;
     private final @NonNull ErrorListener errorListener;
     private final @NonNull LoggerFacade logger;
@@ -276,6 +283,48 @@ public class NativeBluetoothStack implements BluetoothStack {
     @NonNull
     public LoggerFacade getLogger() {
         return logger;
+    }
+
+
+    @Nullable
+    @Override
+    public Parcelable saveState(@NonNull GattPeripheral peripheral) {
+        logger.debug(LOG_TAG, "saveState(" + peripheral + ")");
+
+        if (!(peripheral instanceof NativeGattPeripheral)) {
+            throw new IllegalArgumentException("Peripheral is not from this bluetooth stack");
+        }
+
+        final NativeGattPeripheral nativePeripheral = (NativeGattPeripheral) peripheral;
+        final Bundle savedState = new Bundle(3);
+        savedState.putParcelable(SAVED_DEVICE, nativePeripheral.bluetoothDevice);
+        savedState.putParcelable(SAVED_ADVERTISING_DATA, peripheral.getAdvertisingData());
+        savedState.putInt(SAVED_RSSI, peripheral.getScanTimeRssi());
+        return savedState;
+    }
+
+    @Override
+    public GattPeripheral restoreState(@Nullable Parcelable state) {
+        logger.debug(LOG_TAG, "restoreState(" + state + ")");
+
+        if (state == null) {
+            return null;
+        } else {
+            if (!(state instanceof Bundle)) {
+                throw new IllegalArgumentException("Saved state is not from this bluetooth stack");
+            }
+
+            final Bundle savedState = (Bundle) state;
+            final BluetoothDevice bluetoothDevice = savedState.getParcelable(SAVED_DEVICE);
+            final AdvertisingData advertisingData = savedState.getParcelable(SAVED_ADVERTISING_DATA);
+            final int rssi = savedState.getInt(SAVED_RSSI, 0);
+
+            if (bluetoothDevice == null || advertisingData == null) {
+                throw new IllegalArgumentException("Saved state malformed");
+            }
+
+            return new NativeGattPeripheral(this, bluetoothDevice, rssi, advertisingData);
+        }
     }
 
 

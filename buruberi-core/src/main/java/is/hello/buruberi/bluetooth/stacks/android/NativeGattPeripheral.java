@@ -25,6 +25,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
@@ -74,7 +75,7 @@ public class NativeGattPeripheral implements GattPeripheral,
     private final @NonNull LoggerFacade logger;
     private final SerialQueue serialQueue;
 
-    @VisibleForTesting final @NonNull BluetoothDevice bluetoothDevice;
+    /*package*/ final @NonNull BluetoothDevice bluetoothDevice;
     private final int scannedRssi;
     private final @NonNull AdvertisingData advertisingData;
 
@@ -146,6 +147,12 @@ public class NativeGattPeripheral implements GattPeripheral,
         final int myRssi = getScanTimeRssi();
         final int otherRssi = other.getScanTimeRssi();
         return (myRssi < otherRssi) ? -1 : ((myRssi > otherRssi) ? 1 : 0);
+    }
+
+    @Nullable
+    @Override
+    public Parcelable saveState() {
+        return stack.saveState(this);
     }
 
     //endregion

@@ -19,9 +19,11 @@ import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
+import android.os.Parcelable;
 import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import java.lang.annotation.Documented;
@@ -272,6 +274,17 @@ public interface GattPeripheral extends Comparable<GattPeripheral> {
      */
     @CheckResult
     @NonNull BluetoothStack getStack();
+
+    /**
+     * Convenience method for saving the state of the peripheral. Functionally equivalent to:
+     * <pre>{@code
+     * final BluetoothStack stack = peripheral.getStack();
+     * final Parcelable savedState = stack.saveState(peripheral);
+     * // ...
+     * }</pre>
+     * @return The saved state of the peripheral.
+     */
+    @Nullable Parcelable saveState();
 
     //endregion
 

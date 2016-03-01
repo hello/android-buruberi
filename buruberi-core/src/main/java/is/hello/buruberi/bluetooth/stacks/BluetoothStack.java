@@ -16,7 +16,9 @@
 package is.hello.buruberi.bluetooth.stacks;
 
 import android.Manifest;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import java.util.List;
@@ -121,4 +123,21 @@ public interface BluetoothStack {
      * Returns the logger facade associated with the {@code BluetoothStack}.
      */
     @NonNull LoggerFacade getLogger();
+
+
+    /**
+     * Writes the state of a peripheral into a {@code Parcelable} object.
+     *
+     * @param peripheral    The peripheral whose state needs to be saved.
+     * @return The saved state.
+     */
+    @Nullable Parcelable saveState(@NonNull GattPeripheral peripheral);
+
+    /**
+     * Restores the saved state of a peripheral into a new object.
+     *
+     * @param savedState    The state to restore.
+     * @return A new peripheral representing the saved state.
+     */
+    GattPeripheral restoreState(@Nullable Parcelable savedState);
 }
