@@ -19,11 +19,13 @@ import org.junit.Test;
 
 import java.util.Collection;
 
+import is.hello.buruberi.testing.BuruberiTestCase;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-public class AdvertisingDataTests {
+public class AdvertisingDataTests extends BuruberiTestCase {
     private static final byte[] TEST_PAYLOAD = {
             // Advertisement contents size
             (byte) 0x03,
@@ -39,10 +41,10 @@ public class AdvertisingDataTests {
     @SuppressWarnings("ConstantConditions")
     @Test
     public void parse() throws Exception {
-        AdvertisingData advertisingData = AdvertisingData.parse(TEST_PAYLOAD);
+        final AdvertisingData advertisingData = AdvertisingData.parse(TEST_PAYLOAD);
         assertFalse(advertisingData.isEmpty());
 
-        Collection<byte[]> records = advertisingData.getRecordsForType(AdvertisingData.TYPE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS);
+        final Collection<byte[]> records = advertisingData.getRecordsForType(AdvertisingData.TYPE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS);
         assertNotNull(records);
         assertFalse(records.isEmpty());
         assertEquals(Bytes.toString(records.iterator().next()), "E1FE");

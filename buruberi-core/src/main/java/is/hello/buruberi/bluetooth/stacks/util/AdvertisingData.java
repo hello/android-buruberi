@@ -17,15 +17,14 @@ package is.hello.buruberi.bluetooth.stacks.util;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import rx.functions.Func1;
 
@@ -34,7 +33,7 @@ import rx.functions.Func1;
  * by predicates contained in a {@link PeripheralCriteria} instance.
  */
 public final class AdvertisingData {
-    private final Map<Integer, List<byte[]>> records = new HashMap<>();
+    private final SparseArray<List<byte[]>> records = new SparseArray<>();
 
     //region Creation
 
@@ -85,14 +84,18 @@ public final class AdvertisingData {
      * Returns whether or not there are no advertising data records.
      */
     public boolean isEmpty() {
-        return records.isEmpty();
+        return (records.size() == 0);
     }
 
     /**
      * Returns a sorted copy of the record types contained in the advertising data.
      */
     public List<Integer> copyRecordTypes() {
-        final List<Integer> recordTypes = new ArrayList<>(records.keySet());
+        final int count = records.size();
+        final List<Integer> recordTypes = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            recordTypes.add(records.keyAt(i));
+        }
         Collections.sort(recordTypes);
         return recordTypes;
     }
@@ -145,13 +148,10 @@ public final class AdvertisingData {
     @Override
     public String toString() {
         String string = "{";
-        final Iterator<Map.Entry<Integer, List<byte[]>>> recordIterator =
-                records.entrySet().iterator();
-        while (recordIterator.hasNext()) {
-            final Map.Entry<Integer, List<byte[]>> entry = recordIterator.next();
-            string += typeToString(entry.getKey());
+        for (int i = 0, count = records.size(); i < count; i++) {
+            string += typeToString(records.keyAt(i));
             string += "=[";
-            final Iterator<byte[]> entryIterator = entry.getValue().iterator();
+            final Iterator<byte[]> entryIterator = records.valueAt(i).iterator();
             while (entryIterator.hasNext()) {
                 byte[] contents = entryIterator.next();
                 string += Bytes.toString(contents);
@@ -159,7 +159,7 @@ public final class AdvertisingData {
                     string += ", ";
                 }
             }
-            if (recordIterator.hasNext()) {
+            if (i < count - 1) {
                 string += "], ";
             } else {
                 string += "]";
