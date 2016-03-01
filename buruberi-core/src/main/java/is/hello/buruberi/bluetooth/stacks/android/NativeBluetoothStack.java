@@ -28,6 +28,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 import android.support.annotation.VisibleForTesting;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.List;
 
@@ -66,7 +67,7 @@ public class NativeBluetoothStack implements BluetoothStack {
         this.bluetoothManager = (BluetoothManager) applicationContext.getSystemService(Context.BLUETOOTH_SERVICE);
         this.adapter = bluetoothManager.getAdapter();
         if (adapter != null) {
-            final BroadcastReceiver receiver = new BroadcastReceiver() {
+            final BroadcastReceiver powerStateReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     final int newState = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
@@ -79,9 +80,25 @@ public class NativeBluetoothStack implements BluetoothStack {
                     }
                 }
             };
-            applicationContext.registerReceiver(receiver,
+            applicationContext.registerReceiver(powerStateReceiver,
                                                 new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
             enabled.onNext(adapter.isEnabled());
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                final BroadcastReceiver pairingReceiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                        final Intent broadcast = new Intent(ACTION_PAIRING_REQUEST);
+                        broadcast.putExtra(GattPeripheral.EXTRA_NAME, device.getName());
+                        broadcast.putExtra(GattPeripheral.EXTRA_ADDRESS, device.getAddress());
+                        LocalBroadcastManager.getInstance(context)
+                                             .sendBroadcast(broadcast);
+                    }
+                };
+                applicationContext.registerReceiver(pairingReceiver,
+                                                    new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST));
+            }
         } else {
             logger.warn(LOG_TAG, "Host device has no bluetooth hardware!");
             enabled.onNext(false);

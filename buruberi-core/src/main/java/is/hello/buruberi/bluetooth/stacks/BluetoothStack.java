@@ -40,6 +40,16 @@ public interface BluetoothStack {
      */
     String LOG_TAG = "Bluetooth." + BluetoothStack.class.getSimpleName();
 
+    /**
+     * A local broadcast that indicates an implicit pairing request has been initiated by the system.
+     * <p>
+     * Only available starting in API level 19, Android KitKat.
+     *
+     * @see GattPeripheral#EXTRA_NAME for the name of the affected peripheral.
+     * @see GattPeripheral#EXTRA_ADDRESS for the address of the affected peripheral.
+     */
+    String ACTION_PAIRING_REQUEST = BluetoothStack.class.getName() + ".ACTION_PAIRING_REQUEST";
+
 
     /**
      * Performs a scan for peripherals matching a given set of criteria.
