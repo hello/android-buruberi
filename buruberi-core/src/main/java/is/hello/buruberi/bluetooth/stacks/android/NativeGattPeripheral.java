@@ -283,6 +283,12 @@ public class NativeGattPeripheral implements GattPeripheral,
                         subscriber.onNext(NativeGattPeripheral.this);
                         subscriber.onCompleted();
 
+                        final Intent connectedIntent = new Intent(ACTION_CONNECTED)
+                                .putExtra(EXTRA_NAME, getName())
+                                .putExtra(EXTRA_ADDRESS, getAddress());
+                        LocalBroadcastManager.getInstance(stack.applicationContext)
+                                             .sendBroadcast(connectedIntent);
+
                         return false;
                     }
 
@@ -804,11 +810,11 @@ public class NativeGattPeripheral implements GattPeripheral,
             handleGattDisconnect(gatt);
 
             if (enabled) {
-                final Intent disconnect = new Intent(ACTION_DISCONNECTED);
-                disconnect.putExtra(EXTRA_NAME, getName());
-                disconnect.putExtra(EXTRA_ADDRESS, getAddress());
+                final Intent disconnectIntent = new Intent(ACTION_DISCONNECTED)
+                        .putExtra(EXTRA_NAME, getName())
+                        .putExtra(EXTRA_ADDRESS, getAddress());
                 LocalBroadcastManager.getInstance(stack.applicationContext)
-                                     .sendBroadcast(disconnect);
+                                     .sendBroadcast(disconnectIntent);
             }
         }
 

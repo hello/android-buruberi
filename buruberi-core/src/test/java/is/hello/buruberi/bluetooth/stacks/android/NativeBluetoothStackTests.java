@@ -258,6 +258,7 @@ public class NativeBluetoothStackTests extends BuruberiTestCase {
         final NativeBluetoothStack stack = new NativeBluetoothStack(getContext(),
                                                                     errorListener,
                                                                     loggerFacade);
+        getShadowBluetoothAdapter();
         final BluetoothDevice bluetoothDevice = createMockDevice(DEVICE_ADDRESS);
         final AdvertisingData advertisingData = new AdvertisingDataBuilder()
                 .add(TYPE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS, "E1FE")

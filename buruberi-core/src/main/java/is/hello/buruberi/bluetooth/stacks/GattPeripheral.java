@@ -63,6 +63,15 @@ public interface GattPeripheral extends Comparable<GattPeripheral> {
 
     /**
      * A local broadcast that informs interested listeners
+     * that a {@code GattPeripheral} has connected.
+     *
+     * @see #EXTRA_NAME
+     * @see #EXTRA_ADDRESS
+     */
+    String ACTION_CONNECTED = GattPeripheral.class.getName() + ".ACTION_CONNECTED";
+
+    /**
+     * A local broadcast that informs interested listeners
      * that a {@code GattPeripheral} has disconnected.
      *
      * @see #EXTRA_NAME
@@ -229,13 +238,14 @@ public interface GattPeripheral extends Comparable<GattPeripheral> {
     })
     @Retention(RetentionPolicy.SOURCE)
     @Documented
-    @IntDef(flag = true, value = {
-            CONNECT_FLAG_WAIT_AVAILABLE,
-            CONNECT_FLAG_TRANSPORT_AUTO,
-            CONNECT_FLAG_TRANSPORT_BREDR,
-            CONNECT_FLAG_TRANSPORT_LE,
-            CONNECT_FLAG_DEFAULTS,
-    })
+    @IntDef(flag = true,
+            value = {
+                    CONNECT_FLAG_WAIT_AVAILABLE,
+                    CONNECT_FLAG_TRANSPORT_AUTO,
+                    CONNECT_FLAG_TRANSPORT_BREDR,
+                    CONNECT_FLAG_TRANSPORT_LE,
+                    CONNECT_FLAG_DEFAULTS,
+            })
     @interface ConnectFlags {}
 
     //endregion
