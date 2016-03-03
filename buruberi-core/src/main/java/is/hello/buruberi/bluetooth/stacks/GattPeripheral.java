@@ -19,9 +19,11 @@ import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
+import android.os.Parcelable;
 import android.support.annotation.CheckResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import java.lang.annotation.Documented;
@@ -46,8 +48,11 @@ import rx.Observable;
  * All Observable objects returned by a GattPeripheral must be subscribed
  * to before they will perform their work. No guarantees are made about
  * what scheduler the Observables will do, and yield their work on.
+ * <p>
+ * {@code GattPeripheral} objects are ordered based on the strength of their RSSI at scan time.
+ * The {@code GattPeripheral} with the strongest signal in a collection will be placed last.
  */
-public interface GattPeripheral {
+public interface GattPeripheral extends Comparable<GattPeripheral> {
     /**
      * The log tag used by implementations of the GattPeripheral interface.
      */
@@ -55,6 +60,15 @@ public interface GattPeripheral {
 
 
     //region Local Broadcasts
+
+    /**
+     * A local broadcast that informs interested listeners
+     * that a {@code GattPeripheral} has connected.
+     *
+     * @see #EXTRA_NAME
+     * @see #EXTRA_ADDRESS
+     */
+    String ACTION_CONNECTED = GattPeripheral.class.getName() + ".ACTION_CONNECTED";
 
     /**
      * A local broadcast that informs interested listeners
@@ -224,13 +238,14 @@ public interface GattPeripheral {
     })
     @Retention(RetentionPolicy.SOURCE)
     @Documented
-    @IntDef(flag = true, value = {
-            CONNECT_FLAG_WAIT_AVAILABLE,
-            CONNECT_FLAG_TRANSPORT_AUTO,
-            CONNECT_FLAG_TRANSPORT_BREDR,
-            CONNECT_FLAG_TRANSPORT_LE,
-            CONNECT_FLAG_DEFAULTS,
-    })
+    @IntDef(flag = true,
+            value = {
+                    CONNECT_FLAG_WAIT_AVAILABLE,
+                    CONNECT_FLAG_TRANSPORT_AUTO,
+                    CONNECT_FLAG_TRANSPORT_BREDR,
+                    CONNECT_FLAG_TRANSPORT_LE,
+                    CONNECT_FLAG_DEFAULTS,
+            })
     @interface ConnectFlags {}
 
     //endregion
@@ -269,6 +284,17 @@ public interface GattPeripheral {
      */
     @CheckResult
     @NonNull BluetoothStack getStack();
+
+    /**
+     * Convenience method for saving the state of the peripheral. Functionally equivalent to:
+     * <pre>{@code
+     * final BluetoothStack stack = peripheral.getStack();
+     * final Parcelable savedState = stack.saveState(peripheral);
+     * // ...
+     * }</pre>
+     * @return The saved state of the peripheral.
+     */
+    @Nullable Parcelable saveState();
 
     //endregion
 

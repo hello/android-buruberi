@@ -16,7 +16,9 @@
 package is.hello.buruberi.bluetooth.stacks;
 
 import android.Manifest;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
 
 import java.util.List;
@@ -39,6 +41,16 @@ public interface BluetoothStack {
      * The log tag that of BluetoothStack use.
      */
     String LOG_TAG = "Bluetooth." + BluetoothStack.class.getSimpleName();
+
+    /**
+     * A local broadcast that indicates an implicit pairing request has been initiated by the system.
+     * <p>
+     * Only available starting in API level 19, Android KitKat.
+     *
+     * @see GattPeripheral#EXTRA_NAME for the name of the affected peripheral.
+     * @see GattPeripheral#EXTRA_ADDRESS for the address of the affected peripheral.
+     */
+    String ACTION_PAIRING_REQUEST = BluetoothStack.class.getName() + ".ACTION_PAIRING_REQUEST";
 
 
     /**
@@ -111,4 +123,21 @@ public interface BluetoothStack {
      * Returns the logger facade associated with the {@code BluetoothStack}.
      */
     @NonNull LoggerFacade getLogger();
+
+
+    /**
+     * Writes the state of a peripheral into a {@code Parcelable} object.
+     *
+     * @param peripheral    The peripheral whose state needs to be saved.
+     * @return The saved state.
+     */
+    @Nullable Parcelable saveState(@NonNull GattPeripheral peripheral);
+
+    /**
+     * Restores the saved state of a peripheral into a new object.
+     *
+     * @param savedState    The state to restore.
+     * @return A new peripheral representing the saved state.
+     */
+    GattPeripheral restoreState(@Nullable Parcelable savedState);
 }

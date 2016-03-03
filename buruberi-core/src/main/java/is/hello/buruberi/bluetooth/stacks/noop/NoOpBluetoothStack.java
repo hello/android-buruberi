@@ -17,7 +17,9 @@ package is.hello.buruberi.bluetooth.stacks.noop;
 
 import android.annotation.TargetApi;
 import android.os.Build;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -93,4 +95,14 @@ public class NoOpBluetoothStack implements BluetoothStack {
         return logger;
     }
 
+    @Nullable
+    @Override
+    public Parcelable saveState(@NonNull GattPeripheral peripheral) {
+        return null;
+    }
+
+    @Override
+    public GattPeripheral restoreState(@Nullable Parcelable savedState) {
+        return null;
+    }
 }

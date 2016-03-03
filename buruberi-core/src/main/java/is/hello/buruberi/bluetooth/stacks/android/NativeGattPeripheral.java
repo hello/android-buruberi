@@ -25,6 +25,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresPermission;
@@ -74,7 +75,7 @@ public class NativeGattPeripheral implements GattPeripheral,
     private final @NonNull LoggerFacade logger;
     private final SerialQueue serialQueue;
 
-    @VisibleForTesting final @NonNull BluetoothDevice bluetoothDevice;
+    /*package*/ final @NonNull BluetoothDevice bluetoothDevice;
     private final int scannedRssi;
     private final @NonNull AdvertisingData advertisingData;
 
@@ -139,6 +140,19 @@ public class NativeGattPeripheral implements GattPeripheral,
     @NonNull
     public BluetoothStack getStack() {
         return stack;
+    }
+
+    @Override
+    public int compareTo(@NonNull GattPeripheral other) {
+        final int myRssi = getScanTimeRssi();
+        final int otherRssi = other.getScanTimeRssi();
+        return (myRssi < otherRssi) ? -1 : ((myRssi > otherRssi) ? 1 : 0);
+    }
+
+    @Nullable
+    @Override
+    public Parcelable saveState() {
+        return stack.saveState(this);
     }
 
     //endregion
@@ -268,6 +282,12 @@ public class NativeGattPeripheral implements GattPeripheral,
                         disconnectForwarder.setEnabled(true);
                         subscriber.onNext(NativeGattPeripheral.this);
                         subscriber.onCompleted();
+
+                        final Intent connectedIntent = new Intent(ACTION_CONNECTED)
+                                .putExtra(EXTRA_NAME, getName())
+                                .putExtra(EXTRA_ADDRESS, getAddress());
+                        LocalBroadcastManager.getInstance(stack.applicationContext)
+                                             .sendBroadcast(connectedIntent);
 
                         return false;
                     }
@@ -790,12 +810,30 @@ public class NativeGattPeripheral implements GattPeripheral,
             handleGattDisconnect(gatt);
 
             if (enabled) {
-                final Intent disconnect = new Intent(ACTION_DISCONNECTED);
-                disconnect.putExtra(EXTRA_NAME, getName());
-                disconnect.putExtra(EXTRA_ADDRESS, getAddress());
+                final Intent disconnectIntent = new Intent(ACTION_DISCONNECTED)
+                        .putExtra(EXTRA_NAME, getName())
+                        .putExtra(EXTRA_ADDRESS, getAddress());
                 LocalBroadcastManager.getInstance(stack.applicationContext)
-                                     .sendBroadcast(disconnect);
+                                     .sendBroadcast(disconnectIntent);
             }
+        }
+
+        @Override
+        /*package*/ boolean onConnected(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing, prevent this listener from being removed.
+            return true;
+        }
+
+        @Override
+        /*package*/ boolean onConnecting(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing, prevent this listener from being removed.
+            return true;
+        }
+
+        @Override
+        /*package*/ boolean onDisconnecting(@NonNull BluetoothGatt gatt, int status) {
+            // Do nothing, prevent this listener from being removed.
+            return true;
         }
 
         @Override

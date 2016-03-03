@@ -17,26 +17,37 @@ package is.hello.buruberi.bluetooth.stacks.android;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Parcelable;
 
 import org.junit.Test;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowBluetoothAdapter;
 
 import is.hello.buruberi.bluetooth.errors.ChangePowerStateException;
+import is.hello.buruberi.bluetooth.stacks.GattPeripheral;
+import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
 import is.hello.buruberi.bluetooth.stacks.util.ErrorListener;
 import is.hello.buruberi.bluetooth.stacks.util.LoggerFacade;
 import is.hello.buruberi.bluetooth.stacks.util.PeripheralCriteria;
 import is.hello.buruberi.testing.BuruberiTestCase;
 import is.hello.buruberi.testing.Sync;
+import is.hello.buruberi.util.AdvertisingDataBuilder;
 import is.hello.buruberi.util.Defaults;
 import rx.Observable;
 
+import static is.hello.buruberi.bluetooth.stacks.util.AdvertisingData.TYPE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS;
+import static is.hello.buruberi.testing.Testing.DEVICE_ADDRESS;
+import static is.hello.buruberi.testing.Testing.createMockDevice;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 public class NativeBluetoothStackTests extends BuruberiTestCase {
     private final ErrorListener errorListener = Defaults.createEmptyErrorListener();
@@ -215,5 +226,57 @@ public class NativeBluetoothStackTests extends BuruberiTestCase {
 
         Sync.wrap(turnOff)
             .assertThrows(ChangePowerStateException.class);
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void saveStateSafety() {
+        final NativeBluetoothStack stack = new NativeBluetoothStack(getContext(),
+                                                                    errorListener,
+                                                                    loggerFacade);
+        stack.saveState(mock(GattPeripheral.class));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void restoreStateSafety() {
+        final NativeBluetoothStack stack = new NativeBluetoothStack(getContext(),
+                                                                    errorListener,
+                                                                    loggerFacade);
+        stack.restoreState(new Intent());
+    }
+
+    @Test
+    public void restoreStateNullSafety() {
+        final NativeBluetoothStack stack = new NativeBluetoothStack(getContext(),
+                                                                    errorListener,
+                                                                    loggerFacade);
+        assertThat(stack.restoreState(null), is(nullValue()));
+    }
+
+    @Test
+    public void saveRestoreState() {
+        final NativeBluetoothStack stack = new NativeBluetoothStack(getContext(),
+                                                                    errorListener,
+                                                                    loggerFacade);
+        getShadowBluetoothAdapter();
+        final BluetoothDevice bluetoothDevice = createMockDevice(DEVICE_ADDRESS);
+        final AdvertisingData advertisingData = new AdvertisingDataBuilder()
+                .add(TYPE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS, "E1FE")
+                .build();
+        final int rssi = -50;
+
+        final GattPeripheral outPeripheral = new NativeGattPeripheral(stack, bluetoothDevice,
+                                                                      rssi, advertisingData);
+        assertThat(outPeripheral.getAddress(), is(equalTo(DEVICE_ADDRESS)));
+
+        final Parcelable outState = stack.saveState(outPeripheral);
+        assertThat(outState, is(notNullValue()));
+
+        final GattPeripheral inPeripheral = stack.restoreState(outState);
+        assertThat(inPeripheral, is(notNullValue()));
+        assertThat(inPeripheral.getScanTimeRssi(), is(equalTo(rssi)));
+        assertThat(inPeripheral.getAddress(), is(equalTo(outPeripheral.getAddress())));
+        assertThat(inPeripheral.getAdvertisingData().isEmpty(),
+                   is(equalTo(outPeripheral.getAdvertisingData().isEmpty())));
     }
 }

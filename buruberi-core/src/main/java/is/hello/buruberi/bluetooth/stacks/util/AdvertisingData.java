@@ -15,26 +15,58 @@
 */
 package is.hello.buruberi.bluetooth.stacks.util;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import rx.functions.Func1;
 
 /**
  * Parses a raw BLE advertising data blob into a multi-map collection for querying
  * by predicates contained in a {@link PeripheralCriteria} instance.
+ * <p>
+ * {@code AdvertisingData} does not implement the identity methods {@link #equals(Object)}
+ * and {@link #hashCode()}, and as such is not suitable for use with Java collections.
  */
-public final class AdvertisingData {
-    private final Map<Integer, List<byte[]>> records = new HashMap<>();
+public final class AdvertisingData implements Parcelable {
+    private final SparseArray<List<byte[]>> records;
+
+    //region Parceling
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeSparseArray((SparseArray) records);
+    }
+
+    public static final Creator<AdvertisingData> CREATOR = new Creator<AdvertisingData>() {
+        @Override
+        @SuppressWarnings("unchecked")
+        public AdvertisingData createFromParcel(Parcel in) {
+            return new AdvertisingData(in.readSparseArray(SparseArray.class.getClassLoader()));
+        }
+
+        @Override
+        public AdvertisingData[] newArray(int size) {
+            return new AdvertisingData[size];
+        }
+    };
+
+    //endregion
 
     //region Creation
 
@@ -42,7 +74,7 @@ public final class AdvertisingData {
      * Parses a given byte array into an advertising data object.
      */
     public static @NonNull AdvertisingData parse(@NonNull byte[] rawData) {
-        final AdvertisingData parsedResponses = new AdvertisingData();
+        final AdvertisingData parsedResponses = new AdvertisingData(new SparseArray<List<byte[]>>());
         int index = 0;
         while (index < rawData.length) {
             final byte dataLength = rawData[index++];
@@ -63,7 +95,8 @@ public final class AdvertisingData {
         return parsedResponses;
     }
 
-    private AdvertisingData() {
+    private AdvertisingData(@NonNull SparseArray<List<byte[]>> records) {
+        this.records = records;
     }
 
     private void addRecord(int type, @NonNull byte[] contents) {
@@ -85,14 +118,18 @@ public final class AdvertisingData {
      * Returns whether or not there are no advertising data records.
      */
     public boolean isEmpty() {
-        return records.isEmpty();
+        return (records.size() == 0);
     }
 
     /**
      * Returns a sorted copy of the record types contained in the advertising data.
      */
     public List<Integer> copyRecordTypes() {
-        final List<Integer> recordTypes = new ArrayList<>(records.keySet());
+        final int count = records.size();
+        final List<Integer> recordTypes = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            recordTypes.add(records.keyAt(i));
+        }
         Collections.sort(recordTypes);
         return recordTypes;
     }
@@ -114,7 +151,7 @@ public final class AdvertisingData {
             return false;
         }
 
-        for (byte[] payload : recordsForType) {
+        for (final byte[] payload : recordsForType) {
             if (predicate.call(payload)) {
                 return true;
             }
@@ -129,29 +166,12 @@ public final class AdvertisingData {
     //region Identity
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        AdvertisingData that = (AdvertisingData) o;
-        return records.equals(that.records);
-    }
-
-    @Override
-    public int hashCode() {
-        return records.hashCode();
-    }
-
-    @Override
     public String toString() {
         String string = "{";
-        final Iterator<Map.Entry<Integer, List<byte[]>>> recordIterator =
-                records.entrySet().iterator();
-        while (recordIterator.hasNext()) {
-            final Map.Entry<Integer, List<byte[]>> entry = recordIterator.next();
-            string += typeToString(entry.getKey());
+        for (int i = 0, count = records.size(); i < count; i++) {
+            string += typeToString(records.keyAt(i));
             string += "=[";
-            final Iterator<byte[]> entryIterator = entry.getValue().iterator();
+            final Iterator<byte[]> entryIterator = records.valueAt(i).iterator();
             while (entryIterator.hasNext()) {
                 byte[] contents = entryIterator.next();
                 string += Bytes.toString(contents);
@@ -159,7 +179,7 @@ public final class AdvertisingData {
                     string += ", ";
                 }
             }
-            if (recordIterator.hasNext()) {
+            if (i < count - 1) {
                 string += "], ";
             } else {
                 string += "]";

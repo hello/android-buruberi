@@ -36,8 +36,6 @@ import java.util.concurrent.TimeUnit;
 
 import is.hello.buruberi.bluetooth.stacks.OperationTimeout;
 import is.hello.buruberi.bluetooth.stacks.util.AdvertisingData;
-import is.hello.buruberi.testing.BuruberiShadows;
-import is.hello.buruberi.testing.ShadowBluetoothDeviceExt;
 import is.hello.buruberi.util.AdvertisingDataBuilder;
 import rx.Scheduler;
 import rx.Subscriber;
